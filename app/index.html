@@ -1878,11 +1878,18 @@ function renderService(){
 }
 
 /* ---------- form steps ---------- */
+// Every service opens straight on step 1, so the admin's hero image and banner show there.
+// The banner is skipped when this step's own content block already shows it.
+function introHTML(step){
+  const img = safeImg(svcContent(svc.id).hero_image);
+  return (img ? `<div class="hero"><img class="himg" src="${img}" alt=""></div>` : '')
+    + (svc.banner && !step.content ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '');
+}
 function renderForm(r){
   const total = journey();
   const step = svc.steps[stepIx];
   bar(svc.name, `Step ${stepIx+1} of ${total} · ${step.title}`, total, stepIx);
-  $screen.innerHTML = step.build(st, r)
+  $screen.innerHTML = (stepIx === 0 ? introHTML(step) : '') + step.build(st, r)
     + (step.content ? `<div class="sepline"></div>` + contentHTML(svc, st, 'step') : '');
   bindInputs();
   if (step.bind) step.bind($screen);
