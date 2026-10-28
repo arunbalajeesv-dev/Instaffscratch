@@ -1,0 +1,2107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Instaff</title>
+<meta name="description" content="Instaff booking prototype — nine services on one config-driven engine.">
+<meta name="theme-color" content="#0F7A63">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F7A63'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='sans-serif' font-weight='bold' fill='white'>i</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
+<style>
+:root{
+  --primary:#0F7A63;--dark:#0B5F4D;--tint:#EAF6F2;--tint-border:#BFE3D8;
+  --page:#F6F8F7;--card-border:#E3E8E5;--text:#14201C;--muted:#5B6B65;
+  --warn-text:#8A4B12;--warn-bg:#FDF6F0;--warn-border:#F0D5C0;--white:#FFFFFF;
+  --shell:#DFE7E3;
+  --font:'Manrope',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+  margin:0;font-family:var(--font);background:var(--shell);color:var(--text);
+  -webkit-font-smoothing:antialiased;display:flex;align-items:center;justify-content:center;
+}
+button{font-family:inherit;cursor:pointer}
+
+/* ---- device shell: full bleed on phones, a framed phone on desktop ---- */
+#app{
+  width:100%;height:100%;max-width:430px;background:var(--page);
+  display:flex;flex-direction:column;overflow:hidden;position:relative;
+}
+@media (min-width:760px) and (min-height:760px){
+  body{padding:24px}
+  #app{height:860px;max-height:100%;border-radius:30px;border:1px solid #C9D5D0;
+    box-shadow:0 30px 70px -40px rgba(11,95,77,.55)}
+}
+
+/* ---- top bar ---- */
+.topbar{flex:0 0 auto;background:var(--white);border-bottom:1px solid var(--card-border);
+  padding:calc(12px + env(safe-area-inset-top,0px)) 16px 10px}
+.tbrow{display:flex;align-items:center;gap:8px;min-height:40px}
+.iconbtn{width:40px;height:40px;margin-left:-8px;border:0;background:none;display:grid;place-items:center;
+  color:var(--text);border-radius:12px;flex:0 0 auto}
+.iconbtn:disabled{opacity:0;pointer-events:none}
+.tbtitle{font-size:17px;font-weight:800;letter-spacing:-.015em;flex:1;min-width:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tbsub{font-size:12px;font-weight:600;color:var(--muted);margin:3px 0 8px}
+.bars{display:flex;gap:6px}
+.bar{height:4px;flex:1;border-radius:99px;background:var(--card-border);transition:background .2s}
+.bar.on{background:var(--primary)}
+
+/* ---- scroll area ---- */
+.screen{flex:1 1 auto;overflow-y:auto;overscroll-behavior:contain;
+  padding:18px 16px 20px;display:flex;flex-direction:column;gap:20px}
+.screen::-webkit-scrollbar{width:0}
+
+/* ---- bottom bar ---- */
+.bottombar{flex:0 0 auto;background:var(--white);border-top:1px solid var(--card-border);
+  padding:11px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:9px}
+.estimate{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700;color:var(--dark)}
+.estimate.care{color:var(--warn-text)}
+.btn{min-height:50px;border-radius:14px;border:0;background:var(--primary);color:var(--white);
+  font-size:15.5px;font-weight:700;width:100%;display:grid;place-items:center}
+.btn:disabled{background:var(--card-border);color:var(--muted)}
+.btn.ghost{background:none;color:var(--muted);min-height:36px;font-size:13.5px}
+.btn.alt{background:var(--white);color:var(--primary);border:1.5px solid var(--tint-border)}
+
+/* ---- tab bar ---- */
+.tabbar{flex:0 0 auto;background:var(--white);border-top:1px solid var(--card-border);
+  display:flex;padding:6px 8px calc(8px + env(safe-area-inset-bottom,0px))}
+.tab{flex:1;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;
+  padding:7px 0;color:var(--muted);font-size:10.5px;font-weight:700;border-radius:12px}
+.tab[aria-selected="true"]{color:var(--primary)}
+
+/* ---- generic blocks ---- */
+.q{display:flex;flex-direction:column;gap:10px}
+.qlabel{font-size:15.5px;font-weight:700;letter-spacing:-.01em}
+.qhelp{font-size:12.5px;color:var(--muted);line-height:1.45;margin-top:-4px}
+.sectitle{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.note{background:var(--tint);border:1px solid var(--tint-border);border-radius:14px;
+  padding:11px 13px;font-size:12.5px;line-height:1.5;color:var(--dark)}
+.warnnote{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;
+  padding:11px 13px;font-size:12.5px;line-height:1.5;color:var(--warn-text)}
+.warnnote strong{font-weight:800}
+
+/* ---- home ---- */
+.hometop{display:flex;flex-direction:column;gap:4px}
+.brand{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:800;letter-spacing:-.02em}
+.brandmark{width:30px;height:30px;border-radius:9px;background:var(--primary);color:var(--white);display:grid;place-items:center;
+  font-size:17px;font-weight:800;line-height:1}
+.gsec{display:flex;flex-direction:column;gap:12px}
+.gsechead{display:flex;flex-direction:column;gap:2px}
+.gsectitle{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.gsecsub{font-size:12.5px;color:var(--muted);line-height:1.4}
+.hbanner{flex:0 0 auto;position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;border-radius:20px;
+  padding:18px 16px 18px 18px;background:var(--primary);color:var(--white)}
+.hbanner::after{content:"";position:absolute;right:-48px;top:-48px;width:170px;height:170px;border-radius:50%;
+  background:rgba(255,255,255,.08)}
+.hbtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;position:relative;z-index:1}
+.hbtitle{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
+.hbsub{font-size:12.5px;line-height:1.45;color:#D7F0E7}
+.hbtags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.hbtags span{font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px;background:rgba(255,255,255,.16);color:var(--white)}
+.hbart{position:relative;z-index:1;width:92px;height:96px;flex:0 0 auto}
+.hbart span{position:absolute;display:grid;place-items:center;border-radius:16px;background:var(--white);color:var(--dark);
+  box-shadow:0 8px 18px -10px rgba(0,0,0,.45)}
+.hb1{width:58px;height:58px;right:0;top:0}
+.hb2{width:46px;height:46px;left:0;top:34px;transform:rotate(-8deg)}
+.hb3{width:42px;height:42px;right:8px;bottom:-2px;transform:rotate(6deg)}
+.fchips{flex:0 0 auto;display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:6px 16px 8px;position:sticky;top:-18px;z-index:2;
+  background:var(--page)}
+.fchips::-webkit-scrollbar{height:0}
+.fchip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid var(--card-border);background:var(--white);
+  border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--text);min-height:38px}
+.fchip svg{width:15px;height:15px}
+.fchip .n{font-size:11px;font-weight:700;color:var(--muted)}
+.fchip[aria-selected="true"]{background:var(--primary);border-color:var(--primary);color:var(--white)}
+.fchip[aria-selected="true"] .n{color:#CFEDE3}
+.fsec{display:flex;flex-direction:column;gap:12px}
+.fsechead{display:flex;align-items:center;gap:11px}
+.fsechead > span:last-child{display:flex;flex-direction:column;gap:1px;min-width:0}
+.fsecicon{width:40px;height:40px;border-radius:12px;background:var(--white);border:1px solid var(--card-border);
+  display:grid;place-items:center;color:var(--dark);flex:0 0 auto}
+.fsectitle{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.fsecsub{font-size:12px;color:var(--muted)}
+.gsoon{aspect-ratio:1/1;border:1.5px dashed var(--card-border);border-radius:18px;display:grid;place-items:center;
+  text-align:center;padding:10px;font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.35;background:var(--white)}
+.sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}
+.gcard{border:0;background:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--text)}
+.gtile{position:relative;aspect-ratio:1/1;border-radius:18px;display:grid;place-items:center;
+  border:1px solid var(--card-border);transition:transform .12s ease}
+.gcard:active .gtile{transform:scale(.97)}
+.gcard:focus-visible{outline:none}
+.gcard:focus-visible .gtile{box-shadow:0 0 0 3px var(--tint-border)}
+.tone-green  .gtile{background:linear-gradient(160deg,#F3FAF7 0%,#E1F1EA 100%);color:#0B5F4D}
+.tone-blue   .gtile{background:linear-gradient(160deg,#F3F6FC 0%,#E1E9F6 100%);color:#2C4F86}
+.tone-violet .gtile{background:linear-gradient(160deg,#F6F3FC 0%,#E8E2F6 100%);color:#55408F}
+.gplus{position:absolute;right:7px;bottom:7px;width:30px;height:30px;border-radius:10px;background:var(--white);
+  color:var(--primary);display:grid;place-items:center;box-shadow:0 2px 8px -2px rgba(20,32,28,.22)}
+.gname{font-size:12.8px;font-weight:700;line-height:1.3;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:2;
+  -webkit-box-orient:vertical;overflow:hidden;padding:0 2px}
+.hello{font-size:13px;font-weight:700;color:var(--muted)}
+.h1{font-size:25px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.protobar{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;
+  padding:11px 13px;font-size:12px;line-height:1.5;color:var(--warn-text)}
+.cat{font-size:11px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-bottom:-6px}
+.svclist{display:flex;flex-direction:column;gap:10px}
+.svc{display:flex;gap:13px;align-items:center;background:var(--white);border:1px solid var(--card-border);
+  border-radius:18px;padding:13px;text-align:left;width:100%}
+.svc:active{border-color:var(--tint-border);background:var(--tint)}
+.svcicon{width:46px;height:46px;border-radius:14px;background:var(--tint);border:1px solid var(--tint-border);
+  display:grid;place-items:center;color:var(--dark);flex:0 0 auto}
+.svcbody{flex:1;min-width:0}
+.svcname{display:block;font-size:14.5px;font-weight:800;letter-spacing:-.01em;color:var(--text)}
+.svctag{display:block;font-size:11.5px;color:var(--muted);line-height:1.4;margin-top:2px}
+.chev{color:var(--muted);flex:0 0 auto}
+
+/* ---- service details ---- */
+.hero{height:142px;border-radius:18px;background:var(--tint);border:1px solid var(--tint-border);
+  display:grid;place-items:center;color:var(--dark);flex:0 0 auto}
+.detailtitle{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
+.detailsub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
+.inctiles{display:flex;flex-direction:column;gap:8px}
+.inctile{display:flex;gap:11px;align-items:center;background:var(--white);border:1px solid var(--card-border);
+  border-radius:15px;padding:10px 12px}
+.thumb{width:38px;height:38px;border-radius:11px;background:var(--tint);display:grid;place-items:center;
+  color:var(--dark);flex:0 0 auto}
+.inctile .txt{font-size:12.8px;font-weight:600;line-height:1.35}
+.plainlist{background:var(--white);border:1px solid var(--card-border);border-radius:15px;padding:12px 14px}
+.plainlist ul{margin:0;padding-left:17px;font-size:12.8px;line-height:1.65;color:var(--text)}
+.plainlist.muted ul{color:var(--muted)}
+.emptynote{background:var(--white);border:1px dashed var(--card-border);border-radius:15px;
+  padding:13px 14px;font-size:12.5px;color:var(--muted);font-weight:600}
+.steps{display:flex;flex-direction:column;gap:10px}
+.stepitem{display:flex;gap:11px;align-items:flex-start}
+.stepnum{width:25px;height:25px;border-radius:50%;background:var(--tint);border:1px solid var(--tint-border);
+  color:var(--dark);font-size:11.5px;font-weight:800;display:grid;place-items:center;flex:0 0 auto}
+.steptext{font-size:12.8px;line-height:1.5;padding-top:3px}
+.draftbadge{display:inline-block;font-size:9px;font-weight:800;letter-spacing:.06em;color:var(--warn-text);
+  background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:5px;padding:1px 4px;margin-left:5px;vertical-align:1px}
+
+/* ---- inputs ---- */
+.seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:7px;background:var(--white);
+  border:1px solid var(--card-border);border-radius:16px;padding:4px}
+.seg button{min-height:50px;border:0;border-radius:12px;background:none;font-size:13.5px;font-weight:700;
+  color:var(--muted);display:flex;flex-direction:column;gap:2px;align-items:center;justify-content:center;padding:0 6px}
+.seg button .s{font-size:10.5px;font-weight:600;opacity:.8}
+.seg button[aria-pressed="true"]{background:var(--primary);color:var(--white)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.card{background:var(--white);border:1px solid var(--card-border);border-radius:16px;padding:12px;
+  text-align:left;display:flex;flex-direction:column;gap:2px;min-height:78px;justify-content:center}
+.card[aria-pressed="true"]{border-color:var(--primary);background:var(--tint);box-shadow:inset 0 0 0 1px var(--primary)}
+.card.care[aria-pressed="true"]{border-color:var(--warn-border);background:var(--warn-bg);box-shadow:inset 0 0 0 1px var(--warn-border)}
+.cname{font-size:13.5px;font-weight:800;letter-spacing:-.01em}
+.csub{font-size:11px;font-weight:700;color:var(--primary)}
+.card.care .csub{color:var(--warn-text)}
+.chelp{font-size:10.5px;color:var(--muted);line-height:1.35;margin-top:2px}
+.chips{display:flex;flex-wrap:wrap;gap:7px}
+.chip{background:var(--white);border:1px solid var(--card-border);border-radius:13px;padding:9px 13px;
+  font-size:12.5px;font-weight:700;color:var(--text);display:flex;flex-direction:column;gap:1px;align-items:flex-start}
+.chip .sub{font-size:10px;font-weight:600;color:var(--muted)}
+.chip[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--white)}
+.chip[aria-pressed="true"] .sub{color:rgba(255,255,255,.85)}
+.rows{display:flex;flex-direction:column;gap:8px}
+.row{display:flex;align-items:center;gap:11px;padding:11px 13px;background:var(--white);
+  border:1px solid var(--card-border);border-radius:16px}
+.row.on{border-color:var(--tint-border);background:var(--tint)}
+.rname{flex:1;min-width:0;font-size:13.5px;font-weight:700}
+.rsub{font-size:11px;font-weight:600;color:var(--muted);display:block;margin-top:2px;line-height:1.35}
+.stepper{display:flex;align-items:center;gap:4px;flex:0 0 auto}
+.stepper button{touch-action:manipulation;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;width:36px;height:36px;border-radius:11px;border:1px solid var(--card-border);
+  background:var(--white);font-size:19px;font-weight:700;color:var(--primary);line-height:1}
+.stepper button:disabled{opacity:.3;color:var(--muted)}
+.stepper .val{white-space:nowrap;padding:0 4px;min-width:32px;text-align:center;font-size:15px;font-weight:800;font-variant-numeric:tabular-nums}
+.numfield{display:flex;align-items:center;gap:8px;flex:0 0 auto}
+.numfield input{width:86px;border:1px solid var(--card-border);border-radius:11px;padding:9px;
+  font-family:inherit;font-size:14px;font-weight:700;text-align:right;color:var(--text);background:var(--white)}
+.numfield input:focus{outline:2px solid var(--primary);outline-offset:-2px}
+.numfield .u{font-size:11px;font-weight:700;color:var(--muted)}
+.people{display:flex;gap:8px;flex-wrap:wrap}
+.pbtn{width:58px;height:58px;border-radius:17px;border:1px solid var(--card-border);background:var(--white);
+  font-size:18px;font-weight:800;color:var(--text)}
+.pbtn[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--white)}
+.pbtn.more{width:auto;padding:0 15px;font-size:12px;font-weight:700}
+.toggle{display:flex;align-items:center;gap:11px;padding:12px 13px;background:var(--white);
+  border:1px solid var(--card-border);border-radius:16px;text-align:left;width:100%}
+.toggle[aria-pressed="true"]{border-color:var(--primary);background:var(--tint)}
+.tgbox{width:25px;height:25px;border-radius:8px;border:1.5px solid var(--card-border);background:var(--white);
+  display:grid;place-items:center;flex:0 0 auto;color:var(--white)}
+.toggle[aria-pressed="true"] .tgbox{background:var(--primary);border-color:var(--primary)}
+.textfield{background:var(--white);border:1px solid var(--card-border);border-radius:16px;padding:5px}
+.textfield textarea{width:100%;border:0;background:none;font-family:inherit;font-size:13.5px;font-weight:500;
+  color:var(--text);padding:10px;min-height:62px;resize:none;line-height:1.5}
+.textfield textarea:focus{outline:2px solid var(--primary);outline-offset:-2px;border-radius:12px}
+.upload{display:flex;flex-direction:column;align-items:center;gap:3px;background:var(--white);
+  border:1px dashed var(--card-border);border-radius:16px;padding:18px;position:relative;text-align:center}
+.upload input{position:absolute;inset:0;opacity:0}
+.uplabel{font-size:13px;font-weight:700;color:var(--primary)}
+.upsub{font-size:11px;color:var(--muted)}
+
+/* ---- repeating item lines (Loading & Unloading) ---- */
+.linecard{background:var(--white);border:1px solid var(--card-border);border-radius:18px;padding:13px;
+  display:flex;flex-direction:column;gap:10px}
+.linehead{display:flex;justify-content:space-between;align-items:center}
+.linetitle{font-size:14px;font-weight:800;letter-spacing:-.01em}
+.linerm{border:0;background:none;color:var(--warn-text);font-size:12px;font-weight:700;padding:6px 2px}
+.linecard .row{padding:9px 11px}
+.tinput{width:100%;border:1px solid var(--card-border);border-radius:12px;padding:11px;font-family:inherit;
+  font-size:13px;font-weight:500;color:var(--text);background:var(--white)}
+.tinput:focus{outline:2px solid var(--primary);outline-offset:-2px}
+.tinput.need{border-color:var(--warn-border);background:var(--warn-bg)}
+.addline{border:1.5px dashed var(--tint-border);background:var(--tint);color:var(--dark);border-radius:16px;
+  min-height:50px;font-size:14px;font-weight:800;width:100%}
+.inclist{display:grid;grid-template-columns:1fr auto;gap:0;background:var(--white);border:1px solid var(--card-border);border-radius:15px;overflow:hidden}
+.inclist span{padding:9px 13px;font-size:12.8px;border-bottom:1px solid var(--card-border)}
+.inclist span:nth-child(even){font-weight:800;text-align:right;color:var(--dark)}
+.inclist span:nth-last-child(-n+2){border-bottom:0}
+.grouplabel{font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--primary);margin:4px 0 -2px}
+
+.ticklist{list-style:none;margin:0;padding:12px 14px;background:var(--white);border:1px solid var(--card-border);
+  border-radius:15px;display:flex;flex-direction:column;gap:8px}
+.ticklist li{display:flex;gap:9px;align-items:flex-start;font-size:12.8px;line-height:1.4;font-weight:600}
+.ticklist svg{flex:0 0 auto;color:var(--primary);margin-top:1px;width:14px;height:14px}
+.gotocard{display:flex;gap:11px;align-items:center;background:var(--white);border:1px dashed var(--tint-border);border-radius:16px;padding:12px 13px}
+.gotocard .rname{flex:1}
+.gotobtn{border:1px solid var(--tint-border);background:var(--tint);color:var(--dark);border-radius:11px;padding:9px 12px;font-size:12px;font-weight:800;flex:0 0 auto}
+.pickrow{flex-direction:column;align-items:stretch;gap:10px}
+.sepline{height:1px;background:var(--card-border);margin:2px 0}
+
+.tinput.big{font-size:15px;padding:13px}
+.opt{font-size:11px;font-weight:600;color:var(--muted);margin-left:6px}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;opacity:0}
+a.btn{text-decoration:none}
+
+/* ---- results ---- */
+.bigblock{background:var(--tint);border:1px solid var(--tint-border);border-radius:18px;padding:16px;
+  display:flex;flex-direction:column;gap:4px}
+.bigv{font-size:26px;font-weight:800;color:var(--dark);letter-spacing:-.03em;line-height:1.12}
+.bigl{font-size:12px;font-weight:600;color:var(--dark);opacity:.82;line-height:1.45}
+.list{background:var(--white);border:1px solid var(--card-border);border-radius:16px;overflow:hidden}
+.li{display:flex;justify-content:space-between;gap:14px;padding:11px 13px;font-size:12.8px;
+  border-bottom:1px solid var(--card-border)}
+.li:last-child{border-bottom:0}
+.li .k{color:var(--muted);white-space:nowrap}
+.li .v{font-weight:700;text-align:right}
+.tbc{font-weight:800;color:var(--warn-text)}
+.disclaim{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:16px;padding:13px}
+.disctitle{font-size:12.5px;font-weight:800;color:var(--warn-text);margin-bottom:5px}
+.disctext{font-size:11.5px;line-height:1.55;color:var(--warn-text)}
+.acceptrow{display:flex;gap:10px;align-items:center;margin-top:11px;background:var(--white);
+  border:1px solid var(--warn-border);border-radius:12px;padding:10px;width:100%;text-align:left}
+.acceptrow .box{width:22px;height:22px;border-radius:7px;border:1.5px solid var(--warn-border);
+  background:var(--white);display:grid;place-items:center;color:var(--white);flex:0 0 auto}
+.acceptrow[aria-pressed="true"] .box{background:var(--primary);border-color:var(--primary)}
+.accepttext{font-size:11.5px;font-weight:700;color:var(--warn-text);line-height:1.4}
+
+/* ---- care ---- */
+.care-screen{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:13px;text-align:center;padding:36px 20px}
+.carecircle{width:66px;height:66px;border-radius:50%;background:var(--warn-bg);border:1px solid var(--warn-border);
+  display:grid;place-items:center;color:var(--warn-text)}
+.caretitle{font-size:19px;font-weight:800;letter-spacing:-.02em}
+.caretext{font-size:13px;color:var(--muted);line-height:1.5;max-width:31ch}
+.carenum{font-size:15px;font-weight:800;color:var(--dark);font-variant-numeric:tabular-nums}
+
+/* ---- slot ---- */
+.dayscroll{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;margin:0 -16px;padding-inline:16px}
+.dayscroll::-webkit-scrollbar{height:0}
+.day{flex:0 0 auto;width:62px;background:var(--white);border:1px solid var(--card-border);border-radius:15px;
+  padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.day[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--white)}
+.dname{font-size:10.5px;font-weight:700;opacity:.8}
+.dnum{font-size:18px;font-weight:800;letter-spacing:-.02em}
+.dmon{font-size:9.5px;font-weight:700;opacity:.75}
+.slots{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px}
+.slot{background:var(--white);border:1px solid var(--card-border);border-radius:13px;padding:12px 4px;
+  font-size:12.5px;font-weight:700;color:var(--text)}
+.slot[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--white)}
+
+/* ---- confirmation ---- */
+.done{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;
+  text-align:center;padding:36px 20px}
+.donecircle{width:72px;height:72px;border-radius:50%;background:var(--tint);border:1px solid var(--tint-border);
+  display:grid;place-items:center;color:var(--primary)}
+.donetitle{font-size:21px;font-weight:800;letter-spacing:-.02em}
+.ref{font-size:13px;font-weight:800;color:var(--dark);background:var(--tint);border:1px solid var(--tint-border);
+  border-radius:10px;padding:7px 13px;font-variant-numeric:tabular-nums}
+
+/* ---- bookings ---- */
+.bkcard{background:var(--white);border:1px solid var(--card-border);border-radius:18px;padding:14px;
+  display:flex;flex-direction:column;gap:7px}
+.bkhead{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.bkname{font-size:14.5px;font-weight:800;letter-spacing:-.01em}
+.bkref{font-size:10.5px;font-weight:700;color:var(--muted);font-variant-numeric:tabular-nums}
+.bkmeta{font-size:12px;color:var(--muted);line-height:1.5}
+.pill{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
+  border-radius:999px;padding:3px 9px}
+.pill.ok{background:var(--tint);color:var(--dark);border:1px solid var(--tint-border)}
+.pill.care{background:var(--warn-bg);color:var(--warn-text);border:1px solid var(--warn-border)}
+.empty{display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;padding:52px 20px;color:var(--muted)}
+.emptytitle{font-size:16px;font-weight:800;color:var(--text)}
+.emptysub{font-size:13px;line-height:1.5;max-width:30ch}
+</style>
+</head>
+<body>
+<div id="app">
+  <div class="topbar" id="topbar"></div>
+  <div class="screen" id="screen"></div>
+  <div id="footer"></div>
+</div>
+
+<script>
+"use strict";
+
+/* ============================================================
+   SMOKE TEST SETTINGS. These two lines are the only ones to fill in.
+   ============================================================ */
+// Google Apps Script web app URL, ending in /exec. Leave empty and leads are not sent anywhere.
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzGw8aS6XEdFlJ289GpSP2PH2w0fqKQzfg741B8w-nMhkD7t9_yCRvSO6LU9EYByVwr/exec';
+// Optional. Your WhatsApp Business number, digits only with country code, e.g. 919876543210.
+// When filled in, the confirmation screen offers "Send these details on WhatsApp".
+const WHATSAPP_NUMBER = '';
+
+/* ============================================================
+   ICONS
+   ============================================================ */
+const I = {
+  chev:'<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18l6-6-6-6"/></svg>',
+  back:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>',
+  clock:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>',
+  tick:'<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  bigtick:'<svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>',
+  phone:'<svg width="27" height="27" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1 1 .4 1.9.7 2.8a2 2 0 0 1-.5 2.1L8.1 9.9a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.8.7a2 2 0 0 1 1.7 2z"/></svg>',
+  grid:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.6"/><rect x="14" y="3" width="7" height="7" rx="1.6"/><rect x="3" y="14" width="7" height="7" rx="1.6"/><rect x="14" y="14" width="7" height="7" rx="1.6"/></svg>',
+  cal:'<svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="16" rx="2.4"/><path d="M3 10h18M8 3v4M16 3v4"/></svg>',
+  spray:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M9 8h5a2 2 0 0 1 2 2v10a1 1 0 0 1-1 1h-7a1 1 0 0 1-1-1V10a2 2 0 0 1 2-2z"/><path d="M9 8V4h4M18 5h.01M20 8h.01M18 11h.01"/></svg>',
+  bin:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M9 7V5h6v2M6 7l1 13h10l1-13"/></svg>',
+  dish:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 0 1 18 0z"/><path d="M2 12h20M12 3v2"/></svg>',
+  wc:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h5v7H6z"/><path d="M4 10h14v1a6 6 0 0 1-6 6H10a6 6 0 0 1-6-6z"/><path d="M9.5 17l-1 4h7l-1-4"/></svg>',
+  person:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.6"/><path d="M5 21v-1.5A5.5 5.5 0 0 1 10.5 14h3a5.5 5.5 0 0 1 5.5 5.5V21"/></svg>',
+  pos:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="3" width="16" height="13" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
+  tray:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11h18M5 11V7a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v4M7 11v6a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-6"/></svg>',
+  box:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7.5L12 3l9 4.5v9L12 21l-9-4.5z"/><path d="M3 7.5L12 12l9-4.5M12 12v9M7.5 5.2l9 4.6"/></svg>',
+  clip:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4h6v3H9zM9 12h6M9 16h4"/></svg>',
+  cam:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 8h3l1.5-2h9L18 8h3v12H3z"/><circle cx="12" cy="13" r="3.2"/></svg>',
+  truck:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M2 6h11v10H2zM13 9h4l3 3.5V16h-7z"/><circle cx="6" cy="17.5" r="1.8"/><circle cx="16.5" cy="17.5" r="1.8"/></svg>',
+  pot:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v6a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4zM2 10h2M20 10h2M9 6c0-1 1-1.5 1-2.5M14 6c0-1 1-1.5 1-2.5"/></svg>',
+  store:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9h16l-1.5-5h-13z"/><path d="M5 9v11h14V9"/><path d="M10 20v-6h4v6"/></svg>',
+  timer:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13.5" r="7.5"/><path d="M12 10v3.5l2.5 2M9.5 2.5h5M12 2.5V6"/></svg>',
+  cash:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M5.6 5.6l12.8 12.8"/></svg>'
+};
+
+/* ============================================================
+   SHARED CROSS-SERVICE RULES
+   ============================================================ */
+const LIMIT = 480;                 // 8 hours of work, every workload service
+const BAND = w => w <= 240 ? 1 : 2; // 0-240 = 1 professional, 241-480 = 2
+const ROUND_TO = 5;                 // time on site rounds up to 5 min, set 21 Oct (was 15, then 10)
+const roundUp = m => Math.ceil(m / ROUND_TO) * ROUND_TO;
+
+function staffing(workload){
+  workload = Math.round(workload * 1e6) / 1e6;   // clears float dust such as 120.00000000000003
+  if (workload > LIMIT) return {care:true, reason:'More than 8 hours of work'};
+  const pros = BAND(workload);
+  const each = workload / pros;
+  return {care:false, workload, pros, each, onsite:roundUp(each)};
+}
+function hhmm(m){
+  const h = Math.floor(m/60), mm = Math.round(m%60);
+  if (h === 0) return mm + ' min';
+  if (mm === 0) return h + ' h';
+  return h + ' h ' + mm + ' min';
+}
+const r2 = n => Math.round(n*100)/100;
+function fmtVal(kind, v, unit){
+  if (kind === 'hhmm') return hhmm(v);
+  if (kind === 'ft25') return v ? `+${v*25} ft` : '0';
+  if (kind === 'unit') return v ? `${Number(v).toLocaleString('en-IN')} ${unit}` : '0';
+  return String(v);
+}
+// Units that read the same in the singular and the plural.
+function unitText(n, u){
+  return ['sqft','pcs','ft','L'].indexOf(u) > -1 ? `${Number(n).toLocaleString('en-IN')} ${u}` : plural(n, u);
+}
+const esc = s => String(s).replace(/[<>&]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[c]));
+const plural = (n,w) => n + ' ' + (n === 1 ? w : (w === 'person' ? 'people' : w + 's'));
+
+/* ============================================================
+   INPUT HELPERS — every service builds its steps from these
+   ============================================================ */
+const UI = {
+  seg(key, options, sel){
+    return `<div class="seg" data-input="seg" data-key="${key}">` + options.map(o =>
+      `<button data-v="${o.v}" aria-pressed="${sel===o.v}">${o.n}${o.s?`<span class="s">${o.s}</span>`:''}</button>`
+    ).join('') + `</div>`;
+  },
+  cards(key, items, sel, opt){
+    opt = opt || {};
+    return `<div class="grid2" data-input="card" data-key="${key}">` + items.map(it =>
+      `<button class="card ${it.care?'care':''}" data-v="${it.id}" aria-pressed="${sel===it.id}">
+         <span class="cname">${it.name}</span>
+         ${it[opt.sub]?`<span class="csub">${it[opt.sub]}</span>`:''}
+         ${it.help?`<span class="chelp">${it.help}</span>`:''}
+       </button>`).join('') + `</div>`;
+  },
+  chips(key, items, sel){
+    return `<div class="chips" data-input="card" data-key="${key}">` + items.map(it =>
+      `<button class="chip" data-v="${it.id}" aria-pressed="${sel===it.id}">${it.label}${it.sub?`<span class="sub">${it.sub}</span>`:''}</button>`
+    ).join('') + `</div>`;
+  },
+  stepRow(key, name, sub, val, min, max, on, o){
+    o = o || {};
+    return `<div class="row ${on?'on':''}">
+      <span class="rname">${name}${sub?`<span class="rsub">${sub}</span>`:''}</span>
+      <span class="stepper" data-input="step" data-key="${key}" data-min="${min}" data-max="${max}"
+        data-step="${o.step||1}" data-fmt="${o.fmt||''}" data-unit="${o.unit||''}">
+        <button data-dir="-1" ${val<=min?'disabled':''} aria-label="Less">–</button>
+        <span class="val">${fmtVal(o.fmt||'', val, o.unit||'')}</span>
+        <button data-dir="1" ${val>=max?'disabled':''} aria-label="More">+</button>
+      </span></div>`;
+  },
+  people(key, sel, max){
+    let h = `<div class="people" data-input="people" data-key="${key}">`;
+    for (let n = 1; n <= max; n++) h += `<button class="pbtn" data-v="${n}" aria-pressed="${sel===n}">${n}</button>`;
+    h += `<button class="pbtn more" data-v="more">More than ${max}</button></div>`;
+    return h;
+  },
+  toggle(key, name, sub, on){
+    return `<button class="toggle" data-input="toggle" data-key="${key}" aria-pressed="${on}">
+      <span class="rname">${name}${sub?`<span class="rsub">${sub}</span>`:''}</span>
+      <span class="tgbox">${on?I.tick:''}</span></button>`;
+  },
+  note(key, val, ph){
+    return `<div class="textfield"><textarea data-input="text" data-key="${key}" placeholder="${ph}">${esc(val||'')}</textarea></div>`;
+  },
+  q(label, help, body){
+    return `<div class="q"><div class="qlabel">${label}</div>${help?`<div class="qhelp">${help}</div>`:''}${body}</div>`;
+  },
+  sec(title, body){ return `<div class="q"><div class="sectitle">${title}</div>${body}</div>`; }
+};
+
+/* ---------- Included / Not included, placed inside a step or on review (21 Oct) ---------- */
+function contentHTML(s, st, where){
+  const c = s.content;
+  const inc = (where === 'review' && s.reviewIncluded) ? s.reviewIncluded(st) : c.included;
+  let h = '';
+  if (where === 'step' && s.banner) h += `<div class="warnnote"><strong>${s.banner.title}</strong><br>${s.banner.text}</div>`;
+  h += UI.sec("What's included", inc && inc.length
+    ? `<ul class="ticklist">${inc.map(t => `<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>`
+      + (c.includedNote ? `<div class="note" style="margin-top:9px">${c.includedNote}</div>` : '')
+    : `<div class="emptynote">To be confirmed</div>`);
+  if (c.notIncluded === null)
+    h += UI.sec('Not included', `<div class="emptynote">To be confirmed</div>`);
+  else if (c.notIncluded && c.notIncluded.length)
+    h += UI.sec('Not included', `<div class="plainlist muted"><ul>${c.notIncluded.map(t => `<li>${t}</li>`).join('')}</ul></div>`);
+  if (c.ready && c.ready.length)
+    h += UI.sec('Please have ready' + (c.readyDraft ? '<span class="draftbadge">draft</span>' : ''),
+      `<div class="plainlist"><ul>${c.ready.map(t => `<li>${t}</li>`).join('')}</ul></div>`);
+  return h;
+}
+
+/* ============================================================
+   SERVICE DEFINITIONS
+   Every number below comes from an approved Service Logic sheet.
+   Nothing here is invented: unknowns stay as "To be confirmed".
+   ============================================================ */
+
+/* ---------- shared block-booking engine (Server, POS, Busser) ---------- */
+const BLOCK_DUR = [{id:'dur_2',hours:2},{id:'dur_4',hours:4}];
+const BLOCK_MAX_TOTAL = 4;   // hours per person, capped at 4 "for now", set 21 Oct
+const BLOCK_MAX_PEOPLE = 4;  // above this, customer care, set 19 Oct
+
+function blockMaxExtra(st){ return BLOCK_MAX_TOTAL - BLOCK_DUR.find(x => x.id === st.dur).hours; }
+function blockCalc(st){
+  const d = BLOCK_DUR.find(x => x.id === st.dur);
+  st.extra = Math.max(0, Math.min(st.extra, BLOCK_MAX_TOTAL - d.hours)); // switching to 4 hours drops any extra hours
+  const per = d.hours + st.extra;
+  return {care:false, blocks:true, base:d.hours, extra:st.extra, per,
+          people:st.people, totalHours:per*st.people, workload:per*st.people*60};
+}
+// Since 21 Oct: how many comes first, how long second. `contentOn` picks the screen that carries Included / Not included.
+function blockSteps(labels){
+  const howMany = {title:'How many', content:labels.contentOn === 'count', build:(st,r) => ''
+    + UI.q(labels.countQ, 'You choose the hours on the next step.', UI.people('people', st.people, BLOCK_MAX_PEOPLE))
+    + big(plural(r.people, labels.unit), `each working ${hhmm(r.per*60)} unless you change it next`)};
+  const howLong = {title:'How long', content:labels.contentOn === 'duration', build:(st,r) => {
+    const max = blockMaxExtra(st);
+    return UI.q('How long do you need cover?',
+        `Everyone in this booking works the same hours, up to ${BLOCK_MAX_TOTAL} hours. For different hours, make a second booking.`,
+        UI.seg('dur', BLOCK_DUR.map(d => ({v:d.id, n:d.hours+' hours', s:labels.sub[d.id]})), st.dur))
+      + (max > 0 ? UI.q('Need longer?', `Add up to ${plural(max,'more hour')}.`,
+          `<div class="rows">` + UI.stepRow('extra','Extra hours',
+            st.extra >= max ? 'maximum reached' : (max-st.extra)+' more available', st.extra, 0, max, st.extra>0) + `</div>`) : '')
+      + big(hhmm(r.per*60) + ' each', `${plural(r.people,labels.unit)}, everyone starting together · ${r.totalHours} worker-hours`)
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, labels.notePh));
+  }};
+  return [howMany, howLong];
+}
+function big(v,l){ return `<div class="bigblock"><span class="bigv">${v}</span><span class="bigl">${l}</span></div>`; }
+
+/* ---------- 1. Toilet Cleaning ---------- */
+const TOILET_FACILITY = [
+  {id:'fac_single', name:'Single toilet', sqft:'Up to 300 sqft',      help:'Small QSR or cafe',              base:15},
+  {id:'fac_small',  name:'Small',         sqft:'300 to 600 sqft',     help:'Restaurant or small retail',     base:15},
+  {id:'fac_medium', name:'Medium',        sqft:'600 to 1,000 sqft',   help:'Retail, office or restaurant',   base:20},
+  {id:'fac_large',  name:'Large',         sqft:'1,000 to 2,000 sqft', help:'Office or hotel',                base:25},
+  {id:'fac_xl',     name:'Very large',    sqft:'2,000 to 4,000 sqft', help:'Large office or facility',       base:30},
+  {id:'fac_complex',name:'Complex',       sqft:'Above 4,000 sqft',    help:'Mall, cinema or office complex', base:40}
+];
+// Fixture minutes moved to the nearest 5, set 21 Oct (sheet had urinal 7, basin 6, mirror 3, countertop 3, cubicle 4).
+const TOILET_FIX = [
+  {id:'wc_qty', name:'WC / toilets', min:10, max:100},
+  {id:'urinal_qty', name:'Urinals', min:5, max:100},
+  {id:'wash_basin_qty', name:'Wash basins', min:5, max:100},
+  {id:'mirror_qty', name:'Mirrors', min:5, max:100},
+  {id:'countertop_qty', name:'Countertops', min:5, max:50}
+];
+const CUBICLE_MIN = 5;
+
+/* ---------- 2. Opening & Closing Cleaning ---------- */
+const OC_PACKAGES = [
+  {id:'pkg_small',  name:'Small',        seats:'0 to 20 seats',   base:60},
+  {id:'pkg_medium', name:'Medium',       seats:'21 to 50 seats',  base:90},
+  {id:'pkg_large',  name:'Large',        seats:'51 to 75 seats',  base:120},
+  {id:'pkg_xl',     name:'Extra Large',  seats:'76 to 100 seats', base:150},
+  {id:'pkg_over',   name:'More than 100',seats:'needs a call',    care:true}
+];
+// Revised 21 Oct: AC filters and furniture moving removed; carpet and outdoor picked from set sizes.
+const OC_ADDONS = [
+  {id:'fan_qty', name:'Fan cleaning', unit:'fan', mins:10, kind:'count', desc:'Blades, housing and the mount, wiped down and degreased'},
+  {id:'sofa_qty', name:'Sofa cleaning', unit:'sofa', mins:5, kind:'count', desc:'Surface clean of seating upholstery, including under the cushions'},
+  {id:'carpet_sqft', name:'Carpet cleaning', unit:'sqft', mins:15, block:100, kind:'area', max:500, desc:'Vacuum and spot clean'},
+  {id:'outdoor_sqft', name:'Outdoor cleaning', unit:'sqft', mins:15, block:250, kind:'area', max:1500, desc:'Entrance, patio and seating outside'},
+  {id:'glass_section_qty', name:'High glass', unit:'section', mins:20, kind:'count', desc:'Glass up to 6 ft, counted by section'},
+  {id:'stain_zone_qty', name:'Stain removal', unit:'spot', mins:10, kind:'count', desc:'Targeted treatment of a marked spot or zone'}
+];
+
+/* ---------- 3. KST / Dishwashing ---------- */
+// Package names are the counts themselves, set 21 Oct.
+const DW_PACKAGES = [
+  {id:'pkg_small',    name:'Up to 150 pcs',       base:60},
+  {id:'pkg_moderate', name:'151 to 350 pcs',      base:90},
+  {id:'pkg_high',     name:'351 to 700 pcs',      base:150},
+  {id:'pkg_bulk',     name:'701 to 1,200 pcs',    base:240},
+  {id:'pkg_over',     name:'More than 1,200 pcs', sub:'needs a call', care:true}
+];
+// Specialised kitchenware removed and bulk sanitisation made a quantity, 21 Oct.
+const DW_ADDONS = [
+  {id:'large_vessel_qty', name:'Extra-large vessels', unit:'vessel', mins:5, kind:'count', desc:'30 litres and above. Anything under 30 L is already in your package.'},
+  {id:'oven_accessory_qty', name:'Oven accessories', unit:'item', mins:5, kind:'count', desc:'Grills, trays and baskets from the oven.'},
+  {id:'tandoor_accessory_qty', name:'Tandoor accessories', unit:'item', mins:5, kind:'count', desc:'Skewers, rods and tandoor tools.'},
+  {id:'fryer_accessory_qty', name:'Fryer accessories', unit:'item', mins:5, kind:'count', desc:'Fryer baskets and holders, degreased before washing.'},
+  {id:'crate_container_qty', name:'Crates and containers', unit:'item', mins:5, kind:'count', desc:'Storage crates and bulk containers, inside and out.'},
+  {id:'trolley_qty', name:'Trolleys', unit:'trolley', mins:10, kind:'count', desc:'Service and kitchen trolleys, including shelves and wheels.'},
+  {id:'rack_qty', name:'Racks', unit:'rack', mins:10, kind:'count', desc:'Storage and drying racks.'},
+  {id:'dishwasher_machine_qty', name:'Dishwasher machine', unit:'machine', mins:20, kind:'count', desc:'The machine itself — filters, interior and door seals.'},
+  {id:'bulk_sanitisation_qty', name:'Bulk sanitisation', unit:'pcs', mins:15, block:100, kind:'area',
+   desc:'A sanitising pass after washing, on top of your package'}
+];
+
+/* ---------- 4. Garbage & Waste Handling ---------- */
+const G_DRY = [
+  {id:'dry_small',  label:'Small',  sub:'0 to 10',  base:30,  mix:0},
+  {id:'dry_medium', label:'Medium', sub:'11 to 25', base:60,  mix:15},
+  {id:'dry_large',  label:'Large',  sub:'26 to 50', base:160, mix:30},
+  {id:'dry_xl',     label:'XL',     sub:'51 to 75', base:200, mix:40},
+  {id:'dry_custom', label:'More',   sub:'over 75',  base:200, mix:40, custom:true}
+];
+const G_WET = [
+  {id:'wet_small',  label:'Small',  sub:'up to 30 L', base:30, mix:0},
+  {id:'wet_medium', label:'Medium', sub:'30 to 60 L', base:60, mix:15},
+  {id:'wet_custom', label:'More',   sub:'over 60 L',  base:60, mix:15, custom:true}
+];
+const DRY_BLOCK = 60, DRY_BLOCK_MIX = 10, WET_BLOCK = 30, WET_BLOCK_MIX = 15;
+const GARB_FT_INCLUDED = 50;  // ft, set 21 Oct
+const GARB_FT_STEP_MIN = 3;   // min per extra 25 ft, set 21 Oct
+
+/* ---------- shared: floors travelled and carrying distance (Garbage, Loading & Unloading) ---------- */
+// Stairs extended to 6 floors on 21 Oct, keeping +0.25 per floor. Lift factors unchanged.
+const STAIRS = {1:1.25, 2:1.5, 3:1.75, 4:2.0, 5:2.25, 6:2.5};
+const STAIRS_MAX = 6;
+const FT_STEP = 25;
+function accessFactor(sameFloor, lift, n){
+  if (sameFloor) return {f:1.0, mode:'same'};
+  if (lift) return {f: n <= 3 ? 1.1 : (n <= 6 ? 1.2 : 1.3), mode:'lift'};
+  if (n > STAIRS_MAX) return {stop:true, mode:'stairs'};
+  return {f:STAIRS[n], mode:'stairs'};
+}
+
+/* ---------- 5. Stock Counting ---------- */
+const SC_BASE = {
+  retail:     {label:'Retail',         q1:30, q2:60,  q3:120, q4:240},
+  restaurant: {label:'Restaurant',     q1:40, q2:75,  q3:150, q4:300},
+  fmcg:       {label:'FMCG / Grocery', q1:45, q2:90,  q3:180, q4:360},
+  warehouse:  {label:'Warehouse',      q1:50, q2:100, q3:200, q4:400}
+};
+const SC_TYPES = ['fmcg','retail','restaurant','warehouse'];
+const SC_SKU = [
+  {id:'s1', label:'Up to 10', factor:1.0},
+  {id:'s2', label:'11 to 25', factor:1.1},
+  {id:'s3', label:'26 to 40', factor:1.2},
+  {id:'s4', label:'41 to 50', factor:1.3},
+  {id:'s_more', label:'More than 50', care:true}
+];
+const SC_QTY = [
+  {id:'q1', label:'Up to 250'},
+  {id:'q2', label:'251 to 500'},
+  {id:'q3', label:'501 to 1,000'},
+  {id:'q4', label:'1,001 to 2,000'},
+  {id:'q_more', label:'More than 2,000', care:true}
+];
+
+/* ---------- 6. Packing, Tagging & Scanning ---------- */
+const PK_TASKS = [
+  {id:'packing_only',             name:'Packing only',                 prod:250},
+  {id:'tagging_only',             name:'Tagging only',                 prod:350},
+  {id:'scanning_only',            name:'Scanning only',                prod:500},
+  {id:'packing_tagging',          name:'Packing + Tagging',            prod:180},
+  {id:'tagging_scanning',         name:'Tagging + Scanning',           prod:250},
+  {id:'packing_tagging_scanning', name:'Packing + Tagging + Scanning', prod:150}
+];
+const PK_SKU = [
+  {id:'sku_1', label:'1', factor:1.0},
+  {id:'sku_2_5', label:'2 to 5', factor:1.1},
+  {id:'sku_6_10', label:'6 to 10', factor:1.2},
+  {id:'sku_11_25', label:'11 to 25', factor:1.35},
+  {id:'sku_26_50', label:'26 to 50', factor:1.5},
+  {id:'sku_above', label:'More than 50', care:true}
+];
+const PK_QTY = [
+  {id:'small',  name:'Small',  range:'Up to 250 units',    bill:250},
+  {id:'medium', name:'Medium', range:'251 to 500 units',   bill:500},
+  {id:'large',  name:'Large',  range:'501 to 1,000 units', bill:1000},
+  {id:'custom', name:'More than 1,000', range:'Custom order', care:true}
+];
+const PK_PACKAGING = [
+  {id:'carton', label:'Carton'},{id:'cover', label:'Cover'},
+  {id:'pouch', label:'Pouch'},{id:'box', label:'Box'}
+];
+
+/* ---------- 7. Kitchen Equipment Cleaning (workbook v2, 13 Oct; revised 21 Oct) ---------- */
+const KE_SIZES = [
+  {id:'small',  name:'Small',  sqft:'Up to 300 sqft',   base:60,  tile:25, inc:{counter:2, shelf:2, storage:2, sink:1, hob:1, burner:1}},
+  {id:'medium', name:'Medium', sqft:'Up to 600 sqft',   base:90,  tile:30, inc:{counter:4, shelf:4, storage:4, sink:2, hob:1, burner:1}},
+  {id:'large',  name:'Large',  sqft:'Up to 1,000 sqft', base:105, tile:40, inc:{counter:6, shelf:6, storage:6, sink:2, hob:1, burner:1}},
+  {id:'xl',     name:'XL',     sqft:'Up to 1,500 sqft', base:150, tile:50, inc:{counter:8, shelf:8, storage:8, sink:3, hob:1, burner:1}},
+  {id:'over',   name:'Above 1,500 sqft', sqft:'needs a call', care:true}
+];
+// Package items beyond the allowance. Hob and stove / burner moved to the equipment step, 21 Oct.
+const KE_EXTRAS = [
+  {id:'extra_counters_qty',         name:'Counters and work surfaces', inc:'counter', mins:10, max:30},
+  {id:'extra_shelf_exterior_qty',   name:'Shelf exteriors',            inc:'shelf',   mins:10, max:30},
+  {id:'extra_storage_exterior_qty', name:'Storage exteriors',          inc:'storage', mins:10, max:30},
+  {id:'extra_sink_qty',             name:'Sinks',                      inc:'sink',    mins:20, max:10}
+];
+const KE_EQUIP = [
+  {g:'Cooking', id:'extra_hob_qty', name:'Hob', mins:15, inc:'hob', max:10},
+  {g:'Cooking', id:'extra_burner_qty', name:'Stove / burner', mins:15, inc:'burner', max:10},
+  {g:'Cooking', id:'griddle', name:'Griddle / Hot plate', mins:15},
+  {g:'Cooking', id:'deep_fryer', name:'Deep fryer', mins:20},
+  {g:'Cooking', id:'oven', name:'Oven', mins:10},
+  {g:'Cooking', id:'tandoor', name:'Tandoor', mins:20},
+  {g:'Cooking', id:'microwave', name:'Microwave', mins:10},
+  {g:'Cold storage', id:'fridge_1door', name:'Refrigerator, 1 door', mins:20},
+  {g:'Cold storage', id:'fridge_2door', name:'Refrigerator, 2 door', mins:30},
+  {g:'Cold storage', id:'fridge_3door', name:'Refrigerator, 3 door', mins:40},
+  {g:'Cold storage', id:'freezer_70_140', name:'Freezer, 70 to 140 L', mins:20},
+  {g:'Cold storage', id:'freezer_150_300', name:'Freezer, 150 to 300 L', mins:30},
+  {g:'Cold storage', id:'freezer_300_750', name:'Freezer, 300 to 750 L', mins:45},
+  {g:'Surfaces', id:'rack_interior', name:'Rack / equipment stand, interior', mins:10},
+  {g:'Machines', id:'mixer', name:'Mixer / Grinder / Blender', mins:10},
+  {g:'Machines', id:'dishwasher', name:'Dishwasher machine', mins:20},
+  {g:'Machines', id:'exhaust_fan', name:'Exhaust fan', mins:15},
+  {g:'Machines', id:'chimney', name:'Chimney exterior', mins:20},
+  {g:'Other', id:'fan', name:'Fan', mins:10},
+  {g:'Other', id:'window', name:'Window', mins:20},
+  {g:'Other', id:'sanitisation', name:'Kitchen sanitisation', mins:15}
+];
+const KE_INC_LABEL = {counter:'Counters and work surfaces', shelf:'Shelf exteriors', storage:'Storage exteriors',
+                      sink:'Sinks', hob:'Hob', burner:'Stove / burner'};
+
+/* ---------- 8. Loading & Unloading (brief 14 Oct; revised 21 Oct) ---------- */
+const LU_SERVICE = [
+  {id:'loading',           name:'Loading only',        help:'Into the vehicle',      mult:1.0},
+  {id:'unloading',         name:'Unloading only',      help:'Out of the vehicle',    mult:1.0},
+  {id:'loading_unloading', name:'Loading & Unloading', help:'Both ends of the move', mult:1.75}
+];
+// Minutes per item revised 21 Oct. XL and Heavy both go to a call.
+const LU_SIZE = [
+  {id:'small',  label:'Small',  sub:'up to 10 kg', mins:1},
+  {id:'medium', label:'Medium', sub:'11 to 25 kg', mins:2},
+  {id:'large',  label:'Large',  sub:'26 to 50 kg', mins:3},
+  {id:'xl',     label:'XL',     sub:'51 to 75 kg', mins:4, care:true},
+  {id:'heavy',  label:'Heavy',  sub:'above 75 kg', care:true}
+];
+const LU_TYPES = [
+  {id:'carton_box', label:'Carton / Box', f:1.00},
+  {id:'bag_sack', label:'Bag / Sack', f:1.00},
+  {id:'crate_bin', label:'Crate / Bin', f:1.05},
+  {id:'bundle', label:'Bundle', f:1.00},
+  {id:'roll', label:'Roll', f:1.00},
+  {id:'furniture_equipment', label:'Furniture / Equipment', f:1.25}
+];
+const LU_FT_INCLUDED = 50;   // ft, set 21 Oct
+const LU_FT_PCT = 0.05;      // each extra 25 ft adds 5% to the job, set 21 Oct
+const newLine = () => ({size:'small', qty:1, types:['carton_box'], crate:'', furn:''});
+
+function luLineCard(l, i, n){
+  const has = t => l.types.indexOf(t) > -1;
+  const size = LU_SIZE.find(x => x.id === l.size);
+  return `<div class="linecard">
+    <div class="linehead"><span class="linetitle">Item ${i+1}</span>
+      ${n > 1 ? `<button class="linerm" data-rm="${i}">Remove</button>` : ''}</div>
+    <div class="sectitle">Size and weight</div>
+    <div class="chips">${LU_SIZE.map(s =>
+      `<button class="chip" data-line="${i}" data-size="${s.id}" aria-pressed="${l.size===s.id}">${s.label}<span class="sub">${s.sub}</span></button>`).join('')}</div>
+    ${size.care ? `<div class="warnnote"><strong>Items above 50 kg.</strong> We take these over a call so the team can plan the lift safely.</div>` : ''}
+    ${UI.stepRow('lines.' + i + '.qty', 'How many items?', 'Hold + to count up faster', l.qty, 1, 9999, false)}
+    <div class="sectitle">Item type · pick all that apply</div>
+    <div class="chips">${LU_TYPES.map(t =>
+      `<button class="chip" data-line="${i}" data-type="${t.id}" aria-pressed="${has(t.id)}">${t.label}</button>`).join('')}</div>
+    ${l.types.length === 0 ? `<div class="qhelp" style="margin-top:0;color:var(--warn-text)">Pick at least one type.</div>` : ''}
+    ${has('crate_bin') ? `<input class="tinput ${l.crate.trim()?'':'need'}" data-line="${i}" data-field="crate" placeholder="Specify the crate or bin (required)" value="${esc(l.crate)}">` : ''}
+    ${has('furniture_equipment') ? `<input class="tinput ${l.furn.trim()?'':'need'}" data-line="${i}" data-field="furn" placeholder="Specify the furniture or equipment (required)" value="${esc(l.furn)}">` : ''}
+  </div>`;
+}
+function luLineValid(l){
+  return l.qty >= 1 && l.types.length > 0
+    && (l.types.indexOf('crate_bin') < 0 || l.crate.trim())
+    && (l.types.indexOf('furniture_equipment') < 0 || l.furn.trim());
+}
+function luBind(screen){
+  const L = st.lines;
+  screen.querySelectorAll('[data-size]').forEach(b => b.onclick = () => { L[+b.dataset.line].size = b.dataset.size; render(); });
+  screen.querySelectorAll('[data-type]').forEach(b => b.onclick = () => {
+    const l = L[+b.dataset.line], t = b.dataset.type, ix = l.types.indexOf(t);
+    if (ix > -1) l.types.splice(ix, 1); else l.types.push(t);
+    render();
+  });
+  screen.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => { L.splice(+b.dataset.rm, 1); render(); });
+  const add = screen.querySelector('#addline');
+  if (add) add.onclick = () => { L.push(newLine()); render(); setTimeout(() => { $screen.scrollTop = $screen.scrollHeight; }, 0); };
+  screen.querySelectorAll('[data-field]').forEach(inp => {
+    const l = L[+inp.dataset.line], f = inp.dataset.field;
+    inp.oninput = () => {
+      if (f === 'qty') l.qty = Math.max(0, parseInt(inp.value, 10) || 0); else l[f] = inp.value;
+      if (f !== 'qty') inp.classList.toggle('need', !inp.value.trim());
+      refreshFooter();
+    };
+    if (f === 'qty') inp.onblur = () => render();
+  });
+}
+
+/* ---------- 9. Service-Time Cleaning (corrected workbook, 23 Oct) ---------- */
+// The customer books live cleaning by duration: the package sets the minimum, the customer
+// adds time in 30-minute steps up to 240, and extras and add-ons are worker-time on top.
+const STC_PACKAGES = [
+  {id:'pkg_small',  name:'Small',         seats:'Up to 20 seats',  min:45},
+  {id:'pkg_medium', name:'Medium',        seats:'21 to 50 seats',  min:60},
+  {id:'pkg_large',  name:'Large',         seats:'51 to 75 seats',  min:90},
+  {id:'pkg_xl',     name:'Extra Large',   seats:'76 to 100 seats', min:120},
+  {id:'pkg_over',   name:'More than 100', seats:'needs a call',    care:true}
+];
+const STC_STEP = 30, STC_MAX = 240;
+const STC_ADDONS = [
+  {id:'glass_section_qty', name:'High glass / facade', unit:'section', mins:20, kind:'count', max:50, desc:'Counted by section'},
+  {id:'sofa_qty', name:'Sofa cleaning', unit:'sofa', mins:5, kind:'count', max:100},
+  {id:'carpet_sqft', name:'Carpet cleaning', unit:'sqft', mins:15, block:100, kind:'area', max:10000},
+  {id:'outdoor_sqft', name:'Outdoor cleaning', unit:'sqft', mins:15, block:250, kind:'area', max:10000},
+  {id:'stain_zone_qty', name:'Special stain removal', unit:'zone', mins:10, kind:'count', max:50, desc:'Per spot or zone'},
+  {id:'washbasin_qty', name:'Washbasin cleaning', unit:'washbasin', mins:10, kind:'count', max:50}
+];
+
+/* ---------- 10. Store Cleaning (workbook v1, 23 Oct) ---------- */
+// One professional for every store size, so time on site is the whole job, never split.
+const SC_SIZES = [
+  {id:'SC01', name:'Up to 2,000 sqft',      base:45},
+  {id:'SC02', name:'2,001 to 4,000 sqft',   base:75},
+  {id:'SC03', name:'4,001 to 6,000 sqft',   base:90},
+  {id:'SC04', name:'6,001 to 8,000 sqft',   base:105},
+  {id:'SC05', name:'8,001 to 14,000 sqft',  base:150},
+  {id:'CUSTOM', name:'Above 14,000 sqft', sub:'needs a call', care:true}
+];
+const SC_ADDONS = [
+  {id:'deep_rack_bays', name:'Shelf & rack deep cleaning', unit:'rack', mins:10, kind:'count', desc:'Deeper cleaning, per rack or bay'},
+  {id:'wall_area_sqft', name:'Wall cleaning', unit:'sqft', mins:5, block:100, kind:'area', max:10000, desc:'Accessible wall areas'},
+  {id:'ceiling_area_sqft', name:'Ceiling dusting', unit:'sqft', mins:5, block:100, kind:'area', max:10000, desc:'Reachable ceiling only, up to 8 ft'},
+  {id:'fixture_count', name:'Fixture cleaning', unit:'fixture', mins:5, block:3, kind:'count'},
+  {id:'exterior_rack_bays', name:'Shelf & rack exterior dusting', unit:'rack', mins:5, block:3, kind:'count', desc:'Racks or bays'}
+];
+
+/* ---------- add-on list renderer, shared by Opening/Closing and Dishwashing ---------- */
+function addonMins(a, v){
+  if (!v) return 0;
+  // Anything with a block size is charged per started block (sqft, tables, groups of 3 fixtures).
+  return a.block ? Math.ceil(v / a.block) * a.mins : v * a.mins;
+}
+function addonRate(a){
+  if (a.rate) return a.rate;
+  return a.block ? `${a.mins} min per ${unitText(a.block, a.unit)}` : `${a.mins} min each`;
+}
+function addonRows(list, qty){
+  return `<div class="rows">` + list.map(a => {
+    const v = qty[a.id] || 0, m = addonMins(a, v);
+    const sub = [a.desc ? a.desc.replace(/\.$/, '') : '', addonRate(a), m ? `${m} min` : ''].filter(Boolean).join(' · ');
+    return a.kind === 'area'
+      ? UI.stepRow('qty.'+a.id, a.name, sub, v, 0, a.max || 10000, v>0, {step:a.block, fmt:'unit', unit:a.unit})
+      : UI.stepRow('qty.'+a.id, a.name, sub, v, 0, a.max || 99, v>0);
+  }).join('') + `</div>`;
+}
+function addonLines(list, qty){
+  return list.filter(a => (qty[a.id]||0) > 0)
+             .map(a => ({a, qty:qty[a.id], mins:addonMins(a, qty[a.id])}));
+}
+function addonText(a, v){
+  return a.kind === 'area' ? unitText(v, a.unit) : plural(v, a.unit);
+}
+
+/* ============================================================
+   THE CATALOGUE
+   ============================================================ */
+const SERVICES = [
+
+/* ===== TOILET CLEANING ===== */
+{
+  id:'toilet_cleaning', name:'Toilet Cleaning', cat:'Cleaning', icon:I.wc,
+  skipDetails:true, contentOnReview:true,
+  tagline:'Washroom cleaning priced on facility size and fixture counts',
+  sub:'Toilet cleaning based on facility type and fixture quantities.',
+  content:{
+    included:['WC and toilet cleaning','Urinal cleaning','Wash basin and mirror cleaning',
+      'Cubicle and partition cleaning','Countertop cleaning','Floor cleaning and final mop','Wall tiles up to 6 ft'],
+    notIncluded:null,
+    ready:['Cleaning material, provided by the facility'],
+    how:['Choose your facility type and the fixture counts',
+         'Floor, final mop and wall tiles up to 6 ft are already included',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({facility:'fac_small', qty:{wc_qty:1, urinal_qty:0, wash_basin_qty:1, mirror_qty:1, countertop_qty:0}, note:'', photo:''}),
+  steps:[
+    {title:'Your facility', build:st =>
+      UI.q('What kind of place is it?',
+        'Go by the floor area. This sets the base allowance that covers the floor, the final mop and wall tiles up to 6 ft.',
+        UI.cards('facility', TOILET_FACILITY, st.facility, {sub:'sqft'}))},
+    {title:'Fixtures', build:st => {
+      const f = TOILET_FACILITY.find(x => x.id === st.facility);
+      const total = Object.values(st.qty).reduce((a,b)=>a+b,0);
+      return UI.q('How many of each?', `Base allowance for ${f.name.toLowerCase()} is ${f.base} min. Each WC also carries ${CUBICLE_MIN} min of cubicle and partition work.`,
+          `<div class="rows">` + TOILET_FIX.map(x => {
+            const v = st.qty[x.id];
+            const per = x.id === 'wc_qty' ? x.min + CUBICLE_MIN : x.min;
+            return UI.stepRow('qty.'+x.id, x.name, `${per} min each${v?` · ${v*per} min`:''}`, v, 0, x.max, v>0);
+          }).join('') + `</div>`)
+        + (total === 0 ? `<div class="warnnote"><strong>Pick at least one fixture.</strong> There is nothing to clean yet.</div>` : '')
+        + UI.q('Add a photo','Optional. Helps the team see the space before they arrive.',
+            `<label class="upload"><input type="file" accept="image/*" data-input="photo" data-key="photo">
+             ${st.photo ? `<span class="uplabel">${esc(st.photo)}</span><span class="upsub">Tap to choose a different photo</span>`
+                        : `<span class="uplabel">Choose a photo</span><span class="upsub">JPG or PNG</span>`}</label>`)
+        + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Second floor washroom, key is at reception'));
+    }}
+  ],
+  valid:st => Object.values(st.qty).reduce((a,b)=>a+b,0) > 0,
+  calc:st => {
+    const f = TOILET_FACILITY.find(x => x.id === st.facility);
+    const parts = TOILET_FIX.map(x => ({name:x.name, qty:st.qty[x.id], mins:st.qty[x.id]*x.min}));
+    const cubMins = st.qty.wc_qty * CUBICLE_MIN;
+    const workload = f.base + parts.reduce((a,p)=>a+p.mins,0) + cubMins;
+    return Object.assign({f, parts, cubMins}, staffing(workload));
+  },
+  rows:(st,r) => [['Facility', r.f.name + ' · ' + r.f.sqft.toLowerCase()]]
+    .concat(TOILET_FIX.filter(x => st.qty[x.id] > 0).map(x => [x.name, st.qty[x.id]]))
+    .concat(st.photo ? [['Photo', st.photo]] : [])
+},
+
+/* ===== OPENING & CLOSING CLEANING ===== */
+{
+  id:'opening_closing', name:'Opening & Closing Cleaning', cat:'Cleaning', icon:I.spray,
+  skipDetails:true, contentOnReview:true,
+  tagline:'Dining and front-of-house cleaning, before open or after close',
+  sub:'Restaurant dining and front-of-house cleaning, before you open or after you close.',
+  content:{
+    included:['Floor sweeping and mopping','Tables and chairs cleaning','Door and glass cleaning','Dusting','General surface wiping'],
+    notIncluded:['Kitchen and food preparation areas, booked as Kitchen Equipment Cleaning',
+      'Toilets and washrooms, booked as Toilet Cleaning',
+      'Waste removal beyond the premises, booked as Garbage & Waste Handling',
+      'Pest control, repairs and maintenance','Work at height beyond the high glass add-on',
+      'Moving or storing stock, crockery and equipment'],
+    ready:null,
+    how:['Choose opening or closing, and your restaurant size','Add anything beyond the standard clean',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({service:'opening', pkg:'pkg_medium', qty:Object.fromEntries(OC_ADDONS.map(a=>[a.id,0])), note:''}),
+  steps:[
+    {title:'Your restaurant', build:st => ''
+      + UI.q('Opening or closing?','Opening is before business hours, closing is after. Both take the same time.',
+          UI.seg('service', [{v:'opening',n:'Opening'},{v:'closing',n:'Closing'}], st.service))
+      + UI.q('How big is the dining area?','Go by how many people you seat.',
+          UI.cards('pkg', OC_PACKAGES, st.pkg, {sub:'seats'}))},
+    {title:'Add-ons', build:st => ''
+      + UI.q('Anything beyond the standard clean?','All optional. Leave them at zero if you only want the standard clean.',
+          addonRows(OC_ADDONS, st.qty))
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Entrance glass gets heavy fingerprints, please do that first'))}
+  ],
+  calc:st => {
+    const p = OC_PACKAGES.find(x => x.id === st.pkg);
+    if (p.care) return {care:true, reason:'More than 100 seats', p};
+    const lines = addonLines(OC_ADDONS, st.qty);
+    const workload = p.base + lines.reduce((s,l)=>s+l.mins,0);
+    return Object.assign({p, lines}, staffing(workload));
+  },
+  rows:(st,r) => [['Service', st.service === 'opening' ? 'Opening clean' : 'Closing clean'],
+                  ['Dining area', r.p.name + ' · ' + r.p.seats]]
+    .concat(r.lines.map(l => [l.a.name, addonText(l.a, l.qty)]))
+},
+
+/* ===== SERVICE-TIME CLEANING ===== */
+{
+  id:'service_time_cleaning', name:'Service-Time Cleaning', cat:'Cleaning', icon:I.timer,
+  tagline:'Live cleaning of your dining area while you serve',
+  sub:'Live cleaning support for restaurant dining halls, dining area and front-of-house only.',
+  skipDetails:true, contentOnReview:true,
+  content:{
+    included:['Routine floor sweeping and cleaning','Tables and chairs cleaning','Dusting','Live spill cleaning','General surface wiping'],
+    notIncluded:['Dishwashing, booked as KST / Dishwashing'],
+    ready:null,
+    how:['Choose your dining area size and how long you need live cleaning','Add anything beyond live cleaning',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({pkg:'pkg_medium', duration:60,
+    qty:Object.fromEntries(STC_ADDONS.map(a => [a.id, 0])), note:''}),
+  steps:[
+    {title:'Your dining area', build:st => {
+      const p = STC_PACKAGES.find(x => x.id === st.pkg);
+      let h = UI.q('How big is the dining area?','Go by how many people you seat. This sets the shortest booking.',
+        UI.cards('pkg', STC_PACKAGES, st.pkg, {sub:'seats'}));
+      if (!p.care){
+        const d = st.duration;
+        h += UI.q('How long do you need live cleaning?',
+          `${p.name} starts at ${hhmm(p.min)}. Add time in ${STC_STEP}-minute steps, up to ${hhmm(STC_MAX)}.`,
+          `<div class="rows">` + UI.stepRow('duration', 'Live cleaning',
+            d >= STC_MAX ? 'maximum reached' : d <= p.min ? 'package minimum' : 'from ' + hhmm(p.min) + ' minimum',
+            d, p.min, STC_MAX, true, {step:STC_STEP, fmt:'hhmm'}) + `</div>`);
+      }
+      return h;
+    }},
+    {title:'Add-ons', build:st => ''
+      + UI.q('Anything beyond live cleaning?','All optional, each added on top of your live-cleaning time.', addonRows(STC_ADDONS, st.qty))
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Lunch rush is 12:30 to 2:30, focus on the window section'))}
+  ],
+  calc:st => {
+    const p = STC_PACKAGES.find(x => x.id === st.pkg);
+    if (p.care) return {care:true, reason:'More than 100 seats', p};
+    // The live duration never goes below the package minimum or above 240, whatever the package was before.
+    st.duration = Math.max(p.min, Math.min(STC_MAX, st.duration));
+    const lines = addonLines(STC_ADDONS, st.qty);
+    const workload = st.duration + lines.reduce((s,l) => s + l.mins, 0);
+    return Object.assign({p, lines, live:st.duration}, staffing(workload));
+  },
+  rows:(st,r) => [['Dining area', r.p.name + ' · ' + r.p.seats.toLowerCase()], ['Live cleaning', hhmm(r.live)]]
+    .concat(r.lines.map(l => [l.a.name, addonText(l.a, l.qty)]))
+},
+
+/* ===== STORE CLEANING ===== */
+{
+  id:'store_cleaning', name:'Store Cleaning', cat:'Cleaning', icon:I.store,
+  tagline:'Routine cleaning for retail stores, showrooms and shops',
+  sub:'Routine cleaning for retail stores, showrooms and shops.',
+  skipDetails:true,
+  content:{
+    included:['Floor cleaning: sweep or vacuum and mop accessible floors','Entrance cleaning: accessible entrance surfaces and glass doors',
+      'Billing counter cleaning: checkout and billing counter surfaces','Display cleaning: accessible display surfaces, without moving products',
+      'Trial room cleaning: floors, mirrors and accessible surfaces','Mirror and glass cleaning: accessible mirrors and glass partitions',
+      'Door and handle cleaning: doors, handles and touchpoints'],
+    includedNote:'Every store size gets the same seven tasks. A bigger store just takes longer.',
+    notIncluded:['Moving or removing stock','Areas above 8 ft','Special stain treatment','Heavy or specialist cleaning',
+      'Equipment repair','Bulk waste disposal'],
+    ready:null,
+    how:['Choose your store size','Add any extra cleaning you need','We work out the time on site and the price']
+  },
+  init:() => ({size:'SC01', qty:Object.fromEntries(SC_ADDONS.map(a => [a.id, 0])), note:''}),
+  steps:[
+    {title:'Your store', content:true, build:st =>
+      UI.q('How big is your store?','Go by the floor area. One professional does the whole job.',
+        UI.cards('size', SC_SIZES, st.size, {sub:'sub'}))},
+    {title:'Add-ons', build:st => ''
+      + UI.q('Anything beyond the routine clean?','All optional. Leave them at zero for the routine clean only.', addonRows(SC_ADDONS, st.qty))
+      + UI.q('Need dustbins cleaned?','',
+          `<div class="gotocard"><span class="rname">Dustbin cleaning<span class="rsub">Available through Garbage & Waste Handling. Book it separately.</span></span>
+           <button class="gotobtn" data-goto="garbage_waste">Book it</button></div>`)
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Store opens at 10, please finish the trial rooms first'))}
+  ],
+  calc:st => {
+    const s = SC_SIZES.find(x => x.id === st.size);
+    if (s.care) return {care:true, reason:'A store above 14,000 sqft', s};
+    const lines = addonLines(SC_ADDONS, st.qty);
+    const workload = s.base + lines.reduce((a,l) => a + l.mins, 0);
+    if (workload > LIMIT) return {care:true, reason:'More than 8 hours of work', s};
+    // Always one professional, so the whole job is the time on site.
+    return {care:false, s, lines, workload, pros:1, each:workload, onsite:roundUp(workload)};
+  },
+  rows:(st,r) => [['Store size', r.s.name]].concat(r.lines.map(l => [l.a.name, addonText(l.a, l.qty)]))
+},
+
+/* ===== KITCHEN EQUIPMENT CLEANING ===== */
+{
+  id:'kitchen_equipment_cleaning', name:'Kitchen Equipment Cleaning', cat:'Cleaning', icon:I.pot,
+  tagline:'Deep cleaning of cooking, cold-storage and prep equipment',
+  sub:'Deep cleaning of cooking, cold-storage and prep equipment. Your package scope loads from your kitchen size.',
+  skipDetails:true, contentOnReview:true,
+  content:{
+    included:['Counters and work surfaces, up to the package allowance','Shelf and storage exteriors, up to the package allowance',
+      'Sinks, up to the package allowance','One hob and one stove / burner','Basic surface degreasing'],
+    notIncluded:['Extra equipment or items beyond the package allowance, unless you add them'],
+    ready:null,
+    how:['Choose your kitchen size and your package scope loads automatically','Add only the extra equipment and items you need',
+         'We work out the team, the time on site and the price']
+  },
+  // On review, Included shows the actual quantities of the package they picked.
+  reviewIncluded:st => {
+    const s = KE_SIZES.find(x => x.id === st.size);
+    return [`${s.inc.counter} counters and work surfaces`, `${s.inc.shelf} shelf exteriors`, `${s.inc.storage} storage exteriors`,
+            plural(s.inc.sink,'sink'), 'One hob and one stove / burner', 'Basic surface degreasing'];
+  },
+  init:() => ({size:'medium',
+    qty:Object.fromEntries(KE_EXTRAS.map(x=>[x.id,0]).concat(KE_EQUIP.map(x=>[x.id,0]))),
+    tile:false, note:''}),
+  steps:[
+    {title:'Your kitchen', build:st => {
+      const s = KE_SIZES.find(x => x.id === st.size);
+      return UI.q('How big is your kitchen?','Your package scope loads automatically.',
+          UI.cards('size', KE_SIZES, st.size, {sub:'sqft'}))
+        + (s.care ? '' : UI.sec(`Included in ${s.name}`,
+            `<div class="inclist">${Object.keys(KE_INC_LABEL).map(k =>
+              `<span>${KE_INC_LABEL[k]}</span><span>${s.inc[k]}</span>`).join('')}</div>
+             <div class="note" style="margin-top:9px">Basic surface degreasing is part of every package.</div>`));
+    }},
+    {title:'Equipment', build:st => {
+      const s = KE_SIZES.find(x => x.id === st.size);
+      const groups = ['Cooking','Cold storage','Surfaces','Machines','Other'];
+      return UI.q('Which equipment needs cleaning?','One hob and one stove / burner are in your package. Add anything else, or leave it at zero.',
+          groups.map(g => `<div class="grouplabel">${g}</div><div class="rows">` +
+            KE_EQUIP.filter(e => e.g === g).map(e => {
+              const v = st.qty[e.id];
+              const sub = e.inc ? `${s.inc[e.inc]} included · ${e.mins} min each extra` : `${e.mins} min each`;
+              return UI.stepRow('qty.'+e.id, e.inc ? 'Extra ' + e.name.toLowerCase() : e.name,
+                sub + (v ? ` · ${v*e.mins} min` : ''), v, 0, e.max || 99, v>0);
+            }).join('') + `</div>`).join(''));
+    }},
+    {title:'Extra items', build:st => {
+      const s = KE_SIZES.find(x => x.id === st.size);
+      return UI.q('Need more than your package covers?','Only add the quantity above your allowance.',
+          `<div class="rows">` + KE_EXTRAS.map(x => {
+            const v = st.qty[x.id];
+            return UI.stepRow('qty.'+x.id, x.name, `${s.inc[x.inc]} included · ${x.mins} min each extra${v?` · ${v*x.mins} min`:''}`, v, 0, x.max, v>0);
+          }).join('') + `</div>`)
+        + UI.q('Wall tiles','Sized to your kitchen.',
+            UI.toggle('tile','Tile cleaning, up to 6 ft', `${s.tile} min for a ${s.name.toLowerCase()} kitchen`, st.tile))
+        + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Fryer oil is drained, chimney filters are in the sink'));
+    }}
+  ],
+  calc:st => {
+    const s = KE_SIZES.find(x => x.id === st.size);
+    if (s.care) return {care:true, reason:'A kitchen above 1,500 sqft', s};
+    const pick = list => list.filter(x => st.qty[x.id] > 0).map(x => ({x, qty:st.qty[x.id], mins:st.qty[x.id]*x.mins}));
+    const equip = pick(KE_EQUIP), extras = pick(KE_EXTRAS);
+    const workload = s.base + equip.concat(extras).reduce((a,l)=>a+l.mins,0) + (st.tile ? s.tile : 0);
+    return Object.assign({s, extras, equip}, staffing(workload));
+  },
+  rows:(st,r) => [['Kitchen', r.s.name + ' · ' + r.s.sqft.toLowerCase()]]
+    .concat(r.equip.map(l => [l.x.inc ? 'Extra ' + l.x.name.toLowerCase() : l.x.name, l.qty]))
+    .concat(r.extras.map(l => ['Extra ' + l.x.name.toLowerCase(), l.qty]))
+    .concat(st.tile ? [['Tile cleaning','Yes']] : [])
+},
+
+/* ===== KST / DISHWASHING ===== */
+{
+  id:'kst_dishwashing', name:'KST / Dishwashing', cat:'Cleaning', icon:I.dish,
+  tagline:'Utensil washing priced on your total count, not item by item',
+  sub:'Utensil washing support, priced on your total count rather than item by item.',
+  skipDetails:true,
+  content:{
+    included:['Plates and bowls','Cups and glasses','Cutlery','Small cookware',
+      'Regular pots and kadai, under 30 L','GN containers','Trays','Other regular utensils'],
+    includedNote:'Count them all together. You never enter them one type at a time.',
+    notIncluded:['Cleaning of kitchen surfaces, floors and equipment, booked as Kitchen Cleaning',
+      'Waste and food-scrap removal from the premises, booked as Garbage & Waste Handling',
+      'Items needing special or delicate handling, which go through customer care',
+      'Repair or replacement of damaged, cracked or already-chipped items',
+      'Putting utensils away or restocking service areas beyond the wash area'],
+    ready:null,
+    how:['Count all your regular utensils together and pick the package',
+         "Add anything that isn't a regular utensil",
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({pkg:'pkg_moderate', qty:Object.fromEntries(DW_ADDONS.map(a=>[a.id,0])), difficult:false, accepted:false, note:''}),
+  steps:[
+    {title:'How much', content:true, build:st =>
+      UI.q('How many utensils, all together?',
+        'Plates, glasses, cutlery, pots, trays — one number for the lot. No need to split them by type.',
+        UI.cards('pkg', DW_PACKAGES, st.pkg, {sub:'sub'}))},
+    {title:'Add-ons', build:st => ''
+      + UI.q("Anything that isn't a regular utensil?",'All optional, and each one is added on top of your package.',
+          addonRows(DW_ADDONS, st.qty))
+      + UI.q('Anything unusually difficult?','Burnt-on vessels, delicate or antique items.',
+          UI.toggle('difficult','Needs special handling','We take this one over a call so the team can see what is involved first.', st.difficult))
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Wash area is behind the kitchen, hot water tap on the left'))}
+  ],
+  calc:st => {
+    const p = DW_PACKAGES.find(x => x.id === st.pkg);
+    if (p.care) return {care:true, reason:'More than 1,200 pieces', p};
+    if (st.difficult) return {care:true, reason:'An item needing special handling', p};
+    const lines = addonLines(DW_ADDONS, st.qty);
+    const workload = p.base + lines.reduce((s,l)=>s+l.mins,0);
+    return Object.assign({p, lines}, staffing(workload));
+  },
+  rows:(st,r) => [['Utensils', r.p.name]]
+    .concat(r.lines.map(l => [l.a.name, addonText(l.a, l.qty)])),
+  disclaimer:{
+    title:'Before you confirm',
+    text:'The professional and the platform are not responsible for accidental breakage, cracks, dents, scratches or damage to utensils, cookware, glassware, equipment accessories or other items during handling and cleaning.',
+    accept:'I understand and accept the breakage and damage disclaimer'
+  }
+},
+
+/* ===== LOADING & UNLOADING ===== */
+{
+  id:'loading_unloading', name:'Loading & Unloading', cat:'Operations', icon:I.truck,
+  tagline:'Goods moved into or out of a vehicle, priced on size, count and access',
+  sub:'On-demand loading and unloading support based on item size, quantity and access.',
+  skipDetails:true, contentOnReview:true,
+  content:{
+    included:['Pick items from your source or staging point, for loading','Carry items to the vehicle, for loading',
+      'Load items into the vehicle','Remove items from the vehicle, for unloading',
+      'Carry items to your destination point','Place items in the designated area',
+      `Carrying distance up to ${LU_FT_INCLUDED} ft between the vehicle and the drop point`],
+    notIncluded:['Basic stacking or arrangement, unless agreed separately'],
+    ready:null,
+    how:['Choose the service, the access and the distance','Add each kind of item: size, how many and what type',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({service_type:'loading', ground_floor:true, service_lift:true, floor_number:1,
+               extraFt:0, lines:[newLine()], note:''}),
+  steps:[
+    // No items exist yet on this step, so a time here would only reflect the placeholder line.
+    {title:'Service and access', hideEstimate:'Time on site shows once you add your items', build:st => {
+      let h = UI.q('What service do you need?','', UI.cards('service_type', LU_SERVICE, st.service_type, {}))
+        + UI.q('Is the destination on the ground floor?','Only the destination end affects the time.',
+            UI.seg('ground_floor', [{v:'yes',n:'Ground floor'},{v:'no',n:'Upper floor'}], st.ground_floor?'yes':'no'));
+      if (!st.ground_floor){
+        h += UI.q('Is a service lift available?','', UI.seg('service_lift', [{v:'yes',n:'Lift'},{v:'no',n:'Stairs only'}], st.service_lift?'yes':'no'));
+        h += UI.q('Which floor?', st.service_lift ? '' : `Stairs are booked online up to floor ${STAIRS_MAX}.`,
+          `<div class="rows">` + UI.stepRow('floor_number','Floor','', st.floor_number, 1, 10, true) + `</div>`);
+        if (!st.service_lift && st.floor_number > STAIRS_MAX)
+          h += `<div class="warnnote"><strong>Stairs above floor ${STAIRS_MAX}.</strong> We take this one over a call instead of online.</div>`;
+      }
+      h += UI.q('Any extra carrying distance?',
+        `${LU_FT_INCLUDED} ft between the vehicle and the drop point is included. Each extra ${FT_STEP} ft adds 5% to the time.`,
+        `<div class="rows">` + UI.stepRow('extraFt','Extra distance',
+          st.extraFt ? `${LU_FT_INCLUDED + st.extraFt*FT_STEP} ft in total` : `None beyond the ${LU_FT_INCLUDED} ft included`,
+          st.extraFt, 0, 20, st.extraFt>0, {fmt:'ft25'}) + `</div>`);
+      return h;
+    }},
+    {title:'Items', bind:luBind, build:st =>
+      `<div class="q"><div class="qlabel">What are we moving?</div>
+        <div class="qhelp">Add one line for each kind of item. Mixed sizes go on separate lines.</div></div>`
+      + st.lines.map((l,i) => luLineCard(l, i, st.lines.length)).join('')
+      + `<button class="addline" id="addline">+ Add another item</button>`
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Truck parks at the back gate, dock 2'))}
+  ],
+  valid:st => st.lines.length > 0 && st.lines.every(luLineValid),
+  calc:st => {
+    // Hard stops first, before any arithmetic: anything above 50 kg, then stairs above floor 6.
+    if (st.lines.some(l => LU_SIZE.find(x => x.id === l.size).care)) return {care:true, reason:'Items above 50 kg'};
+    const a = accessFactor(st.ground_floor, st.service_lift, st.floor_number);
+    if (a.stop) return {care:true, reason:`Stairs above floor ${STAIRS_MAX}`, a};
+    a.label = a.mode === 'same' ? 'Ground floor' : `${a.mode === 'lift' ? 'Lift' : 'Stairs'}, floor ${st.floor_number}`;
+    const lines = st.lines.map(l => {
+      const s = LU_SIZE.find(x => x.id === l.size);
+      const fs = l.types.map(t => LU_TYPES.find(x => x.id === t).f);
+      const tf = fs.length ? fs.reduce((p,c)=>p+c,0) / fs.length : 1;
+      return {l, s, tf, mins:(l.qty||0) * s.mins * tf};
+    });
+    const svcT = LU_SERVICE.find(x => x.id === st.service_type);
+    const df = 1 + LU_FT_PCT * st.extraFt;
+    const workload = lines.reduce((p,x)=>p+x.mins,0) * svcT.mult * df * a.f;
+    return Object.assign({lines, svcT, df, a}, staffing(workload));
+  },
+  rows:(st,r) => [['Service', r.svcT.name], ['Access', r.a.label + (r.a.f !== 1 ? ` · ×${r.a.f}` : '')]]
+    .concat(st.extraFt ? [['Extra distance', `+${st.extraFt*FT_STEP} ft · ×${r2(r.df)}`]] : [])
+    .concat(r.lines.map((x,i) => [`Item ${i+1}`,
+      `${x.l.qty} × ${x.s.label} · ${x.l.types.map(t => LU_TYPES.find(y=>y.id===t).label).join(', ')}`]))
+},
+
+/* ===== GARBAGE & WASTE HANDLING ===== */
+{
+  id:'garbage_waste', name:'Garbage & Waste Handling', cat:'Operations', icon:I.bin,
+  tagline:'Dry, wet or mixed waste moved to your disposal point',
+  sub:'On-demand dry, wet or mixed waste movement to a designated disposal point.',
+  skipDetails:true,
+  content:{
+    included:['Dry waste handling: cartons, packaging, paper and plastic','Wet waste handling: food waste',
+      `Movement to your disposal point, up to ${GARB_FT_INCLUDED} ft`,'Ground floor, lift or stairs worked into the time'],
+    notIncluded:['Hazardous, biomedical, chemical or regulated waste',
+      'Waste transport beyond the designated disposal point, unless arranged separately'],
+    ready:null,
+    how:['Choose dry, wet or mixed, and how much there is','Tell us where the disposal point is and how far',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({waste:'dry', dry:'dry_small', dryBlocks:0, wet:'wet_small', wetBlocks:0,
+               sameFloor:true, lift:true, floors:1, extraFt:0, note:''}),
+  steps:[
+    {title:'The waste', content:true, build:st => {
+      const hasDry = st.waste === 'dry' || st.waste === 'mixed';
+      const hasWet = st.waste === 'wet' || st.waste === 'mixed';
+      const d = G_DRY.find(x => x.id === st.dry), w = G_WET.find(x => x.id === st.wet);
+      let h = UI.q('What type of waste needs handling?', '',
+        UI.seg('waste', [{v:'dry',n:'Dry',s:'Cartons, paper'},{v:'wet',n:'Wet',s:'Food waste'},{v:'mixed',n:'Mixed',s:'Both'}], st.waste));
+      if (hasDry){
+        h += UI.q('How much dry waste?','Counted in cartons or equivalent bags.', UI.chips('dry', G_DRY, st.dry));
+        if (d.custom) h += `<div class="rows">` + UI.stepRow('dryBlocks','Extra blocks of 25 cartons',
+          `${DRY_BLOCK} min each · ${st.dryBlocks*DRY_BLOCK} min`, st.dryBlocks, 0, 20, st.dryBlocks>0) + `</div>`;
+      }
+      if (hasWet){
+        h += UI.q('How much wet waste?','Counted in litres.', UI.chips('wet', G_WET, st.wet));
+        if (w.custom) h += `<div class="rows">` + UI.stepRow('wetBlocks','Extra blocks of 30 litres',
+          `${WET_BLOCK} min each · ${st.wetBlocks*WET_BLOCK} min`, st.wetBlocks, 0, 20, st.wetBlocks>0) + `</div>`;
+      }
+      return h;
+    }},
+    {title:'Getting there', build:st => {
+      let h = UI.q('Is the disposal point on the same floor?','This is about how many floors the waste travels, not which floor the building is on.',
+        UI.seg('sameFloor', [{v:'yes',n:'Same floor'},{v:'no',n:'Different floor'}], st.sameFloor?'yes':'no'));
+      if (!st.sameFloor){
+        h += UI.q('Is there a service lift?','', UI.seg('lift', [{v:'yes',n:'Lift'},{v:'no',n:'Stairs only'}], st.lift?'yes':'no'));
+        h += UI.q('How many floors does the waste travel?', st.lift ? '' : `Stairs are booked online up to ${STAIRS_MAX} floors.`,
+          `<div class="rows">` + UI.stepRow('floors','Floors','between pickup and disposal', st.floors, 1, 20, true) + `</div>`);
+        if (!st.lift && st.floors > STAIRS_MAX)
+          h += `<div class="warnnote"><strong>Stairs above ${STAIRS_MAX} floors.</strong> We take this one over a call instead of online.</div>`;
+      }
+      h += UI.q('Any extra distance to the disposal point?',
+        `${GARB_FT_INCLUDED} ft is included. Each extra ${FT_STEP} ft adds ${GARB_FT_STEP_MIN} min.`,
+        `<div class="rows">` + UI.stepRow('extraFt','Extra distance',
+          st.extraFt ? `${GARB_FT_INCLUDED + st.extraFt*FT_STEP} ft in total · +${st.extraFt*GARB_FT_STEP_MIN} min` : `None beyond the ${GARB_FT_INCLUDED} ft included`,
+          st.extraFt, 0, 20, st.extraFt>0, {fmt:'ft25'}) + `</div>`);
+      h += UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Bins are behind the kitchen, gate code 4410'));
+      return h;
+    }}
+  ],
+  calc:st => {
+    const hasDry = st.waste === 'dry' || st.waste === 'mixed';
+    const hasWet = st.waste === 'wet' || st.waste === 'mixed';
+    const a = accessFactor(st.sameFloor, st.lift, st.floors);
+    if (a.stop) return {care:true, reason:`Stairs above ${STAIRS_MAX} floors`, a};
+    const n = st.floors, pl = n > 1 ? 's' : '';
+    a.label = a.mode === 'same' ? 'Same floor' : `${a.mode === 'lift' ? 'Lift' : 'Stairs'}, ${n} floor${pl}`;
+    const d = G_DRY.find(x => x.id === st.dry), w = G_WET.find(x => x.id === st.wet);
+    let dryBase = 0, dryMix = 0, wetBase = 0, wetMix = 0;
+    if (hasDry){ dryBase = d.base + (d.custom ? st.dryBlocks*DRY_BLOCK : 0); dryMix = d.mix + (d.custom ? st.dryBlocks*DRY_BLOCK_MIX : 0); }
+    if (hasWet){ wetBase = w.base + (w.custom ? st.wetBlocks*WET_BLOCK : 0); wetMix = w.mix + (w.custom ? st.wetBlocks*WET_BLOCK_MIX : 0); }
+    let subtotal;
+    if (st.waste === 'dry') subtotal = dryBase;
+    else if (st.waste === 'wet') subtotal = wetBase;
+    else subtotal = dryBase >= wetBase ? dryBase + wetMix : wetBase + dryMix;
+    const distMins = st.extraFt * GARB_FT_STEP_MIN;
+    const workload = subtotal * a.f + distMins;
+    return Object.assign({a, subtotal, distMins, d, w}, staffing(workload));
+  },
+  rows:(st,r) => {
+    const out = [['Waste type', st.waste === 'dry' ? 'Dry' : st.waste === 'wet' ? 'Wet' : 'Mixed']];
+    if (st.waste !== 'wet') out.push(['Dry waste', r.d.label + ' · ' + r.d.sub + (r.d.custom && st.dryBlocks ? ` +${st.dryBlocks} blocks` : '')]);
+    if (st.waste !== 'dry') out.push(['Wet waste', r.w.label + ' · ' + r.w.sub + (r.w.custom && st.wetBlocks ? ` +${st.wetBlocks} blocks` : '')]);
+    out.push(['Access', r.a.label + (r.a.f !== 1 ? ` · ×${r.a.f}` : '')]);
+    if (st.extraFt) out.push(['Extra distance', `+${st.extraFt*FT_STEP} ft · +${r.distMins} min`]);
+    return out;
+  }
+},
+
+/* ===== STOCK COUNTING ===== */
+{
+  id:'stock_counting', name:'Stock Counting', cat:'Operations', icon:I.clip,
+  skipDetails:true, contentOnReview:true,
+  tagline:'Physical stock count, priced on product types and units',
+  sub:'On-demand stock counting support, priced on how many product types and how many units.',
+  content:{
+    included:null,
+    notIncluded:null,
+    ready:null,
+    how:['Choose how you count and what kind of stock it is','Tell us how many product types and how many units',
+         'We work out the team, the time on site and the price']
+  },
+  contentNote:'The Included and Not included lists are still being written for this service. They will be filled before it goes live.',
+  init:() => ({count_method:'manual', stock_type:'retail', sku_band:'s1', quantity_band:'q1', note:''}),
+  steps:[
+    {title:'Your stock', build:st => ''
+      + UI.q('How will the count be done?','Both take the same time. Barcode needs your scanner and app.',
+          UI.seg('count_method', [{v:'manual',n:'Manual counting'},{v:'barcode',n:'Barcode scanning'}], st.count_method))
+      + (st.count_method === 'barcode' ? `<div class="note">Please keep your scanner, the app and any login ready for the team.</div>` : '')
+      + UI.q('What kind of stock is it?','This sets the base time for a given number of units.',
+          UI.cards('stock_type', SC_TYPES.map(k => ({id:k, name:SC_BASE[k].label})), st.stock_type, {}))},
+    {title:'How much', build:st => ''
+      + UI.q('How many types of products?','Each extra type adds handling time.', UI.chips('sku_band', SC_SKU, st.sku_band))
+      + UI.q('How many units in total?','A rough count is fine.', UI.chips('quantity_band', SC_QTY, st.quantity_band))
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Back store room first, then the shop floor'))}
+  ],
+  calc:st => {
+    const sku = SC_SKU.find(s => s.id === st.sku_band), qty = SC_QTY.find(q => q.id === st.quantity_band);
+    if (sku.care) return {care:true, reason:'More than 50 product types'};
+    if (qty.care) return {care:true, reason:'More than 2,000 units'};
+    const base = SC_BASE[st.stock_type][qty.id];
+    const workload = r2(base * sku.factor);
+    return Object.assign({base, sku, qty}, staffing(workload));
+  },
+  rows:(st,r) => [
+    ['Method', st.count_method === 'manual' ? 'Manual counting' : 'Barcode scanning'],
+    ['Stock type', SC_BASE[st.stock_type].label],
+    ['Product types', r.sku.label],
+    ['Units', r.qty.label]
+  ]
+},
+
+/* ===== PACKING, TAGGING & SCANNING ===== */
+{
+  id:'packing_tagging_scanning', name:'Packing, Tagging & Scanning', cat:'Operations', icon:I.box,
+  skipDetails:true, contentOnReview:true,
+  tagline:'Packing, tagging and barcode scanning support',
+  sub:'On-demand packing, tagging and barcode scanning support. You keep the material ready, we bring the hands.',
+  content:{
+    included:['Pick products from your staging or work area','Pack items into your packaging, when Packing is chosen',
+      'Apply your tags and labels, when Tagging is chosen','Barcode scan with your scanner or app, when Scanning is chosen',
+      'Work SKU-wise, with a basic quantity cross-check','Separate completed and pending items, and tidy the workstation'],
+    notIncluded:['Packaging material supply','Label design or printing','Product photography','Full stock counting',
+      'Shelf replenishment','Loading and unloading','ERP correction'],
+    ready:['Boxes, bags, covers and packing material','Tape and packing consumables','Tags, labels and stickers',
+      'Barcode labels, if applicable','Barcode scanner or scanning device and app','Any login or access needed for your system',
+      'SKU list and product identification','Packing instructions','Tag and label placement instructions',
+      'A staging or work area','Products ready at the work location'],
+    how:['Choose the task, the number of SKUs and how much stock','Tell us whether the stock is sorted or mixed, and the packaging',
+         'We work out the team, the time on site and the price']
+  },
+  init:() => ({task:'packing_only', sku_band:'sku_2_5', qty_band:'small', stock_condition:'sorted', packaging_type:'carton', note:''}),
+  steps:[
+    {title:'The work', build:st => ''
+      + UI.q('What needs doing?','Pick the mix you need. A combined task is quicker than booking each one separately.',
+          UI.cards('task', PK_TASKS, st.task, {}))
+      + UI.q('How many types of products?','', UI.chips('sku_band', PK_SKU, st.sku_band))},
+    {title:'The stock', build:st => ''
+      + UI.q('How many units in total?','You are billed on the top of the band you pick.',
+          UI.cards('qty_band', PK_QTY.map(q => ({id:q.id, name:q.name, help:q.range, care:q.care})), st.qty_band, {}))
+      + UI.q('Is the stock sorted or mixed?',
+          st.stock_condition === 'mixed'
+            ? 'Mixed stock has to be found and separated first, so it takes about 15% longer.'
+            : 'Sorted stock is already grouped and ready at the work area.',
+          UI.seg('stock_condition', [{v:'sorted',n:'Sorted'},{v:'mixed',n:'Mixed'}], st.stock_condition))
+      + UI.q('What packaging are you using?','Yours, kept ready at the work area.',
+          UI.chips('packaging_type', PK_PACKAGING, st.packaging_type))
+      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Labels go on the top right of each box'))}
+  ],
+  calc:st => {
+    const task = PK_TASKS.find(t => t.id === st.task);
+    const sku = PK_SKU.find(s => s.id === st.sku_band);
+    const qty = PK_QTY.find(q => q.id === st.qty_band);
+    if (sku.care) return {care:true, reason:'More than 50 product types'};
+    if (qty.care) return {care:true, reason:'More than 1,000 units'};
+    const base = qty.bill / task.prod * 60;
+    const cf = st.stock_condition === 'mixed' ? 1.15 : 1.0;
+    const workload = base * sku.factor * cf;
+    return Object.assign({task, sku, qty, cf, base}, staffing(workload));
+  },
+  rows:(st,r) => [
+    ['Task', r.task.name],
+    ['Product types', r.sku.label],
+    ['Units', r.qty.name + ' · ' + r.qty.range.toLowerCase()],
+    ['Stock', st.stock_condition === 'mixed' ? 'Mixed' : 'Sorted'],
+    ['Packaging', PK_PACKAGING.find(p => p.id === st.packaging_type).label]
+  ]
+},
+
+/* ===== GUEST ASSISTANCE & SERVER ===== */
+{
+  id:'guest_assistance_server', name:'Guest Assistance & Server', cat:'Front of house', icon:I.person,
+  tagline:'Trained server support, booked by the hour and the head',
+  sub:'Trained server support for guest service, table management and dining operations.',
+  skipDetails:true,
+  content:{
+    included:['Welcoming and seating guests','Menu handout','Taking food and beverage orders manually',
+      'Coordinating with kitchen and bar','Serving food and beverages to tables','Refilling water and table essentials on request',
+      'Basic guest assistance and handling requests','Keeping the assigned tables clean and organised','Supporting a smooth dining experience'],
+    notIncluded:['Food preparation or cooking','Dishwashing and KST work',
+      'Deep cleaning, washroom cleaning or equipment cleaning','Heavy lifting or stock movement',
+      'Barista, bartending or cashiering, unless agreed separately','Operating your POS or billing system'],
+    ready:null,
+    how:['Choose how many servers you need','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+  },
+  block:true,
+  init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
+  steps:blockSteps({contentOn:'count', sub:{dur_2:'short service', dur_4:'full service'}, countQ:'How many servers?',
+    unit:'server', notePh:'Section by the window, formal service, black shirts please'}),
+  calc:blockCalc,
+  rows:(st,r) => [['Servers', r.people],['Base duration', r.base + ' hours']]
+    .concat(r.extra ? [['Extra hours','+' + r.extra + ' each']] : [])
+    .concat([['Each server works', hhmm(r.per*60)]]),
+  careReason:'More than 4 servers'
+},
+
+/* ===== POS SUPPORT ===== */
+{
+  id:'pos_support', name:'POS Support', cat:'Front of house', icon:I.pos,
+  tagline:'Counter cover: orders, POS and card payments',
+  sub:'Trained counter cover: taking orders, running the POS, and getting customers paid and on their way.',
+  skipDetails:true,
+  content:{
+    included:['Handling customer orders at the counter','Taking orders and entering them into the POS','Operating the POS system',
+      'Handling digital and card payments','Generating bills and receipts','Applying discounts and coupons as you instruct',
+      'Coordinating order IDs and customer pickups','Packing orders with the correct order ID',
+      'Handing over takeaway orders to customers','Assisting customers and keeping checkout moving'],
+    notIncluded:['Accepting or handling cash at the counter','Cash reconciliation and financial auditing',
+      'Refund approvals and management decisions','POS hardware or software repairs','Inventory counting and stock auditing',
+      'Food preparation or cooking','Work outside the assigned counter'],
+    ready:['POS access and operating instructions'],
+    how:['Choose how many professionals you need','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+  },
+  banner:{title:'Cash stays with your staff',
+    text:'Our professionals take card and digital payments on your POS. They do not accept, hold or count cash, so please keep one of your own staff at the counter for cash billing.'},
+  block:true,
+  init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
+  steps:blockSteps({contentOn:'duration', sub:{dur_2:'peak cover', dur_4:'half shift'}, countQ:'How many professionals?',
+    unit:'professional', notePh:'Counter 2 only, the till code is on a card by the screen'}),
+  calc:blockCalc,
+  rows:(st,r) => [['Professionals', r.people],['Base duration', r.base + ' hours']]
+    .concat(r.extra ? [['Extra hours','+' + r.extra + ' each']] : [])
+    .concat([['Each person works', hhmm(r.per*60)]]),
+  careReason:'More than 4 people at the counter'
+},
+
+/* ===== BUSSER & TABLE SUPPORT ===== */
+{
+  id:'busser_table_support', name:'Busser & Table Support', cat:'Front of house', icon:I.tray,
+  tagline:'Clearing, wiping and resetting tables during service',
+  sub:'Trained floor support that clears, wipes and resets tables so the next guests can sit down.',
+  skipDetails:true,
+  content:{
+    included:['Clearing used plates, glasses and cutlery from tables','Wiping and resetting tables','Chair arrangement',
+      'Supporting food runners from kitchen pickup to dining tables','Moving used items to the dishwashing area',
+      'Quick floor spot cleaning for spills and dropped items','Water refill on request','Maintaining table-area cleanliness during service'],
+    notIncluded:['Utensil washing, KST or dishwashing','Food preparation or cooking',
+      'Deep cleaning, washroom cleaning or equipment cleaning'],
+    ready:['Cloths and a mop or spill kit for floor spots','Bus tubs or trays for clearing',
+      'A quick briefing on the table layout and where used items are dropped'],
+    readyDraft:true,
+    how:['Choose how many people you need on the floor','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+  },
+  block:true,
+  init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
+  steps:blockSteps({contentOn:'duration', sub:{dur_2:'service rush', dur_4:'full service'}, countQ:'How many people on the floor?',
+    unit:'person', notePh:'Clear the terrace section first, drop point is behind the bar'}),
+  calc:blockCalc,
+  rows:(st,r) => [['People', r.people],['Base duration', r.base + ' hours']]
+    .concat(r.extra ? [['Extra hours','+' + r.extra + ' each']] : [])
+    .concat([['Each person works', hhmm(r.per*60)]]),
+  careReason:'More than 4 people on the floor'
+}
+];
+
+const CATS = ['Cleaning','Front of house','Operations'];
+const byId = id => SERVICES.find(s => s.id === id);
+
+/* ============================================================
+   APP STATE + STORAGE
+   ============================================================ */
+let view = 'home';          // home | bookings | service | form | review | slot | done | care
+let svc = null;             // active service definition
+let st = {};                // active service answers
+let stepIx = 0;             // 0-based index into svc.steps
+let slot = {day:0, time:null};
+let bookings = [];
+
+try { bookings = JSON.parse(localStorage.getItem('instaff.bookings') || '[]'); } catch(e){ bookings = []; }
+
+// Customer details for the smoke test. Remembered on this phone only, so a repeat booking is quicker.
+let lead = {name:'', business:'', phone:'', area:'', website:''};   // website is a hidden spam trap
+let leadMode = 'booking';                                             // 'booking' or 'care' (call back)
+let leadError = '';
+try { Object.assign(lead, JSON.parse(localStorage.getItem('instaff.lead') || '{}'), {website:''}); } catch(e){}
+function saveLead(){
+  try { localStorage.setItem('instaff.lead', JSON.stringify({name:lead.name, business:lead.business, phone:lead.phone, area:lead.area})); } catch(e){}
+}
+function saveBookings(){ try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
+
+const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','14:00','16:00','18:00','20:00','21:00','22:00'];
+function days(){
+  const out = [], now = new Date();
+  for (let i = 0; i < 10; i++){
+    const d = new Date(now.getFullYear(), now.getMonth(), now.getDate() + i);
+    out.push({d, name:['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][d.getDay()],
+      num:d.getDate(), mon:['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'][d.getMonth()]});
+  }
+  return out;
+}
+function result(){ return svc ? svc.calc(st) : null; }
+
+/* ============================================================
+   RENDER
+   ============================================================ */
+const $top = document.getElementById('topbar');
+const $screen = document.getElementById('screen');
+const $footer = document.getElementById('footer');
+
+// Redrawing the same screen keeps its scroll position; only a new screen starts at the top.
+let lastScreenKey = '';
+function render(){
+  const k = [view, svc ? svc.id : '', stepIx, leadMode].join('|');
+  const top = k === lastScreenKey ? $screen.scrollTop : 0;
+  renderView();
+  $screen.scrollTop = top;
+  lastScreenKey = k;
+}
+function renderView(){
+  const r = result();
+  if (view === 'home')      return renderHome();
+  if (view === 'bookings')  return renderBookings();
+  if (view === 'service')   return renderService();
+  if (view === 'care')      return renderCare(r);
+  if (view === 'form')      return renderForm(r);
+  if (view === 'review')    return renderReview(r);
+  if (view === 'slot')      return renderSlot(r);
+  if (view === 'details')   return renderDetails(r);
+  if (view === 'done')      return renderDone();
+}
+
+function journey(){ return svc.steps.length + 3; }   // the service's own steps, then review, date and time, details
+function bar(title, sub, steps, cur){
+  $top.innerHTML = `<div class="tbrow">
+      <button class="iconbtn" id="back" ${view==='home'||view==='bookings'?'disabled':''} aria-label="Back">${I.back}</button>
+      <div class="tbtitle">${title}</div>
+    </div>
+    ${sub ? `<div class="tbsub">${sub}</div>` : ''}
+    ${steps ? `<div class="bars">` + Array.from({length:steps},(_,i) =>
+        `<div class="bar ${i<=cur?'on':''}"></div>`).join('') + `</div>` : ''}`;
+  const b = document.getElementById('back');
+  if (b) b.onclick = goBack;
+}
+function tabs(active){
+  $footer.className = '';
+  $footer.innerHTML = `<div class="tabbar">
+    <button class="tab" data-t="home" aria-selected="${active==='home'}">${I.grid}Services</button>
+    <button class="tab" data-t="bookings" aria-selected="${active==='bookings'}">${I.cal}Bookings</button>
+  </div>`;
+  $footer.querySelectorAll('.tab').forEach(t => t.onclick = () => { view = t.dataset.t; svc = null; render(); });
+}
+function footerBar(html){ $footer.className = ''; $footer.innerHTML = `<div class="bottombar">${html}</div>`; }
+
+/* ---------- home: services as a grid of tiles ---------- */
+// Shorter names for the tiles only; the full name shows inside each service.
+const TILE_NAME = {
+  toilet_cleaning:'Toilet Cleaning', opening_closing:'Opening & Closing', service_time_cleaning:'Service-Time Cleaning',
+  store_cleaning:'Store Cleaning', kitchen_equipment_cleaning:'Kitchen Equipment', kst_dishwashing:'KST / Dishwashing',
+  guest_assistance_server:'Guest & Server', pos_support:'POS Support', busser_table_support:'Busser & Tables',
+  stock_counting:'Stock Counting', packing_tagging_scanning:'Packing & Tagging', garbage_waste:'Garbage & Waste',
+  loading_unloading:'Loading & Unloading'
+};
+const CAT_INFO = {
+  'Cleaning':       {sub:'Washrooms, dining areas, kitchens and stores', tone:'green'},
+  'Front of house': {sub:'Servers, counter and table support',          tone:'blue'},
+  'Operations':     {sub:'Stock, packing, waste and loading',           tone:'violet'}
+};
+function greeting(){
+  const h = new Date().getHours();
+  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
+}
+const PLUS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+// Services listed under the type of facility, set 23 Oct.
+// Who can book what comes from tab 1 of each logic sheet (F&B / Retail / Warehouse).
+// No sheet lists Office yet. Toilet Cleaning is shown there because its own facility
+// sizes name offices ("Retail, office or restaurant", "Office or hotel", "office complex").
+const FAC_ICON = {
+  food:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3v8M5 3v5a2 2 0 0 0 4 0V3M7 11v10M16 3c-1.7 0-3 2-3 5s1.3 4 3 4v9"/></svg>',
+  bag:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 8h14l-1 13H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>',
+  shed:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21V9l9-5 9 5v12"/><path d="M7 21v-8h10v8M7 17h10"/></svg>',
+  office:'<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M5 21V4h10v17M15 9h4v12M3 21h18M8 8h4M8 12h4M8 16h4"/></svg>'
+};
+const FACILITIES = [
+  {id:'hospitality', name:'Restaurants & Hotels', sub:'Cafes, restaurants and hotels', icon:FAC_ICON.food,
+   services:['toilet_cleaning','opening_closing','service_time_cleaning','kitchen_equipment_cleaning','kst_dishwashing',
+             'guest_assistance_server','pos_support','busser_table_support',
+             'stock_counting','packing_tagging_scanning','garbage_waste','loading_unloading']},
+  {id:'retail', name:'Retail', sub:'Shops, showrooms and stores', icon:FAC_ICON.bag,
+   services:['toilet_cleaning','store_cleaning','pos_support',
+             'stock_counting','packing_tagging_scanning','garbage_waste','loading_unloading']},
+  {id:'warehouse', name:'Warehouse', sub:'Storage and dispatch', icon:FAC_ICON.shed,
+   services:['toilet_cleaning','stock_counting','packing_tagging_scanning','garbage_waste','loading_unloading']},
+  {id:'office', name:'Office', sub:'Offices and office complexes', icon:FAC_ICON.office,
+   services:['toilet_cleaning'], more:'More office services coming soon'}
+];
+let homeFilter = 'all';
+try { homeFilter = localStorage.getItem('instaff.facility') || 'all'; } catch(e){}
+if (homeFilter !== 'all' && !FACILITIES.some(f => f.id === homeFilter)) homeFilter = 'all';
+let svcFacility = '';   // the facility heading a service was opened from; sent with the lead
+
+function tileHTML(s, f){
+  return `<button class="gcard tone-${CAT_INFO[s.cat].tone}" data-s="${s.id}" data-f="${f.id}" aria-label="${esc(s.name)}, ${esc(f.name)}">
+    <span class="gtile">${s.icon.replace('width="22" height="22"', 'width="42" height="42"').replace('stroke-width="1.9"', 'stroke-width="1.6"')}
+      <span class="gplus">${PLUS}</span></span>
+    <span class="gname">${TILE_NAME[s.id] || s.name}</span>
+  </button>`;
+}
+function renderHome(){
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  const shown = FACILITIES.filter(f => homeFilter === 'all' || f.id === homeFilter);
+  $screen.innerHTML = `
+    <div class="hometop">
+      <div class="hello">${greeting()}</div>
+      <div class="h1">What do you need today?</div>
+    </div>
+    <div class="hbanner">
+      <div class="hbtext">
+        <div class="hbtitle">Trained staff for your business</div>
+        <div class="hbsub">Cleaning, front of house and operations. Pick a service to see the team and the time straight away.</div>
+        <div class="hbtags"><span>By the hour</span><span>By the job</span></div>
+      </div>
+      <div class="hbart" aria-hidden="true">
+        <span class="hb1">${I.tray.replace('width="22" height="22"','width="30" height="30"')}</span>
+        <span class="hb2">${I.spray.replace('width="22" height="22"','width="26" height="26"')}</span>
+        <span class="hb3">${I.box.replace('width="22" height="22"','width="24" height="24"')}</span>
+      </div>
+    </div>
+    <div class="fchips" role="tablist" aria-label="Type of facility">
+      ${[{id:'all', name:'All'}].concat(FACILITIES).map(f => `
+        <button class="fchip" role="tab" data-filter="${f.id}" aria-selected="${homeFilter === f.id}">
+          ${f.icon || ''}<span>${f.name}</span>${f.services ? `<span class="n">${f.services.length}</span>` : ''}
+        </button>`).join('')}
+    </div>
+    ` + shown.map(f => `
+      <section class="fsec" aria-label="${esc(f.name)}">
+        <div class="fsechead">
+          <span class="fsecicon">${f.icon}</span>
+          <span><span class="fsectitle">${f.name}</span>
+            <span class="fsecsub">${f.sub} · ${plural(f.services.length, 'service')}</span></span>
+        </div>
+        <div class="sgrid">
+          ${f.services.map(id => tileHTML(byId(id), f)).join('')}
+          ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
+        </div>
+      </section>`).join('');
+  $screen.querySelectorAll('.fchip').forEach(c => c.onclick = () => {
+    homeFilter = c.dataset.filter;
+    try { localStorage.setItem('instaff.facility', homeFilter); } catch(e){}
+    lastScreenKey = '';   // a new filter starts at the top
+    render();
+  });
+  $screen.querySelectorAll('.gcard').forEach(b => b.onclick = () => {
+    svc = byId(b.dataset.s); svcFacility = b.dataset.f;
+    st = svc.init(); stepIx = 0; view = svc.skipDetails ? 'form' : 'service'; render();
+  });
+  tabs('home');
+}
+
+/* ---------- bookings ---------- */
+function renderBookings(){
+  $top.innerHTML = `<div class="tbrow"><div class="tbtitle">Your bookings</div></div>`;
+  if (!bookings.length){
+    $screen.innerHTML = `<div class="empty">${I.cal}
+      <div class="emptytitle">Nothing booked yet</div>
+      <div class="emptysub">Bookings you make in this prototype show up here.</div></div>`;
+  } else {
+    $screen.innerHTML = bookings.map(b => `
+      <div class="bkcard">
+        <div class="bkhead"><span class="bkname">${b.name}</span><span class="bkref">${b.ref}</span></div>
+        <div class="bkmeta">${b.when}<br>${b.team}</div>
+        <div><span class="pill ${b.status==='ok'?'ok':'care'}">${b.status==='ok'?'Confirmed':'Needs a call'}</span></div>
+      </div>`).join('') + `<button class="btn ghost" id="clear">Clear all bookings</button>`;
+    const c = document.getElementById('clear');
+    if (c) c.onclick = () => { bookings = []; saveBookings(); render(); };
+  }
+  tabs('bookings');
+}
+
+/* ---------- service details ---------- */
+function renderService(){
+  bar(svc.name);
+  const c = svc.content;
+  const list = (title, items, draft) => items && items.length
+    ? UI.sec(title + (draft?'<span class="draftbadge">draft</span>':''),
+        `<div class="plainlist"><ul>${items.map(i => `<li>${i}</li>`).join('')}</ul></div>`)
+    : UI.sec(title, `<div class="emptynote">To be confirmed</div>`);
+
+  $screen.innerHTML = `
+    <div class="hero">${svc.icon.replace(/width="22"/,'width="46"').replace(/height="22"/,'height="46"')}</div>
+    <div><div class="detailtitle">${svc.name}</div><div class="detailsub">${svc.sub}</div></div>
+    ${svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : ''}
+    ${svc.contentNote ? `<div class="note">${svc.contentNote}</div>` : ''}
+    ${c.included && c.included.length
+      ? UI.sec("What's included",
+          `<div class="inctiles">${c.included.map(t => `<div class="inctile"><span class="thumb">${svc.icon.replace(/width="22"/,'width="18"').replace(/height="22"/,'height="18"')}</span><span class="txt">${t}</span></div>`).join('')}</div>`
+          + (c.includedNote ? `<div class="note" style="margin-top:9px">${c.includedNote}</div>` : ''))
+      : UI.sec("What's included", `<div class="emptynote">To be confirmed</div>`)}
+    ${list('Not included', c.notIncluded)}
+    ${c.ready ? list('Please have ready', c.ready, c.readyDraft) : ''}
+    ${UI.sec('How it works' + (c.howDraft?'<span class="draftbadge">draft</span>':''),
+      `<div class="steps">${c.how.map((t,i) => `<div class="stepitem"><span class="stepnum">${i+1}</span><span class="steptext">${t}</span></div>`).join('')}</div>`)}`;
+  footerBar(`<button class="btn" id="go">${svc.block ? 'Check availability' : 'Check time and price'}</button>`);
+  document.getElementById('go').onclick = () => { stepIx = 0; view = 'form'; render(); };
+}
+
+/* ---------- form steps ---------- */
+function renderForm(r){
+  const total = journey();
+  const step = svc.steps[stepIx];
+  bar(svc.name, `Step ${stepIx+1} of ${total} · ${step.title}`, total, stepIx);
+  $screen.innerHTML = step.build(st, r)
+    + (step.content ? `<div class="sepline"></div>` + contentHTML(svc, st, 'step') : '');
+  bindInputs();
+  if (step.bind) step.bind($screen);
+  const blocked = !r.care && svc.valid && !svc.valid(st);
+  const est = (!r.care && step.hideEstimate)
+    ? `<div class="estimate">${I.clock}<span>${step.hideEstimate}</span></div>`
+    : estimateLine(r);
+  footerBar(est + `<button class="btn" id="next" ${blocked?'disabled':''}>Continue</button>`);
+  document.getElementById('next').onclick = () => {
+    const rr = result();
+    if (rr.care){ view = 'care'; render(); return; }
+    if (stepIx < svc.steps.length - 1){ stepIx++; render(); }
+    else { view = 'review'; render(); }
+  };
+}
+
+function estimateLine(r){
+  if (!r) return '';
+  if (r.care) return `<div class="estimate care">${I.clock}<span>Needs a call</span></div>`;
+  if (r.blocks) return `<div class="estimate">${I.clock}<span>${plural(r.people,'person').replace('persons','people')} · ${hhmm(r.per*60)} each</span></div>`;
+  return `<div class="estimate">${I.clock}<span>${hhmm(r.onsite)} on site · ${plural(r.pros,'professional')}</span></div>`;
+}
+
+/* ---------- review ---------- */
+function renderReview(r){
+  const total = journey(), n = svc.steps.length;
+  bar(svc.name, `Step ${n+1} of ${total} · Review`, total, n);
+  const rows = svc.rows(st, r);
+  const head = r.blocks
+    ? big(`${plural(r.people,'person').replace('persons','people')} · ${hhmm(r.per*60)}`,
+          `${r.totalHours} worker-hours in total, everyone starting together`)
+    : big(hhmm(r.onsite), `${plural(r.pros,'professional')} on site · ${hhmm(r.workload)} of work in total`);
+
+  const note = svc.reviewNote ? svc.reviewNote(st) : '';
+  $screen.innerHTML = head
+    + UI.sec('Your booking', `<div class="list">${rows.map(([k,v]) =>
+        `<div class="li"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')
+        + (st.note ? `<div class="li"><span class="k">Note</span><span class="v">${esc(st.note.slice(0,32))}${st.note.length>32?'…':''}</span></div>` : '')}</div>`)
+    + UI.sec('Estimated price', `<div class="list"><div class="li"><span class="k">${svc.name}</span><span class="tbc">Price to be confirmed</span></div></div>
+        <div class="qhelp" style="margin-top:8px">Prices are not set yet, so nothing is charged on this screen.</div>`)
+    + (svc.contentOnReview ? contentHTML(svc, st, 'review') : '')
+    + (svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '')
+    + (note ? `<div class="note">${note}</div>` : '')
+    + (svc.disclaimer ? `<div class="disclaim">
+        <div class="disctitle">${svc.disclaimer.title}</div>
+        <div class="disctext">${svc.disclaimer.text}</div>
+        <button class="acceptrow" data-input="toggle" data-key="accepted" aria-pressed="${st.accepted}">
+          <span class="box">${st.accepted?I.tick:''}</span>
+          <span class="accepttext">${svc.disclaimer.accept}</span></button></div>` : '');
+  bindInputs();
+  const blocked = !!(svc.disclaimer && !st.accepted);
+  footerBar(
+    (blocked ? `<div class="estimate care">${I.clock}<span>Accept the disclaimer to continue</span></div>` : estimateLine(r))
+    + `<button class="btn" id="next" ${blocked?'disabled':''}>Choose date and time</button>`);
+  document.getElementById('next').onclick = () => { view = 'slot'; render(); };
+}
+
+/* ---------- slot ---------- */
+function renderSlot(r){
+  const total = journey(), n = svc.steps.length;
+  bar(svc.name, `Step ${n+2} of ${total} · Date and time`, total, n+1);
+  const ds = days();
+  $screen.innerHTML =
+    UI.q('Which day?','', `<div class="dayscroll" data-input="day">` + ds.map((d,i) =>
+      `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}">
+        <span class="dname">${i===0?'Today':d.name}</span><span class="dnum">${d.num}</span><span class="dmon">${d.mon}</span>
+      </button>`).join('') + `</div>`)
+    + UI.q('What time do we start?', r.blocks
+        ? `Everyone starts together and works ${hhmm(r.per*60)}.`
+        : `${plural(r.pros,'professional')} on site for ${hhmm(r.onsite)}.`,
+      `<div class="slots" data-input="time">` + TIMES.map(t =>
+        `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${t}</button>`).join('') + `</div>`);
+  bindInputs();
+  footerBar(estimateLine(r) + `<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
+  document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; view = 'details'; render(); };
+}
+
+/* ---------- customer details (smoke test lead capture) ---------- */
+function normPhone(p){
+  let d = String(p || '').replace(/\D/g, '');
+  if (d.length === 12 && d.indexOf('91') === 0) d = d.slice(2);
+  if (d.length === 11 && d.charAt(0) === '0') d = d.slice(1);
+  return /^[6-9]\d{9}$/.test(d) ? d : null;
+}
+function leadValid(){
+  return lead.name.trim().length > 1 && lead.business.trim().length > 1 && !!normPhone(lead.phone);
+}
+function isoDate(d){
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+}
+function teamText(r){
+  if (r.care) return '';
+  return r.blocks ? `${plural(r.people,'person')} · ${hhmm(r.per*60)} each`
+                  : `${plural(r.pros,'professional')} · ${hhmm(r.onsite)} on site`;
+}
+function careReasonOf(r){ return r.reason || svc.careReason || 'This one needs a call'; }
+function reviewLines(r){
+  try { return svc.rows(st, r).map(([k,v]) => k + ': ' + v); } catch(e){ return []; }
+}
+function buildLead(r, ref){
+  const care = leadMode === 'care';
+  const d = days()[slot.day].d;
+  // A call back can come from tapping "More than 4", so the on-screen answers may not be what
+  // the customer wants. Send only the reason; the team gets the details on the call.
+  const lines = care ? [] : reviewLines(r);
+  return {
+    source:'instaff-prototype', website:lead.website, ref,
+    type: care ? 'Call back' : 'Booking',
+    service: svc.name,
+    facility: (FACILITIES.find(f => f.id === svcFacility) || {}).name || '',
+    date: care ? '' : isoDate(d),
+    time: care ? '' : slot.time,
+    team: care ? '' : teamText(r),
+    onsite: care ? '' : (r.blocks ? hhmm(r.per*60) + ' each' : hhmm(r.onsite)),
+    details: (care ? ['Reason: ' + careReasonOf(r)] : []).concat(lines).join(' | '),
+    note: st.note || '',
+    name: lead.name.trim(), business: lead.business.trim(),
+    phone: '+91' + normPhone(lead.phone), area: lead.area.trim()
+  };
+}
+// Apps Script web apps do not answer browser preflight checks, so the row goes as plain text
+// with no-cors. The browser cannot read the reply; a network failure still throws, and is shown.
+async function sendLead(payload){
+  if (!SHEET_URL) return 'not-configured';
+  try {
+    await fetch(SHEET_URL, {method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
+    return 'sent';
+  } catch(e){ return 'failed'; }
+}
+
+function renderDetails(r){
+  const care = leadMode === 'care';
+  const total = journey(), n = svc.steps.length;
+  if (care) bar(svc.name, 'Request a call back');
+  else bar(svc.name, `Step ${n+3} of ${total} · Your details`, total, n+2);
+  const ds = days(), d = ds[slot.day];
+  const field = (key, label, ph, type, req, help) => `<div class="q">
+      <div class="qlabel">${label}${req ? '' : '<span class="opt">optional</span>'}</div>
+      ${help ? `<div class="qhelp">${help}</div>` : ''}
+      <input class="tinput big" data-lead="${key}" type="${type}" placeholder="${ph}" value="${esc(lead[key]||'')}"
+        ${type === 'tel' ? 'inputmode="tel" autocomplete="tel"' : key === 'name' ? 'autocomplete="name"' : key === 'business' ? 'autocomplete="organization"' : ''}>
+    </div>`;
+  $screen.innerHTML =
+    (care
+      ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
+      : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, teamText(r)))
+    + field('name', 'Your name', 'Full name', 'text', true)
+    + field('business', 'Business name', 'Restaurant, shop or company', 'text', true)
+    + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
+    + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
+    + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
+    + (!SHEET_URL ? `<div class="warnnote"><strong>Not connected yet.</strong> SHEET_URL is empty at the top of the file, so these details will not reach the Google Sheet.</div>` : '')
+    + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
+  const btnText = care ? 'Request a call back' : 'Confirm booking';
+  footerBar((care ? `<div class="estimate care">${I.clock}<span>Needs a call</span></div>` : estimateLine(r))
+    + `<button class="btn" id="submit" ${leadValid() ? '' : 'disabled'}>${btnText}</button>`);
+  const btn = document.getElementById('submit');
+  $screen.querySelectorAll('[data-lead]').forEach(inp => {
+    inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !leadValid(); };
+  });
+  btn.onclick = async () => {
+    if (!leadValid() || btn.dataset.busy) return;
+    btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
+    const ref = 'IN' + Math.floor(100000 + Math.random()*899999);
+    const payload = buildLead(r, ref);
+    const res = await sendLead(payload);
+    if (res === 'failed'){
+      leadError = "<strong>That didn't go through.</strong> Check your internet connection and try again.";
+      return render();
+    }
+    leadError = ''; saveLead();
+    bookings.unshift({
+      ref, name:svc.name, status: care ? 'care' : 'ok', sheet:res, phone:payload.phone,
+      when: care ? 'Call back requested' : `${d.name} ${d.num} ${d.mon} · ${slot.time}`,
+      team: care ? careReasonOf(r) : teamText(r),
+      wa: [`Instaff ${payload.type.toLowerCase()} ${ref}`, svc.name,
+           care ? payload.details : `${payload.date} at ${payload.time} · ${payload.team}`,
+           care ? '' : payload.details,
+           `${payload.name}, ${payload.business}${payload.area ? ', ' + payload.area : ''}`].filter(Boolean).join('\n')
+    });
+    saveBookings(); view = 'done'; render();
+  };
+}
+
+/* ---------- confirmation ---------- */
+function renderDone(){
+  const b = bookings[0];
+  const care = b.status === 'care';
+  $top.innerHTML = `<div class="tbrow"><div class="tbtitle">${care ? 'Call back requested' : 'Booked'}</div></div>`;
+  $screen.innerHTML = `<div class="done">
+      <div class="donecircle">${care ? I.phone : I.bigtick}</div>
+      <div class="donetitle">${care ? "We'll call you back" : "You're booked"}</div>
+      <div class="caretext">${b.name}<br>${care ? esc(b.team) : b.when + '<br>' + b.team}</div>
+      <div class="ref">${b.ref}</div>
+      <div class="caretext">We'll call you on ${b.phone} to confirm the team and the price before anyone is sent. Nothing is charged here.</div>
+      ${b.sheet === 'not-configured' ? `<div class="warnnote" style="text-align:left">Not sent to the Google Sheet: SHEET_URL is empty.</div>` : ''}
+    </div>`;
+  footerBar((WHATSAPP_NUMBER
+      ? `<a class="btn alt" href="https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(b.wa)}" target="_blank" rel="noopener">Send these details on WhatsApp</a>` : '')
+    + `<button class="btn" id="home">Back to services</button>
+       <button class="btn ghost" id="mine">See my bookings</button>`);
+  document.getElementById('home').onclick = () => { view = 'home'; svc = null; slot = {day:0,time:null}; render(); };
+  document.getElementById('mine').onclick = () => { view = 'bookings'; svc = null; slot = {day:0,time:null}; render(); };
+}
+
+/* ---------- customer care: now a call-back request, captured as a lead ---------- */
+function renderCare(r){
+  bar(svc.name);
+  const reason = careReasonOf(r);
+  $screen.innerHTML = `<div class="care-screen">
+      <div class="carecircle">${I.phone}</div>
+      <div class="caretitle">Let's talk it through</div>
+      <div class="caretext">${reason}. Our team will plan the people and the time with you, and confirm a price before anything starts.</div>
+      <div class="caretext">Leave your number and we'll call you back.</div>
+    </div>`;
+  footerBar(`<div class="estimate care">${I.clock}<span>Needs a call</span></div>
+    <button class="btn" id="callback">Request a call back</button>
+    <button class="btn ghost" id="chg">Change my answers</button>`);
+  document.getElementById('callback').onclick = () => { leadMode = 'care'; leadError = ''; view = 'details'; render(); };
+  document.getElementById('chg').onclick = () => { view = 'form'; render(); };
+}
+
+/* ============================================================
+   INPUT BINDING — one delegated handler set per render
+   ============================================================ */
+function getKey(key){ return key.split('.').reduce((o,p) => o == null ? o : o[p], st); }
+function setKey(key, val){
+  if (['sameFloor','lift','ground_floor','service_lift'].indexOf(key) > -1){ st[key] = (val === 'yes'); return; }
+  const parts = key.split('.'); let o = st;
+  for (let i = 0; i < parts.length - 1; i++) o = o[parts[i]];
+  o[parts[parts.length - 1]] = val;
+}
+
+/* ---------- number selector: tap to step, hold to repeat ---------- */
+let hold = null;
+function stepBy(cfg, dir, mult){
+  const cur = Number(getKey(cfg.key)) || 0, unit = cfg.step * mult;
+  let next = mult > 1 ? (dir > 0 ? (Math.floor(cur/unit) + 1) * unit : (Math.ceil(cur/unit) - 1) * unit)
+                      : cur + dir * cfg.step;
+  next = Math.max(cfg.min, Math.min(cfg.max, next));
+  if (next === cur) return false;
+  setKey(cfg.key, next); return true;
+}
+function holdPaint(cfg){
+  const v = Number(getKey(cfg.key)) || 0;
+  const val = cfg.el.querySelector('.val'); if (val) val.textContent = fmtVal(cfg.fmt, v, cfg.unit);
+  const btns = cfg.el.querySelectorAll('button');
+  if (btns[0]) btns[0].disabled = v <= cfg.min;
+  if (btns[1]) btns[1].disabled = v >= cfg.max;
+  refreshFooter();
+}
+function holdStart(cfg, dir){
+  holdStop(false);
+  if (!stepBy(cfg, dir, 1)) return;
+  holdPaint(cfg);
+  const long = (cfg.max - cfg.min) / cfg.step > 40;   // e.g. item counts and sqft, not durations
+  let n = 0;
+  hold = {t:null};
+  const tick = () => {
+    n++;
+    const mult = !long ? 1 : n < 8 ? 1 : n < 22 ? 5 : 10;
+    if (!stepBy(cfg, dir, mult)) return holdStop(true);
+    holdPaint(cfg);
+    hold.t = setTimeout(tick, 85);
+  };
+  hold.t = setTimeout(tick, 420);
+}
+function holdStop(redraw){
+  if (!hold) return;
+  clearTimeout(hold.t); hold = null;
+  if (redraw !== false) render();
+}
+['pointerup','pointercancel','blur'].forEach(ev => window.addEventListener(ev, () => holdStop(true)));
+document.addEventListener('visibilitychange', () => holdStop(true));
+function bindInputs(){
+  $screen.querySelectorAll('[data-input="seg"] button, [data-input="card"] button').forEach(b => {
+    b.onclick = () => { setKey(b.closest('[data-key]').dataset.key, b.dataset.v); render(); };
+  });
+  // "Book it separately" links that open another service
+  $screen.querySelectorAll('[data-goto]').forEach(b => {
+    b.onclick = () => {
+      const t = byId(b.dataset.goto); if (!t) return;
+      svc = t; st = t.init(); stepIx = 0; view = t.skipDetails ? 'form' : 'service'; render();
+    };
+  });
+  $screen.querySelectorAll('[data-input="pick"] button').forEach(b => {
+    b.onclick = () => { setKey(b.closest('[data-key]').dataset.key, Number(b.dataset.v)); render(); };
+  });
+  $screen.querySelectorAll('[data-input="people"] button').forEach(b => {
+    b.onclick = () => {
+      if (b.dataset.v === 'more'){ view = 'care'; render(); return; }
+      setKey(b.closest('[data-key]').dataset.key, Number(b.dataset.v)); render();
+    };
+  });
+  $screen.querySelectorAll('[data-input="step"]').forEach(w => {
+    const cfg = {key:w.dataset.key, min:+w.dataset.min, max:+w.dataset.max, step:+(w.dataset.step||1),
+                 fmt:w.dataset.fmt||'', unit:w.dataset.unit||'', el:w};
+    w.querySelectorAll('button').forEach(b => {
+      const dir = Number(b.dataset.dir);
+      b.onpointerdown = e => { if (b.disabled) return; e.preventDefault(); holdStart(cfg, dir); };
+      b.onkeydown = e => { if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); if (stepBy(cfg, dir, 1)) render(); } };
+      b.oncontextmenu = e => e.preventDefault();
+    });
+  });
+  $screen.querySelectorAll('[data-input="num"]').forEach(inp => {
+    inp.oninput = () => {
+      let v = Math.max(0, Math.floor(Number(inp.value) || 0));
+      if (inp.dataset.max) v = Math.min(v, Number(inp.dataset.max));
+      setKey(inp.dataset.key, v); refreshFooter();
+    };
+    inp.onblur = () => render();
+  });
+  $screen.querySelectorAll('[data-input="toggle"]').forEach(b => {
+    b.onclick = () => { const k = b.dataset.key; st[k] = !st[k]; render(); };
+  });
+  $screen.querySelectorAll('[data-input="text"]').forEach(t => {
+    t.oninput = () => { st[t.dataset.key] = t.value; };
+  });
+  $screen.querySelectorAll('[data-input="photo"]').forEach(p => {
+    p.onchange = () => { st.photo = p.files && p.files[0] ? p.files[0].name : ''; render(); };
+  });
+  $screen.querySelectorAll('[data-input="day"] button').forEach(b => {
+    b.onclick = () => { slot.day = Number(b.dataset.v); render(); };
+  });
+  $screen.querySelectorAll('[data-input="time"] button').forEach(b => {
+    b.onclick = () => { slot.time = b.dataset.v; render(); };
+  });
+}
+function refreshFooter(){
+  const r = result();
+  const est = $footer.querySelector('.estimate');
+  if (est && r) est.outerHTML = estimateLine(r);
+  const nx = document.getElementById('next');
+  if (nx && view === 'form' && svc.valid) nx.disabled = !r.care && !svc.valid(st);
+}
+
+/* ---------- back ---------- */
+function goBack(){
+  if (view === 'service'){ view = 'home'; svc = null; return render(); }
+  if (view === 'care'){ view = 'form'; return render(); }
+  if (view === 'form'){
+    if (stepIx > 0){ stepIx--; return render(); }
+    if (svc.skipDetails){ view = 'home'; svc = null; return render(); }
+    view = 'service'; return render();
+  }
+  if (view === 'review'){ view = 'form'; stepIx = svc.steps.length - 1; return render(); }
+  if (view === 'slot'){ view = 'review'; return render(); }
+  if (view === 'details'){ leadError = ''; view = leadMode === 'care' ? 'care' : 'slot'; return render(); }
+  view = 'home'; svc = null; render();
+}
+
+render();
+</script>
+</body>
+</html>
