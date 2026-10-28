@@ -51,8 +51,21 @@ function doPost(e) {
 }
 
 // Visiting the URL in a browser shows this, which confirms the deployment works.
-function doGet() {
+// With ?action=leads&token=... it returns the leads for the admin report. The token must match the
+// LEADS_TOKEN script property (Project Settings > Script properties); without it nothing is returned.
+function doGet(e) {
+  if (e && e.parameter && e.parameter.action === 'leads') return leadsReport(e.parameter.token);
   return ContentService.createTextOutput('Instaff lead webhook is running.');
+}
+
+function leadsReport(token) {
+  const expected = PropertiesService.getScriptProperties().getProperty('LEADS_TOKEN');
+  if (!expected || token !== expected) return reply({ok: false, error: 'unauthorised'});
+  const sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(SHEET_NAME);
+  if (!sheet || sheet.getLastRow() < 2) return reply({ok: true, headers: HEADERS, rows: []});
+  const last = sheet.getLastRow(), n = Math.min(1000, last - 1);   // the newest 1,000 leads
+  const rows = sheet.getRange(last - n + 1, 1, n, HEADERS.length).getDisplayValues();
+  return reply({ok: true, headers: HEADERS, rows: rows.reverse()});   // newest first
 }
 
 function getSheet() {

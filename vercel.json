@@ -2,5 +2,8 @@
   "redirects": [
     { "source": "/", "destination": "/app", "permanent": false },
     { "source": "/index.html", "destination": "/app", "permanent": false }
+  ],
+  "headers": [
+    { "source": "/admin(.*)", "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }] }
   ]
 }

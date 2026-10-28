@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Instaff Admin</title>
+<style>
+:root{--bg:#F6F8F7;--card:#fff;--text:#14211D;--muted:#5E6F69;--line:#DDE5E1;--primary:#0F7A63;--primary-d:#0B5F4D;--tint:#E8F4EF;--warn:#B45309;--warn-bg:#FEF3E2;--err:#B42318;--err-bg:#FDECEA}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0F1614;--card:#18221F;--text:#E8F0ED;--muted:#9AB0A9;--line:#2A3833;--primary:#2FB08F;--primary-d:#58C9AB;--tint:#1B2D28;--warn:#F3B35B;--warn-bg:#2E2414;--err:#F28B82;--err-bg:#33191A}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+.wrap{max-width:1100px;margin:0 auto;padding:0 16px 80px}
+header{display:flex;align-items:center;gap:12px;padding:16px 0;flex-wrap:wrap}
+.brand{font-weight:800;font-size:18px;display:flex;align-items:center;gap:8px}
+.mark{width:28px;height:28px;border-radius:8px;background:var(--primary);color:#fff;display:grid;place-items:center;font-weight:800}
+.tabs{display:flex;gap:4px;margin-left:12px}
+.tab{border:0;background:none;color:var(--muted);font:inherit;font-weight:700;padding:8px 14px;border-radius:999px;cursor:pointer}
+.tab[aria-selected="true"]{background:var(--tint);color:var(--primary-d)}
+.sp{flex:1}
+button,input,select,textarea{font:inherit;color:inherit}
+.btn{border:0;background:var(--primary);color:#fff;font-weight:700;padding:9px 16px;border-radius:10px;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.ghost{background:none;color:var(--primary-d);border:1px solid var(--line)}
+.btn.small{padding:6px 11px;font-size:13px}
+input[type=text],input[type=email],input[type=password],input[type=search],select,textarea{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--card)}
+textarea{min-height:72px;resize:vertical}
+label{display:block;font-size:13px;font-weight:700;margin:12px 0 4px}
+.hint{font-size:12.5px;color:var(--muted);font-weight:400}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;margin-bottom:14px}
+h2{font-size:17px;margin:0 0 4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:14px}
+.imgs{display:flex;gap:12px;flex-wrap:wrap;margin-top:6px}
+.imgbox{flex:1;min-width:130px}
+.preview{aspect-ratio:1/1;border-radius:14px;border:1px dashed var(--line);background:var(--tint);display:grid;place-items:center;color:var(--muted);font-size:12.5px;text-align:center;overflow:hidden;margin-bottom:6px}
+.preview.hero{aspect-ratio:16/9}
+.preview img{width:100%;height:100%;object-fit:cover}
+.row{display:flex;gap:6px;flex-wrap:wrap}
+.msg{padding:10px 12px;border-radius:10px;font-size:14px;margin:10px 0}
+.msg.err{background:var(--err-bg);color:var(--err)}
+.msg.ok{background:var(--tint);color:var(--primary-d)}
+.savebar{position:sticky;bottom:0;background:var(--bg);border-top:1px solid var(--line);padding:12px 0;display:flex;gap:12px;align-items:center}
+.login{max-width:380px;margin:12vh auto 0}
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-bottom:12px}
+.filters label{margin:0 0 3px}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:14px;background:var(--card)}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th,td{text-align:left;padding:9px 11px;border-bottom:1px solid var(--line);white-space:nowrap;vertical-align:top}
+th{font-size:12px;text-transform:uppercase;letter-spacing:.04em;color:var(--muted);background:var(--bg);position:sticky;top:0}
+tr.main{cursor:pointer}
+tr.main:hover td{background:var(--tint)}
+tr.det td{white-space:normal;background:var(--bg);color:var(--muted);font-size:13px}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:12px;font-weight:700;background:var(--tint);color:var(--primary-d)}
+.pill.cb{background:var(--warn-bg);color:var(--warn)}
+.stats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:10px 14px;min-width:110px}
+.stat b{display:block;font-size:22px}
+.stat span{font-size:12.5px;color:var(--muted)}
+.chk{display:flex;align-items:center;gap:8px;font-weight:600;margin:12px 0 0}
+.chk input{width:auto}
+a{color:var(--primary-d)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="wrap" id="app"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.4/dist/umd/supabase.min.js"></script>
+<script>
+"use strict";
+const SUPABASE_URL = 'https://vmsvcbyxthsjnujyigly.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_kT_tqnOMqszanNmHDenqnQ_UHznHdeN';
+const BUCKET = 'service-images';
+const SERVICES = [
+  ['toilet_cleaning','Toilet Cleaning'],['opening_closing','Opening & Closing Cleaning'],['service_time_cleaning','Service-Time Cleaning'],
+  ['store_cleaning','Store Cleaning'],['kitchen_equipment_cleaning','Kitchen Equipment Cleaning'],['kst_dishwashing','KST / Dishwashing'],
+  ['guest_assistance_server','Guest & Server Assistance'],['pos_support','POS Support'],['busser_table_support','Busser & Table Support'],
+  ['stock_counting','Stock Counting'],['packing_tagging_scanning','Packing, Tagging & Scanning'],['garbage_waste','Garbage & Waste'],
+  ['loading_unloading','Loading & Unloading']
+];
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+const $app = document.getElementById('app');
+const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+let session = null, tab = 'content', content = {home:{}, services:{}}, dirty = false;
+let leads = null, leadsError = '', leadsLoading = false;
+const filt = {q:'', type:'', service:'', facility:'', source:'', hideInternal:true};
+
+/* ---------- sign in ---------- */
+function renderLogin(err){
+  $app.innerHTML = `<div class="login card">
+    <div class="brand" style="margin-bottom:8px"><span class="mark">i</span>Instaff Admin</div>
+    ${err ? `<div class="msg err">${esc(err)}</div>` : ''}
+    <form id="lf"><label for="em">Email</label><input type="email" id="em" autocomplete="username" required>
+    <label for="pw">Password</label><input type="password" id="pw" autocomplete="current-password" required>
+    <div style="margin-top:16px"><button class="btn" style="width:100%">Sign in</button></div></form></div>`;
+  document.getElementById('lf').onsubmit = async e => {
+    e.preventDefault();
+    const {data, error} = await sb.auth.signInWithPassword({email:document.getElementById('em').value.trim(), password:document.getElementById('pw').value});
+    if (error) return renderLogin('Wrong email or password.');
+    session = data.session; start();
+  };
+}
+
+/* ---------- shell ---------- */
+function shell(body){
+  $app.innerHTML = `<header>
+      <div class="brand"><span class="mark">i</span>Instaff Admin</div>
+      <div class="tabs">
+        <button class="tab" data-t="content" aria-selected="${tab==='content'}">Content</button>
+        <button class="tab" data-t="leads" aria-selected="${tab==='leads'}">Leads</button>
+      </div><div class="sp"></div>
+      <button class="btn ghost small" id="out">Sign out</button></header>${body}`;
+  $app.querySelectorAll('.tab').forEach(b => b.onclick = () => {
+    if (dirty && tab === 'content' && !confirm('You have unsaved changes. Leave without saving?')) return;
+    tab = b.dataset.t; dirty = false; tab === 'leads' ? (leads ? renderLeads() : loadLeads()) : renderContent();
+  });
+  document.getElementById('out').onclick = async () => { await sb.auth.signOut(); session = null; renderLogin(); };
+}
+
+/* ---------- content editor ---------- */
+async function loadContentData(){
+  const {data} = await sb.from('site_content').select('data').eq('id','main').maybeSingle();
+  content = (data && data.data) || {};
+  content.home = content.home || {}; content.services = content.services || {};
+}
+function svcData(id){ return content.services[id] = content.services[id] || {}; }
+function imgBox(id, kind, label, hint){
+  const url = svcData(id)[kind];
+  return `<div class="imgbox"><div class="preview ${kind==='hero_image'?'hero':''}" data-prev="${id}|${kind}">${url ? `<img src="${esc(url)}" alt="">` : 'No image'}</div>
+    <div class="row"><label class="btn ghost small" style="margin:0;cursor:pointer">${label}
+      <input type="file" accept="image/jpeg,image/png,image/webp" hidden data-up="${id}|${kind}"></label>
+      <button class="btn ghost small" data-rm="${id}|${kind}" ${url?'':'hidden'}>Remove</button></div>
+    <div class="hint">${hint}</div></div>`;
+}
+function renderContent(note){
+  const h = content.home, tags = Array.isArray(h.tags) ? h.tags.join(', ') : '';
+  shell(`${note ? `<div class="msg ${note.err?'err':'ok'}">${esc(note.text)}</div>` : ''}
+    <div class="card"><h2>Home banner</h2><div class="hint">Leave a field empty to keep the built-in text.</div>
+      <label>Title</label><input type="text" data-home="title" value="${esc(h.title||'')}" placeholder="Trained staff for your business">
+      <label>Text</label><textarea data-home="sub" placeholder="Cleaning, front of house and operations...">${esc(h.sub||'')}</textarea>
+      <label>Tags <span class="hint">comma separated, up to 4</span></label><input type="text" data-home="tags" value="${esc(tags)}" placeholder="By the hour, By the job"></div>
+    <div class="grid">${SERVICES.map(([id,name]) => { const c = svcData(id), b = c.banner || {}; return `
+      <div class="card"><h2>${esc(name)}</h2>
+        <div class="imgs">${imgBox(id,'tile_image','Upload tile','Home grid. Square.')}${imgBox(id,'hero_image','Upload hero','Service page. Wide.')}</div>
+        <label>Banner title <span class="hint">empty = built-in</span></label><input type="text" data-b="${id}|title" value="${esc(b.title||'')}">
+        <label>Banner text</label><textarea data-b="${id}|text">${esc(b.text||'')}</textarea>
+        <label class="chk"><input type="checkbox" data-boff="${id}" ${c.banner_off?'checked':''}> Hide this service's banner</label>
+        <div class="hint">A custom banner needs both a title and text.</div></div>`; }).join('')}</div>
+    <div class="savebar"><button class="btn" id="save">Save changes</button><span class="hint" id="sstate">${dirty?'Unsaved changes':'All saved'}</span></div>`);
+  const mark = () => { dirty = true; const s = document.getElementById('sstate'); if (s) s.textContent = 'Unsaved changes'; };
+  $app.querySelectorAll('[data-home]').forEach(i => i.oninput = () => {
+    const k = i.dataset.home; content.home[k] = k === 'tags' ? i.value.split(',').map(t => t.trim()).filter(Boolean).slice(0,4) : i.value; mark(); });
+  $app.querySelectorAll('[data-b]').forEach(i => i.oninput = () => {
+    const [id,k] = i.dataset.b.split('|'); const c = svcData(id); c.banner = c.banner || {}; c.banner[k] = i.value; mark(); });
+  $app.querySelectorAll('[data-boff]').forEach(i => i.onchange = () => { svcData(i.dataset.boff).banner_off = i.checked; mark(); });
+  $app.querySelectorAll('[data-rm]').forEach(b => b.onclick = () => {
+    const [id,k] = b.dataset.rm.split('|'); delete svcData(id)[k]; mark(); keep(); });
+  $app.querySelectorAll('[data-up]').forEach(i => i.onchange = async () => {
+    const [id,k] = i.dataset.up.split('|'), f = i.files[0]; if (!f) return;
+    const prev = $app.querySelector(`[data-prev="${id}|${k}"]`); prev.textContent = 'Uploading...';
+    try { svcData(id)[k] = await uploadImage(f, id, k); mark(); keep(); }
+    catch(e){ prev.textContent = 'Failed'; alert(e.message || 'Upload failed.'); }
+  });
+  document.getElementById('save').onclick = save;
+}
+// Redraw without losing the page position or the unsaved-changes state.
+function keep(){ const y = window.scrollY; renderContent(); window.scrollTo(0, y); }
+
+// Shrinks the picture in the browser (max 1000px, WebP) so the customer app stays fast.
+async function uploadImage(file, id, kind){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Use a JPG, PNG or WebP image.');
+  if (file.size > 10 * 1024 * 1024) throw new Error('That image is over 10 MB.');
+  const bmp = await createImageBitmap(file), max = 1000, sc = Math.min(1, max / Math.max(bmp.width, bmp.height));
+  const cv = document.createElement('canvas'); cv.width = Math.round(bmp.width * sc); cv.height = Math.round(bmp.height * sc);
+  cv.getContext('2d').drawImage(bmp, 0, 0, cv.width, cv.height);
+  const blob = await new Promise(r => cv.toBlob(r, 'image/webp', 0.85));
+  if (!blob) throw new Error('Could not process that image.');
+  const path = `${id}/${kind}-${Date.now()}.webp`;
+  const {error} = await sb.storage.from(BUCKET).upload(path, blob, {contentType:'image/webp', cacheControl:'31536000'});
+  if (error) throw new Error('Upload failed: ' + error.message);
+  return sb.storage.from(BUCKET).getPublicUrl(path).data.publicUrl;
+}
+async function save(){
+  const b = document.getElementById('save'); b.disabled = true; b.textContent = 'Saving...';
+  const {error} = await sb.from('site_content').upsert({id:'main', data:content, updated_at:new Date().toISOString()});
+  if (error) { renderContent({err:true, text:'Could not save: ' + error.message}); return; }
+  dirty = false; renderContent({text:'Saved. The customer app shows it on the next load.'});
+  window.scrollTo(0, 0);
+}
+
+/* ---------- leads report ---------- */
+async function loadLeads(){
+  leadsLoading = true; leadsError = ''; shell('<div class="card">Loading leads...</div>');
+  try {
+    const {data:{session:s}} = await sb.auth.getSession();
+    const r = await fetch('/api/leads', {headers:{Authorization:'Bearer ' + (s ? s.access_token : '')}});
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw new Error(d.error || 'Could not load leads.');
+    const h = d.headers; leads = d.rows.map(row => { const o = {}; h.forEach((k,i) => o[k] = row[i] || ''); return o; });
+  } catch(e){ leadsError = e.message; leads = null; }
+  leadsLoading = false; renderLeads();
+}
+const uniq = k => [...new Set((leads || []).map(l => l[k]).filter(Boolean))].sort();
+function visibleLeads(){
+  const q = filt.q.toLowerCase();
+  return leads.filter(l =>
+    (!filt.hideInternal || l.Source !== 'internal') &&
+    (!filt.type || l.Type === filt.type) && (!filt.service || l.Service === filt.service) &&
+    (!filt.facility || l.Facility === filt.facility) && (!filt.source || l.Source === filt.source) &&
+    (!q || [l.Name, l.Business, l.Phone, l.Area, l.Ref].join(' ').toLowerCase().includes(q)));
+}
+function opt(list, cur){ return '<option value="">All</option>' + list.map(v => `<option ${v===cur?'selected':''}>${esc(v)}</option>`).join(''); }
+function renderLeads(){
+  if (leadsError || !leads) return shell(`<div class="msg err">${esc(leadsError || 'No data.')}</div><button class="btn" id="re">Try again</button>`),
+    document.getElementById('re').onclick = loadLeads;
+  const rows = visibleLeads(), cb = rows.filter(l => l.Type === 'Call back').length;
+  shell(`<div class="stats"><div class="stat"><b>${rows.length}</b><span>Leads shown</span></div>
+      <div class="stat"><b>${rows.length - cb}</b><span>Bookings</span></div><div class="stat"><b>${cb}</b><span>Call backs</span></div></div>
+    <div class="filters">
+      <div><label>Search</label><input type="search" id="fq" value="${esc(filt.q)}" placeholder="Name, business, phone"></div>
+      <div><label>Type</label><select id="ft">${opt(uniq('Type'), filt.type)}</select></div>
+      <div><label>Service</label><select id="fs">${opt(uniq('Service'), filt.service)}</select></div>
+      <div><label>Facility</label><select id="ff">${opt(uniq('Facility'), filt.facility)}</select></div>
+      <div><label>Source</label><select id="fo">${opt(uniq('Source'), filt.source)}</select></div></div>
+    <div class="row" style="margin-bottom:12px;align-items:center">
+      <label class="chk" style="margin:0"><input type="checkbox" id="fi" ${filt.hideInternal?'checked':''}> Hide internal test leads</label>
+      <div class="sp"></div><button class="btn ghost small" id="csv">Download CSV</button><button class="btn ghost small" id="re">Refresh</button></div>
+    <div class="tbl"><table><thead><tr><th>Submitted</th><th>Type</th><th>Service</th><th>Name</th><th>Business</th><th>Phone</th><th>Facility</th><th>Booked for</th><th>Source</th></tr></thead><tbody>
+    ${rows.length ? rows.map((l,i) => `<tr class="main" data-i="${i}"><td>${esc(l['Submitted at'])}</td>
+      <td><span class="pill ${l.Type==='Call back'?'cb':''}">${esc(l.Type)}</span></td><td>${esc(l.Service)}</td><td>${esc(l.Name)}</td>
+      <td>${esc(l.Business)}</td><td><a href="tel:${esc(l.Phone.replace(/[^\d+]/g,''))}">${esc(l.Phone)}</a></td><td>${esc(l.Facility)}</td>
+      <td>${esc([l.Date, l['Start time']].filter(Boolean).join(' '))}</td><td>${esc([l.Source, l.Medium, l.Campaign].filter(Boolean).join(' / '))}</td></tr>
+      <tr class="det" hidden><td colspan="9"><b>Ref</b> ${esc(l.Ref)} · <b>Area</b> ${esc(l.Area||'-')} · <b>Team</b> ${esc(l.Team||'-')} · <b>On site</b> ${esc(l['Time on site']||'-')}<br>
+      <b>Details</b> ${esc(l['Booking details']||'-')}${l.Note ? `<br><b>Note</b> ${esc(l.Note)}` : ''}</td></tr>`).join('')
+      : '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:30px">No leads match.</td></tr>'}
+    </tbody></table></div><div class="hint" style="margin-top:8px">Shows the newest 1,000 leads from the Google Sheet. Tap a row for the details.</div>`);
+  const bind = (id, k, ev='onchange') => { document.getElementById(id)[ev] = e => { filt[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; renderLeads(); if (id==='fq') { const q = document.getElementById('fq'); q.focus(); q.setSelectionRange(q.value.length,q.value.length); } }; };
+  bind('ft','type'); bind('fs','service'); bind('ff','facility'); bind('fo','source'); bind('fi','hideInternal'); bind('fq','q','oninput');
+  document.getElementById('re').onclick = loadLeads;
+  document.getElementById('csv').onclick = () => downloadCsv(rows);
+  $app.querySelectorAll('tr.main').forEach(tr => tr.onclick = e => { if (e.target.closest('a')) return; tr.nextElementSibling.hidden = !tr.nextElementSibling.hidden; });
+}
+function downloadCsv(rows){
+  const cols = Object.keys(rows[0] || {}); if (!cols.length) return;
+  const cell = v => { v = String(v == null ? '' : v); if (/^[=+\-@]/.test(v)) v = "'" + v; return '"' + v.replace(/"/g,'""') + '"'; };
+  const csv = [cols.map(cell).join(',')].concat(rows.map(r => cols.map(c => cell(r[c])).join(','))).join('\n');
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([csv], {type:'text/csv'}));
+  a.download = 'instaff-leads.csv'; a.click(); URL.revokeObjectURL(a.href);
+}
+
+/* ---------- start ---------- */
+async function start(){
+  await loadContentData(); tab = 'content'; renderContent();
+}
+(async () => {
+  const {data} = await sb.auth.getSession();
+  session = data.session;
+  session ? start() : renderLogin();
+})();
+</script>
+</body>
+</html>

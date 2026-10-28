@@ -132,6 +132,10 @@ button{font-family:inherit;cursor:pointer}
 .gtile{position:relative;aspect-ratio:1/1;border-radius:18px;display:grid;place-items:center;
   border:1px solid var(--card-border);transition:transform .12s ease}
 .gcard:active .gtile{transform:scale(.97)}
+.gtile .timg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
+.gtile .gplus{z-index:1}
+.hero{overflow:hidden}
+.hero .himg{width:100%;height:100%;object-fit:cover;display:block}
 .gcard:focus-visible{outline:none}
 .gcard:focus-visible .gtile{box-shadow:0 0 0 3px var(--tint-border)}
 .tone-green  .gtile{background:linear-gradient(160deg,#F3FAF7 0%,#E1F1EA 100%);color:#0B5F4D}
@@ -368,6 +372,10 @@ const POSTHOG_HOST = 'https://us.i.posthog.com';
 const WHATSAPP_NUMBER = '918610852323';
 // Customer care phone number with country code, e.g. +919876543210. Empty: no tap-to-call link.
 const CARE_NUMBER = '+918610852323';
+// Supabase project URL and publishable (anon) key, used only to READ the content the admin edits
+// (home banner, service images and banners). Empty: the built-in content is used.
+const SUPABASE_URL = 'https://vmsvcbyxthsjnujyigly.supabase.co';
+const SUPABASE_ANON_KEY = 'sb_publishable_kT_tqnOMqszanNmHDenqnQ_UHznHdeN';
 
 /* ============================================================
    TRACKING (PostHog)
@@ -1596,6 +1604,47 @@ function days(){
 function result(){ return svc ? svc.calc(st) : null; }
 
 /* ============================================================
+   ADMIN-EDITED CONTENT (read-only here; edited at /admin)
+   Anything missing or failing to load falls back to the content built into this file.
+   ============================================================ */
+let CONTENT = {};
+try { CONTENT = JSON.parse(localStorage.getItem('instaff.content') || '{}') || {}; } catch(e){ CONTENT = {}; }
+const IMG_BASE = SUPABASE_URL + '/storage/v1/object/public/service-images/';
+function safeImg(u){
+  return (SUPABASE_URL && typeof u === 'string' && u.indexOf(IMG_BASE) === 0 && !/["'<>\s]/.test(u)) ? u : '';
+}
+function txt(v){ return typeof v === 'string' ? v.trim() : ''; }
+function svcContent(id){ return (CONTENT.services && CONTENT.services[id]) || {}; }
+function applyContent(){
+  SERVICES.forEach(sv => {
+    if (!('_banner0' in sv)) sv._banner0 = sv.banner || null;
+    const c = svcContent(sv.id), t = txt(c.banner && c.banner.title), x = txt(c.banner && c.banner.text);
+    if (c.banner_off) sv.banner = null;
+    else if (t && x) sv.banner = {title:esc(t), text:esc(x)};
+    else sv.banner = sv._banner0;
+  });
+}
+async function loadContent(){
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) return;
+  try {
+    const ctl = new AbortController(), timer = setTimeout(() => ctl.abort(), 5000);
+    const res = await fetch(SUPABASE_URL + '/rest/v1/site_content?id=eq.main&select=data',
+      {headers:{apikey:SUPABASE_ANON_KEY, Authorization:'Bearer ' + SUPABASE_ANON_KEY}, signal:ctl.signal});
+    clearTimeout(timer);
+    if (!res.ok) return;
+    const rows = await res.json();
+    if (!rows || !rows[0] || typeof rows[0].data !== 'object') return;
+    const fresh = JSON.stringify(rows[0].data);
+    if (fresh === JSON.stringify(CONTENT)) return;
+    CONTENT = rows[0].data;
+    try { localStorage.setItem('instaff.content', fresh); } catch(e){}
+    applyContent();
+    // Redraw only screens that show this content; a form in progress is left alone.
+    if (view === 'home' || view === 'service') render();
+  } catch(e){}
+}
+
+/* ============================================================
    RENDER
    ============================================================ */
 const $top = document.getElementById('topbar');
@@ -1718,7 +1767,9 @@ let svcFacility = '';   // the facility heading a service was opened from; sent 
 
 function tileHTML(s, f){
   return `<button class="gcard tone-${CAT_INFO[s.cat].tone}" data-s="${s.id}" data-f="${f.id}" aria-label="${esc(s.name)}, ${esc(f.name)}">
-    <span class="gtile">${s.icon.replace('width="22" height="22"', 'width="42" height="42"').replace('stroke-width="1.9"', 'stroke-width="1.6"')}
+    <span class="gtile">${safeImg(svcContent(s.id).tile_image)
+      ? `<img class="timg" src="${safeImg(svcContent(s.id).tile_image)}" alt="" loading="lazy">`
+      : s.icon.replace('width="22" height="22"', 'width="42" height="42"').replace('stroke-width="1.9"', 'stroke-width="1.6"')}
       <span class="gplus">${PLUS}</span></span>
     <span class="gname">${TILE_NAME[s.id] || s.name}</span>
   </button>`;
@@ -1726,6 +1777,9 @@ function tileHTML(s, f){
 function renderHome(){
   $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
   const shown = FACILITIES.filter(f => homeFilter === 'all' || f.id === homeFilter);
+  const hb = CONTENT.home || {};
+  const hbTags = (Array.isArray(hb.tags) ? hb.tags.map(txt).filter(Boolean).slice(0, 4) : []);
+  if (!hbTags.length) hbTags.push('By the hour', 'By the job');
   $screen.innerHTML = `
     <div class="hometop">
       <div class="hello">${greeting()}</div>
@@ -1733,9 +1787,9 @@ function renderHome(){
     </div>
     <div class="hbanner">
       <div class="hbtext">
-        <div class="hbtitle">Trained staff for your business</div>
-        <div class="hbsub">Cleaning, front of house and operations. Pick a service to see the team and the time straight away.</div>
-        <div class="hbtags"><span>By the hour</span><span>By the job</span></div>
+        <div class="hbtitle">${esc(txt(hb.title) || 'Trained staff for your business')}</div>
+        <div class="hbsub">${esc(txt(hb.sub) || 'Cleaning, front of house and operations. Pick a service to see the team and the time straight away.')}</div>
+        <div class="hbtags">${hbTags.map(t => `<span>${esc(t)}</span>`).join('')}</div>
       </div>
       <div class="hbart" aria-hidden="true">
         <span class="hb1">${I.tray.replace('width="22" height="22"','width="30" height="30"')}</span>
@@ -1804,7 +1858,9 @@ function renderService(){
     : UI.sec(title, `<div class="emptynote">To be confirmed</div>`);
 
   $screen.innerHTML = `
-    <div class="hero">${svc.icon.replace(/width="22"/,'width="46"').replace(/height="22"/,'height="46"')}</div>
+    <div class="hero">${safeImg(svcContent(svc.id).hero_image)
+      ? `<img class="himg" src="${safeImg(svcContent(svc.id).hero_image)}" alt="">`
+      : svc.icon.replace(/width="22"/,'width="46"').replace(/height="22"/,'height="46"')}</div>
     <div><div class="detailtitle">${svc.name}</div><div class="detailsub">${svc.sub}</div></div>
     ${svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : ''}
     ${svc.contentNote ? `<div class="note">${svc.contentNote}</div>` : ''}
@@ -2189,7 +2245,9 @@ function goBack(){
   view = 'home'; svc = null; render();
 }
 
+applyContent();
 render();
+loadContent();
 </script>
 </body>
 </html>
