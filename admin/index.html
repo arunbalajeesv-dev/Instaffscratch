@@ -228,7 +228,7 @@ function renderLeads(){
     <div class="tbl"><table><thead><tr><th>Submitted</th><th>Type</th><th>Service</th><th>Name</th><th>Business</th><th>Phone</th><th>Facility</th><th>Booked for</th><th>Source</th></tr></thead><tbody>
     ${rows.length ? rows.map((l,i) => `<tr class="main" data-i="${i}"><td>${esc(l['Submitted at'])}</td>
       <td><span class="pill ${l.Type==='Call back'?'cb':''}">${esc(l.Type)}</span></td><td>${esc(l.Service)}</td><td>${esc(l.Name)}</td>
-      <td>${esc(l.Business)}</td><td><a href="tel:${esc(l.Phone.replace(/[^\d+]/g,''))}">${esc(l.Phone)}</a></td><td>${esc(l.Facility)}</td>
+      <td>${esc(l.Business)}</td><td><a href="tel:${esc(l.Phone.replace(/[^\d+]/g,''))}">${esc(l.Phone)}</a>${l.Verified==='Yes' ? ' <span title="Phone verified with a one-time code" style="color:var(--primary-d)">&#10003;</span>' : ''}</td><td>${esc(l.Facility)}</td>
       <td>${esc([l.Date, l['Start time']].filter(Boolean).join(' '))}</td><td>${esc([l.Source, l.Medium, l.Campaign].filter(Boolean).join(' / '))}</td></tr>
       <tr class="det" hidden><td colspan="9"><b>Ref</b> ${esc(l.Ref)} · <b>Area</b> ${esc(l.Area||'-')} · <b>Team</b> ${esc(l.Team||'-')} · <b>On site</b> ${esc(l['Time on site']||'-')}<br>
       <b>Details</b> ${esc(l['Booking details']||'-')}${l.Note ? `<br><b>Note</b> ${esc(l.Note)}` : ''}</td></tr>`).join('')

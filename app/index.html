@@ -376,6 +376,14 @@ const CARE_NUMBER = '+918610852323';
 // (home banner, service images and banners). Empty: the built-in content is used.
 const SUPABASE_URL = 'https://vmsvcbyxthsjnujyigly.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kT_tqnOMqszanNmHDenqnQ_UHznHdeN';
+// Firebase web config, used only for the phone one-time code at sign-up. These values are public by design.
+// Leave apiKey empty and the sign-up screen is skipped; the rest of the page keeps working.
+const FIREBASE_CONFIG = {
+  apiKey: 'AIzaSyC64PuU-tzmLIyH03ldJjJczZqzF_6xE0I',
+  authDomain: 'instaff-b5cbe.firebaseapp.com',
+  projectId: 'instaff-b5cbe',
+  appId: '1:555745457343:web:9020e472bb94693e79020a'
+};
 
 /* ============================================================
    TRACKING (PostHog)
@@ -1572,7 +1580,11 @@ const byId = id => SERVICES.find(s => s.id === id);
 /* ============================================================
    APP STATE + STORAGE
    ============================================================ */
-let view = 'home';          // home | bookings | service | form | review | slot | done | care
+// The phone number this browser has verified with a one-time code ('' = not yet).
+const OTP_ON = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
+let verifiedPhone = '';
+try { verifiedPhone = localStorage.getItem('instaff.verified') || ''; } catch(e){}
+let view = (OTP_ON && !verifiedPhone) ? 'signup' : 'home';   // signup | home | bookings | service | form | review | slot | done | care
 let svc = null;             // active service definition
 let st = {};                // active service answers
 let stepIx = 0;             // 0-based index into svc.steps
@@ -1664,6 +1676,7 @@ function render(){
   if (k !== lastTrackedKey){ lastTrackedKey = k; trackScreen(); }
 }
 function trackScreen(){
+  if (view === 'signup') return track('signup_viewed');
   if (view === 'home') return track('home_viewed');
   if (!svc) return;
   const r = result();
@@ -1685,6 +1698,7 @@ function openService(t, facility){
 }
 function renderView(){
   const r = result();
+  if (view === 'signup')    return renderSignup();
   if (view === 'home')      return renderHome();
   if (view === 'bookings')  return renderBookings();
   if (view === 'service')   return renderService();
@@ -1826,6 +1840,110 @@ function renderHome(){
     openService(byId(b.dataset.s), b.dataset.f);
   });
   tabs('home');
+}
+
+/* ---------- sign-up with a one-time code (Firebase phone sign-in) ---------- */
+const FB_VER = '10.14.1';
+let fb = null;
+async function fbLoad(){
+  if (fb) return fb;
+  const base = 'https://www.gstatic.com/firebasejs/' + FB_VER + '/';
+  const [appM, authM] = await Promise.all([import(base + 'firebase-app.js'), import(base + 'firebase-auth.js')]);
+  fb = {auth: authM.getAuth(appM.initializeApp(FIREBASE_CONFIG)), m: authM};
+  return fb;
+}
+// The proof of sign-in sent with each lead, so the Sheet can mark the phone as verified.
+async function authToken(){
+  if (!OTP_ON || !verifiedPhone) return '';
+  try {
+    const f = await Promise.race([fbLoad(), new Promise((_, no) => setTimeout(no, 5000))]);
+    await f.auth.authStateReady();
+    return f.auth.currentUser ? await f.auth.currentUser.getIdToken() : '';
+  } catch(e){ return ''; }
+}
+let su = {step:'form', error:'', confirm:null, verifier:null};
+function otpError(e){
+  const c = (e && e.code) || '';
+  if (c === 'auth/invalid-phone-number') return 'That phone number does not look right.';
+  if (c === 'auth/too-many-requests') return 'Too many tries. Please wait a few minutes and try again.';
+  if (c === 'auth/invalid-verification-code') return 'That code is not right. Check it and try again.';
+  if (c === 'auth/code-expired') return 'That code has expired. Go back and ask for a new one.';
+  if (c === 'auth/network-request-failed') return 'No internet connection. Check it and try again.';
+  return "We couldn't send the code just now. Please try again in a moment.";
+}
+function renderSignup(){
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  const code = su.step === 'code';
+  const field = (key, label, ph, type, help) => `<div class="q">
+      <div class="qlabel">${label}</div>${help ? `<div class="qhelp">${help}</div>` : ''}
+      <input class="tinput big" data-lead="${key}" type="${type}" placeholder="${ph}" value="${esc(lead[key]||'')}"
+        ${type === 'tel' ? 'inputmode="tel" autocomplete="tel"' : key === 'name' ? 'autocomplete="name"' : 'autocomplete="organization"'}></div>`;
+  $screen.innerHTML = `<div class="hometop"><div class="hello">Welcome</div>
+      <div class="h1">${code ? 'Enter the code' : 'Tell us who you are'}</div></div>`
+    + (code
+      ? `<div class="q"><div class="qlabel">6-digit code</div>
+          <div class="qhelp">Sent to +91 ${esc(lead.phone)}.</div>
+          <input class="tinput big" id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>
+         <button class="btn ghost" id="changenum">Use a different number</button>`
+      : field('name', 'Your name', 'Full name', 'text')
+        + field('business', 'Business name', 'Restaurant, shop or company', 'text')
+        + field('phone', 'Phone number', '10-digit mobile number', 'tel', "We'll send a one-time code to this number. Our team also calls it to confirm bookings."))
+    + (su.error ? `<div class="warnnote">${su.error}</div>` : '');
+  footerBar(`<button class="btn" id="go" disabled>${code ? 'Verify and continue' : 'Send code'}</button>`);
+  const go = document.getElementById('go');
+  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim())
+                        : lead.name.trim().length > 1 && lead.business.trim().length > 1 && !!normPhone(lead.phone);
+  const sync = () => { go.disabled = !ok(); };
+  if (code){
+    document.getElementById('otp').oninput = sync;
+    document.getElementById('changenum').onclick = () => { su = {step:'form', error:'', confirm:null, verifier:null}; render(); };
+  } else {
+    $screen.querySelectorAll('[data-lead]').forEach(inp => inp.oninput = () => { lead[inp.dataset.lead] = inp.value; sync(); });
+  }
+  sync();
+  go.onclick = code ? verifyOtp : sendOtp;
+}
+async function sendOtp(){
+  const go = document.getElementById('go');
+  if (!normPhone(lead.phone) || go.dataset.busy) return;
+  go.dataset.busy = '1'; go.disabled = true; go.textContent = 'Sending…';
+  try {
+    const f = await fbLoad();
+    if (su.verifier){ try { su.verifier.clear(); } catch(e){} }
+    su.verifier = new f.m.RecaptchaVerifier(f.auth, go, {size:'invisible'});
+    su.confirm = await f.m.signInWithPhoneNumber(f.auth, '+91' + normPhone(lead.phone), su.verifier);
+    su.step = 'code'; su.error = '';
+    track('otp_sent');
+  } catch(e){
+    su.error = otpError(e);
+    track('signup_failed', {step:'send', code:(e && e.code) || 'unknown'});
+    if (su.verifier){ try { su.verifier.clear(); } catch(x){} su.verifier = null; }
+  }
+  render();
+}
+async function verifyOtp(){
+  const go = document.getElementById('go'), code = document.getElementById('otp').value.trim();
+  if (!/^\d{6}$/.test(code) || go.dataset.busy) return;
+  go.dataset.busy = '1'; go.disabled = true; go.textContent = 'Checking…';
+  try {
+    const cred = await su.confirm.confirm(code);
+    const idToken = await cred.user.getIdToken();
+    verifiedPhone = normPhone(lead.phone);
+    try { localStorage.setItem('instaff.verified', verifiedPhone); } catch(e){}
+    saveLead();
+    track('signup_verified');
+    // The sign-up goes to the Sheet straight away, so people who browse but never book are captured too.
+    sendLead({source:'instaff-prototype', website:'', ref:'SU' + Math.floor(100000 + Math.random()*899999), type:'Sign-up',
+      service:'', facility:'', name:lead.name.trim(), business:lead.business.trim(), phone:'+91' + verifiedPhone,
+      area:lead.area.trim(), id_token:idToken, utm_source: INTERNAL ? 'internal' : UTM.utm_source,
+      utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+    su = {step:'form', error:'', confirm:null, verifier:null};
+    view = 'home';
+  } catch(e){
+    su.error = otpError(e);
+    track('signup_failed', {step:'verify', code:(e && e.code) || 'unknown'});
+  }
+  render();
 }
 
 /* ---------- bookings ---------- */
@@ -2044,6 +2162,10 @@ function renderDetails(r){
     + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
     + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
     + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
+  if (verifiedPhone){
+    const ph = $screen.querySelector('[data-lead="phone"]');
+    if (ph){ ph.value = verifiedPhone; lead.phone = verifiedPhone; ph.readOnly = true; }
+  }
   const btnText = care ? 'Request a call back' : 'Confirm booking';
   footerBar((care ? `<div class="estimate care">${I.clock}<span>Needs a call</span></div>` : estimateLine(r))
     + `<button class="btn" id="submit" ${leadValid() ? '' : 'disabled'}>${btnText}</button>`);
@@ -2056,6 +2178,7 @@ function renderDetails(r){
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
     const ref = 'IN' + Math.floor(100000 + Math.random()*899999);
     const payload = buildLead(r, ref);
+    payload.id_token = await authToken();
     track('details_submitted', {service_id:svc.id});
     const res = await sendLead(payload);
     if (res !== 'not-configured') track('lead_sent', {service_id:svc.id, success: res === 'sent'});

@@ -23,11 +23,13 @@ const SHEET_NAME = 'Leads';
 // so a sheet that already has rows keeps its columns in place.
 const HEADERS = ['Submitted at', 'Ref', 'Type', 'Service', 'Date', 'Start time', 'Team', 'Time on site',
                  'Booking details', 'Note', 'Name', 'Business', 'Phone', 'Area', 'Facility',
-                 'Source', 'Medium', 'Campaign'];
+                 'Source', 'Medium', 'Campaign', 'Verified'];
 const KEYS    = ['ref', 'type', 'service', 'date', 'time', 'team', 'onsite',
                  'details', 'note', 'name', 'business', 'phone', 'area', 'facility',
                  'utm_source', 'utm_medium', 'utm_campaign'];
 const MAX_LEN = 1000;
+// Firebase web API key (public). Used to check the one-time-code sign-in sent with each lead.
+const FIREBASE_API_KEY = 'AIzaSyC64PuU-tzmLIyH03ldJjJczZqzF_6xE0I';
 
 function doPost(e) {
   const lock = LockService.getScriptLock();
@@ -38,15 +40,32 @@ function doPost(e) {
     // Ignore anything that did not come from the prototype, and anything a bot filled in
     // (the hidden "website" field is invisible to people, so only bots fill it).
     if (d.source !== 'instaff-prototype' || d.website) return reply({ok: true, skipped: true});
-    if (!d.name || !d.phone || !d.service) return reply({ok: false, error: 'missing fields'});
+    // A sign-up has no service yet; bookings and call backs always do.
+    if (!d.name || !d.phone || (d.type !== 'Sign-up' && !d.service)) return reply({ok: false, error: 'missing fields'});
 
+    const verified = verifyPhone(d.id_token, d.phone);   // 'Yes' only if Firebase confirms this phone signed in
     const sheet = getSheet();
-    sheet.appendRow([new Date()].concat(KEYS.map(k => clean(d[k]))));
+    sheet.appendRow([new Date()].concat(KEYS.map(k => clean(d[k]))).concat([verified]));
     return reply({ok: true});
   } catch (err) {
     return reply({ok: false, error: String(err)});
   } finally {
     lock.releaseLock();
+  }
+}
+
+// Asks Firebase who the sign-in token belongs to. The row is still saved when this says 'No',
+// so a real customer is never lost; the Verified column tells you which phones were confirmed.
+function verifyPhone(idToken, phone) {
+  if (!idToken) return 'No';
+  try {
+    const res = UrlFetchApp.fetch('https://identitytoolkit.googleapis.com/v1/accounts:lookup?key=' + FIREBASE_API_KEY,
+      {method: 'post', contentType: 'application/json', payload: JSON.stringify({idToken: String(idToken)}), muteHttpExceptions: true});
+    if (res.getResponseCode() !== 200) return 'No';
+    const u = (JSON.parse(res.getContentText()).users || [])[0];
+    return u && u.phoneNumber === phone ? 'Yes' : 'No';
+  } catch (err) {
+    return 'No';
   }
 }
 
