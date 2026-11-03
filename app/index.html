@@ -1890,8 +1890,8 @@ function otpError(e){
 function renderSignup(){
   $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
   const code = su.step === 'code';
-  const field = (key, label, ph, type, help) => `<div class="q">
-      <div class="qlabel">${label}</div>${help ? `<div class="qhelp">${help}</div>` : ''}
+  const field = (key, label, ph, type, help, opt) => `<div class="q">
+      <div class="qlabel">${label}${opt ? '<span class="opt">optional</span>' : ''}</div>${help ? `<div class="qhelp">${help}</div>` : ''}
       <input class="tinput big" data-lead="${key}" type="${type}" placeholder="${ph}" value="${esc(lead[key]||'')}"
         ${type === 'tel' ? 'inputmode="tel" autocomplete="tel"' : key === 'name' ? 'autocomplete="name"' : 'autocomplete="organization"'}></div>`;
   $screen.innerHTML = `<div class="hometop"><div class="hello">Welcome</div>
@@ -1902,13 +1902,12 @@ function renderSignup(){
           <input class="tinput big" id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>
          <button class="btn ghost" id="changenum">Use a different number</button>`
       : field('name', 'Your name', 'Full name', 'text')
-        + field('business', 'Business name', 'Restaurant, shop or company', 'text')
+        + field('business', 'Business name', 'Restaurant, shop or company', 'text', '', true)
         + field('phone', 'Phone number', '10-digit mobile number', 'tel', "We'll send a one-time code to this number. Our team also calls it to confirm bookings."))
     + (su.error ? `<div class="warnnote">${su.error}</div>` : '');
   footerBar(`<button class="btn" id="go" disabled>${code ? 'Verify and continue' : 'Send code'}</button>`);
   const go = document.getElementById('go');
-  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim())
-                        : lead.name.trim().length > 1 && lead.business.trim().length > 1 && !!normPhone(lead.phone);
+  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim()) : leadValid();
   const sync = () => { go.disabled = !ok(); };
   if (code){
     document.getElementById('otp').oninput = sync;
@@ -2134,7 +2133,7 @@ function normPhone(p){
   return /^[6-9]\d{9}$/.test(d) ? d : null;
 }
 function leadValid(){
-  return lead.name.trim().length > 1 && lead.business.trim().length > 1 && !!normPhone(lead.phone);
+  return lead.name.trim().length > 1 && !!normPhone(lead.phone);   // business name is optional
 }
 // A booking needs an address or a map pin; a call back does not, the team asks on the call.
 function addressOk(){ return lead.address.trim().length > 5 || !!lead.lat; }
@@ -2290,7 +2289,7 @@ function renderDetails(r){
       ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
       : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, teamText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
-    + field('business', 'Business name', 'Restaurant, shop or company', 'text', true)
+    + field('business', 'Business name', 'Restaurant, shop or company', 'text', false)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
     + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
 
@@ -2329,7 +2328,7 @@ function renderDetails(r){
       wa: [`Instaff ${payload.type.toLowerCase()} ${ref}`, svc.name,
            care ? payload.details : `${payload.date} at ${payload.time} · ${payload.team}`,
            care ? '' : payload.details,
-           `${payload.name}, ${payload.business}${payload.area ? ', ' + payload.area : ''}`,
+           [payload.name, payload.business, payload.area].filter(Boolean).join(', '),
            payload.address ? 'Address: ' + payload.address : '',
            payload.lat ? `Map: https://www.google.com/maps?q=${payload.lat},${payload.lng}` : ''].filter(Boolean).join('\n')
     });
