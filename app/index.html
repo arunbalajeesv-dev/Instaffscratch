@@ -135,6 +135,10 @@ button{font-family:inherit;cursor:pointer}
 .gtile .timg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .gtile .gplus{z-index:1}
 .hero{overflow:hidden}
+.sugg{display:flex;flex-direction:column;gap:6px;margin-top:6px}
+.sg{text-align:left;border:1px solid var(--card-border);background:var(--white);border-radius:12px;padding:10px 12px;font:inherit;color:var(--text);cursor:pointer}
+.sg b{display:block;font-size:14px}
+.sg span{font-size:12px;color:var(--muted)}
 .hero .himg{width:100%;height:100%;object-fit:cover;display:block}
 .gcard:focus-visible{outline:none}
 .gcard:focus-visible .gtile{box-shadow:0 0 0 3px var(--tint-border)}
@@ -1594,12 +1598,13 @@ let bookings = [];
 try { bookings = JSON.parse(localStorage.getItem('instaff.bookings') || '[]'); } catch(e){ bookings = []; }
 
 // Customer details for the smoke test. Remembered on this phone only, so a repeat booking is quicker.
-let lead = {name:'', business:'', phone:'', area:'', website:''};   // website is a hidden spam trap
+let lead = {name:'', business:'', phone:'', area:'', address:'', lat:'', lng:'', pinSrc:'', website:''};   // website is a hidden spam trap
 let leadMode = 'booking';                                             // 'booking' or 'care' (call back)
 let leadError = '';
 try { Object.assign(lead, JSON.parse(localStorage.getItem('instaff.lead') || '{}'), {website:''}); } catch(e){}
 function saveLead(){
-  try { localStorage.setItem('instaff.lead', JSON.stringify({name:lead.name, business:lead.business, phone:lead.phone, area:lead.area})); } catch(e){}
+  try { localStorage.setItem('instaff.lead', JSON.stringify({name:lead.name, business:lead.business, phone:lead.phone, area:lead.area,
+      address:lead.address, lat:lead.lat, lng:lead.lng, pinSrc:lead.pinSrc})); } catch(e){}
 }
 function saveBookings(){ try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
 
@@ -2095,6 +2100,9 @@ function normPhone(p){
 function leadValid(){
   return lead.name.trim().length > 1 && lead.business.trim().length > 1 && !!normPhone(lead.phone);
 }
+// A booking needs an address or a map pin; a call back does not, the team asks on the call.
+function addressOk(){ return lead.address.trim().length > 5 || !!lead.lat; }
+function detailsOk(care){ return leadValid() && (care || addressOk()); }
 function isoDate(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
@@ -2126,6 +2134,7 @@ function buildLead(r, ref){
     note: st.note || '',
     name: lead.name.trim(), business: lead.business.trim(),
     phone: '+91' + normPhone(lead.phone), area: lead.area.trim(),
+    address: lead.address.trim(), lat: lead.lat, lng: lead.lng,
     utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium: UTM.utm_medium, utm_campaign: UTM.utm_campaign
   };
 }
@@ -2138,6 +2147,84 @@ async function sendLead(payload){
       headers:{'Content-Type':'text/plain;charset=utf-8'}, body:JSON.stringify(payload)});
     return 'sent';
   } catch(e){ return 'failed'; }
+}
+
+/* ---------- address suggestions (Google Places) and "use my location" ---------- */
+let placesLib = null;
+// The Google Maps key is not in this file or the repo. /api/config hands it over from a Vercel
+// environment variable (GOOGLE_MAPS_KEY). No key, or any failure: the address is a plain text box.
+function loadPlaces(){
+  if (placesLib) return placesLib;
+  placesLib = new Promise(async done => {
+    setTimeout(() => done(null), 8000);
+    try {
+      const res = await fetch('/api/config');
+      const key = res.ok ? (await res.json()).mapsKey : '';
+      if (!key) return done(null);
+      window.__mapsReady = () => google.maps.importLibrary('places').then(done, () => done(null));
+      window.gm_authFailure = () => done(null);   // key rejected for this site: fall back to a plain text box
+      const sc = document.createElement('script');
+      sc.src = 'https://maps.googleapis.com/maps/api/js?key=' + encodeURIComponent(key) + '&loading=async&v=weekly&callback=__mapsReady';
+      sc.async = true; sc.onerror = () => done(null);
+      document.head.appendChild(sc);
+    } catch(e){ done(null); }
+  });
+  return placesLib;
+}
+function bindAddress(care, btn){
+  const inp = document.getElementById('addr'), list = document.getElementById('sugg');
+  const note = document.getElementById('locnote'), loc = document.getElementById('locbtn');
+  let lib = null, token = null, timer = null, seq = 0;
+  const refresh = () => { btn.disabled = !detailsOk(care); };
+  loadPlaces();   // start loading while the customer fills the other fields
+  inp.oninput = () => {
+    lead.address = inp.value;
+    if (lead.pinSrc === 'place'){ lead.lat = lead.lng = ''; lead.pinSrc = ''; note.textContent = ''; }   // the text no longer matches the pin
+    refresh(); clearTimeout(timer); list.innerHTML = '';
+    const q = inp.value.trim(); if (q.length < 3) return;
+    timer = setTimeout(async () => {
+      const mine = ++seq;
+      lib = lib || await loadPlaces(); if (!lib) return;
+      try {
+        token = token || new lib.AutocompleteSessionToken();
+        const res = await lib.AutocompleteSuggestion.fetchAutocompleteSuggestions({input:q, includedRegionCodes:['in'], sessionToken:token});
+        if (mine !== seq) return;
+        list.innerHTML = '';
+        res.suggestions.slice(0, 5).forEach(sg => {
+          const pp = sg.placePrediction; if (!pp) return;
+          const b = document.createElement('button');
+          b.type = 'button'; b.className = 'sg';
+          const m = document.createElement('b'); m.textContent = pp.mainText ? pp.mainText.text : pp.text.text;
+          const sub = document.createElement('span'); sub.textContent = pp.secondaryText ? pp.secondaryText.text : '';
+          b.append(m, sub);
+          b.onclick = async () => {
+            try {
+              const place = pp.toPlace();
+              await place.fetchFields({fields:['formattedAddress', 'location', 'addressComponents']});
+              lead.address = place.formattedAddress || pp.text.text;
+              lead.lat = place.location.lat().toFixed(6); lead.lng = place.location.lng().toFixed(6); lead.pinSrc = 'place';
+              const part = (place.addressComponents || []).find(c => /sublocality|locality/.test((c.types || []).join(' ')));
+              const area = $screen.querySelector('[data-lead="area"]');
+              if (part && area && !lead.area.trim()){ lead.area = part.longText; area.value = part.longText; }
+              inp.value = lead.address; list.innerHTML = ''; token = null;
+              note.textContent = 'Address pinned.';
+            } catch(e){ note.textContent = 'Could not load that address. Please type it in.'; }
+            refresh();
+          };
+          list.appendChild(b);
+        });
+      } catch(e){ /* suggestions are a convenience; typing the address still works */ }
+    }, 250);
+  };
+  loc.onclick = () => {
+    if (!navigator.geolocation){ note.textContent = 'Location is not available on this device. Please type the address.'; return; }
+    note.textContent = 'Finding your location…';
+    navigator.geolocation.getCurrentPosition(p => {
+      lead.lat = p.coords.latitude.toFixed(6); lead.lng = p.coords.longitude.toFixed(6); lead.pinSrc = 'gps';
+      note.textContent = 'Location pinned (within about ' + Math.round(p.coords.accuracy) + ' m).'; refresh();
+    }, () => { note.textContent = 'We could not get your location. Please type the address.'; },
+    {enableHighAccuracy:true, timeout:10000, maximumAge:60000});
+  };
 }
 
 function renderDetails(r){
@@ -2160,6 +2247,14 @@ function renderDetails(r){
     + field('business', 'Business name', 'Restaurant, shop or company', 'text', true)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
     + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
+    + `<div class="q">
+        <div class="qlabel">Address of the site${care ? '<span class="opt">optional</span>' : ''}</div>
+        <div class="qhelp">Where should the team come? Start typing and pick your address.</div>
+        <input class="tinput big ph-no-capture" id="addr" type="text" autocomplete="off" placeholder="Shop number, street, area" value="${esc(lead.address||'')}">
+        <div class="sugg ph-no-capture" id="sugg"></div>
+        <button class="btn ghost" id="locbtn" type="button" style="margin-top:8px">Use my current location</button>
+        <div class="qhelp ph-no-capture" id="locnote">${lead.lat ? 'Location pinned.' : 'Only use this if you are at the site now. We use it only to send your team to the right place.'}</div>
+      </div>`
     + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
     + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
   if (verifiedPhone){
@@ -2168,13 +2263,14 @@ function renderDetails(r){
   }
   const btnText = care ? 'Request a call back' : 'Confirm booking';
   footerBar((care ? `<div class="estimate care">${I.clock}<span>Needs a call</span></div>` : estimateLine(r))
-    + `<button class="btn" id="submit" ${leadValid() ? '' : 'disabled'}>${btnText}</button>`);
+    + `<button class="btn" id="submit" ${detailsOk(care) ? '' : 'disabled'}>${btnText}</button>`);
   const btn = document.getElementById('submit');
   $screen.querySelectorAll('[data-lead]').forEach(inp => {
-    inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !leadValid(); };
+    inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !detailsOk(care); };
   });
+  bindAddress(care, btn);
   btn.onclick = async () => {
-    if (!leadValid() || btn.dataset.busy) return;
+    if (!detailsOk(care) || btn.dataset.busy) return;
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
     const ref = 'IN' + Math.floor(100000 + Math.random()*899999);
     const payload = buildLead(r, ref);
@@ -2194,7 +2290,9 @@ function renderDetails(r){
       wa: [`Instaff ${payload.type.toLowerCase()} ${ref}`, svc.name,
            care ? payload.details : `${payload.date} at ${payload.time} · ${payload.team}`,
            care ? '' : payload.details,
-           `${payload.name}, ${payload.business}${payload.area ? ', ' + payload.area : ''}`].filter(Boolean).join('\n')
+           `${payload.name}, ${payload.business}${payload.area ? ', ' + payload.area : ''}`,
+           payload.address ? 'Address: ' + payload.address : '',
+           payload.lat ? `Map: https://www.google.com/maps?q=${payload.lat},${payload.lng}` : ''].filter(Boolean).join('\n')
     });
     saveBookings(); view = 'done'; render();
   };

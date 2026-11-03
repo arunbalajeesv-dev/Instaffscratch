@@ -23,7 +23,7 @@ const SHEET_NAME = 'Leads';
 // so a sheet that already has rows keeps its columns in place.
 const HEADERS = ['Submitted at', 'Ref', 'Type', 'Service', 'Date', 'Start time', 'Team', 'Time on site',
                  'Booking details', 'Note', 'Name', 'Business', 'Phone', 'Area', 'Facility',
-                 'Source', 'Medium', 'Campaign', 'Verified'];
+                 'Source', 'Medium', 'Campaign', 'Verified', 'Address', 'Latitude', 'Longitude', 'Map link'];
 const KEYS    = ['ref', 'type', 'service', 'date', 'time', 'team', 'onsite',
                  'details', 'note', 'name', 'business', 'phone', 'area', 'facility',
                  'utm_source', 'utm_medium', 'utm_campaign'];
@@ -45,13 +45,24 @@ function doPost(e) {
 
     const verified = verifyPhone(d.id_token, d.phone);   // 'Yes' only if Firebase confirms this phone signed in
     const sheet = getSheet();
-    sheet.appendRow([new Date()].concat(KEYS.map(k => clean(d[k]))).concat([verified]));
+    const loc = location(d);
+    sheet.appendRow([new Date()].concat(KEYS.map(k => clean(d[k]))).concat([verified, clean(d.address), loc.lat, loc.lng, loc.link]));
     return reply({ok: true});
   } catch (err) {
     return reply({ok: false, error: String(err)});
   } finally {
     lock.releaseLock();
   }
+}
+
+// Latitude and longitude must be real coordinates; the Map link is built here, not trusted from the page.
+function location(d) {
+  const lat = Number(d.lat), lng = Number(d.lng);
+  const ok = d.lat !== '' && d.lng !== '' && isFinite(lat) && isFinite(lng) && Math.abs(lat) <= 90 && Math.abs(lng) <= 180;
+  const addr = String(d.address || '').trim().slice(0, MAX_LEN);
+  const link = ok ? 'https://www.google.com/maps?q=' + lat + ',' + lng
+    : addr ? 'https://www.google.com/maps/search/?api=1&query=' + encodeURIComponent(addr) : '';
+  return {lat: ok ? lat : '', lng: ok ? lng : '', link: link};
 }
 
 // Asks Firebase who the sign-in token belongs to. The row is still saved when this says 'No',
