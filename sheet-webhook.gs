@@ -40,8 +40,8 @@ function doPost(e) {
     // Ignore anything that did not come from the prototype, and anything a bot filled in
     // (the hidden "website" field is invisible to people, so only bots fill it).
     if (d.source !== 'instaff-prototype' || d.website) return reply({ok: true, skipped: true});
-    // A sign-up has no service yet; bookings and call backs always do.
-    if (!d.name || !d.phone || (d.type !== 'Sign-up' && !d.service)) return reply({ok: false, error: 'missing fields'});
+    // A sign-up or a location has no service yet; bookings and call backs always do.
+    if (!d.name || !d.phone || (d.type !== 'Sign-up' && d.type !== 'Location' && !d.service)) return reply({ok: false, error: 'missing fields'});
 
     const verified = verifyPhone(d.id_token, d.phone);   // 'Yes' only if Firebase confirms this phone signed in
     const sheet = getSheet();

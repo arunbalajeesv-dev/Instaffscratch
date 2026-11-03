@@ -135,6 +135,9 @@ button{font-family:inherit;cursor:pointer}
 .gtile .timg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
 .gtile .gplus{z-index:1}
 .hero{overflow:hidden}
+.locchip{align-self:flex-start;border:1px solid var(--card-border);background:var(--white);border-radius:999px;
+  padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;color:var(--dark);cursor:pointer;max-width:100%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px}
 .sugg{display:flex;flex-direction:column;gap:6px;margin-top:6px}
 .sg{text-align:left;border:1px solid var(--card-border);background:var(--white);border-radius:12px;padding:10px 12px;font:inherit;color:var(--text);cursor:pointer}
 .sg b{display:block;font-size:14px}
@@ -380,6 +383,9 @@ const CARE_NUMBER = '+918610852323';
 // (home banner, service images and banners). Empty: the built-in content is used.
 const SUPABASE_URL = 'https://vmsvcbyxthsjnujyigly.supabase.co';
 const SUPABASE_ANON_KEY = 'sb_publishable_kT_tqnOMqszanNmHDenqnQ_UHznHdeN';
+// Is the service open where customers are? false: after a booking the customer is told the service is not
+// available in their area yet and that we will update them. true: the normal "You're booked" screen.
+const SERVICE_AVAILABLE = false;
 // Firebase web config, used only for the phone one-time code at sign-up. These values are public by design.
 // Leave apiKey empty and the sign-up screen is skipped; the rest of the page keeps working.
 const FIREBASE_CONFIG = {
@@ -1588,7 +1594,8 @@ const byId = id => SERVICES.find(s => s.id === id);
 const OTP_ON = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 let verifiedPhone = '';
 try { verifiedPhone = localStorage.getItem('instaff.verified') || ''; } catch(e){}
-let view = (OTP_ON && !verifiedPhone) ? 'signup' : 'home';   // signup | home | bookings | service | form | review | slot | done | care
+// signup | location | home | bookings | service | form | review | slot | done | care
+let view = (OTP_ON && !verifiedPhone) ? 'signup' : 'location';   // a saved location skips ahead to home, see the end of the script
 let svc = null;             // active service definition
 let st = {};                // active service answers
 let stepIx = 0;             // 0-based index into svc.steps
@@ -1682,6 +1689,7 @@ function render(){
 }
 function trackScreen(){
   if (view === 'signup') return track('signup_viewed');
+  if (view === 'location') return track('location_viewed');
   if (view === 'home') return track('home_viewed');
   if (!svc) return;
   const r = result();
@@ -1704,6 +1712,7 @@ function openService(t, facility){
 function renderView(){
   const r = result();
   if (view === 'signup')    return renderSignup();
+  if (view === 'location')  return renderLocation();
   if (view === 'home')      return renderHome();
   if (view === 'bookings')  return renderBookings();
   if (view === 'service')   return renderService();
@@ -1803,6 +1812,7 @@ function renderHome(){
     <div class="hometop">
       <div class="hello">${greeting()}</div>
       <div class="h1">What do you need today?</div>
+      <button class="locchip ph-no-capture" id="chgloc" type="button">${esc(lead.address ? lead.address.slice(0, 48) : 'Pinned location')} · Change</button>
     </div>
     <div class="hbanner">
       <div class="hbtext">
@@ -1834,6 +1844,7 @@ function renderHome(){
           ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
         </div>
       </section>`).join('');
+  document.getElementById('chgloc').onclick = () => { changingLocation = true; view = 'location'; render(); };
   $screen.querySelectorAll('.fchip').forEach(c => c.onclick = () => {
     homeFilter = c.dataset.filter;
     if (homeFilter !== 'all') track('facility_selected', {facility:homeFilter});
@@ -1943,12 +1954,37 @@ async function verifyOtp(){
       area:lead.area.trim(), id_token:idToken, utm_source: INTERNAL ? 'internal' : UTM.utm_source,
       utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
     su = {step:'form', error:'', confirm:null, verifier:null};
-    view = 'home';
+    view = addressOk() ? 'home' : 'location';   // a location saved on this phone is reused
   } catch(e){
     su.error = otpError(e);
     track('signup_failed', {step:'verify', code:(e && e.code) || 'unknown'});
   }
   render();
+}
+
+/* ---------- location, asked once at the start and changeable from the home screen ---------- */
+async function sendLocation(){
+  if (!leadValid()) return;   // without a name and verified phone there is nothing to attach it to yet
+  sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
+    service:'', facility:'', name:lead.name.trim(), business:lead.business.trim(), phone:'+91' + normPhone(lead.phone),
+    area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
+    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+}
+let changingLocation = false;
+function renderLocation(){
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  $screen.innerHTML = `<div class="hometop"><div class="hello">${changingLocation ? 'Change location' : 'Almost there'}</div>
+      <div class="h1">Where do you need the service?</div></div>` + addressBlock();
+  footerBar(`<button class="btn" id="go" ${addressOk() ? '' : 'disabled'}>Continue</button>`
+    + (changingLocation && addressOk() ? `<button class="btn ghost" id="cancel">Cancel</button>` : ''));
+  const go = document.getElementById('go');
+  bindAddress(() => { go.disabled = !addressOk(); });
+  go.onclick = () => {
+    saveLead(); track('location_set', {method: lead.pinSrc || 'typed'}); sendLocation();
+    changingLocation = false; view = 'home'; render();
+  };
+  const cancel = document.getElementById('cancel');
+  if (cancel) cancel.onclick = () => { changingLocation = false; view = 'home'; render(); };
 }
 
 /* ---------- bookings ---------- */
@@ -1963,7 +1999,7 @@ function renderBookings(){
       <div class="bkcard">
         <div class="bkhead"><span class="bkname">${b.name}</span><span class="bkref">${b.ref}</span></div>
         <div class="bkmeta">${b.when}<br>${b.team}</div>
-        <div><span class="pill ${b.status==='ok'?'ok':'care'}">${b.status==='ok'?'Confirmed':'Needs a call'}</span></div>
+        <div><span class="pill ${b.status==='ok'?'ok':'care'}">${b.status==='ok' ? (SERVICE_AVAILABLE ? 'Confirmed' : 'Requested') : 'Needs a call'}</span></div>
       </div>`).join('') + `<button class="btn ghost" id="clear">Clear all bookings</button>`;
     const c = document.getElementById('clear');
     if (c) c.onclick = () => { bookings = []; saveBookings(); render(); };
@@ -2102,7 +2138,7 @@ function leadValid(){
 }
 // A booking needs an address or a map pin; a call back does not, the team asks on the call.
 function addressOk(){ return lead.address.trim().length > 5 || !!lead.lat; }
-function detailsOk(care){ return leadValid() && (care || addressOk()); }
+function detailsOk(care){ return leadValid(); }   // the location was already set at the start
 function isoDate(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
@@ -2171,11 +2207,21 @@ function loadPlaces(){
   });
   return placesLib;
 }
-function bindAddress(care, btn){
+function addressBlock(){
+  return `<div class="q">
+      <div class="qlabel">Business address</div>
+      <div class="qhelp">Where should the team come? Start typing and pick your address.</div>
+      <input class="tinput big ph-no-capture" id="addr" type="text" autocomplete="off" placeholder="Shop number, street, area" value="${esc(lead.address||'')}">
+      <div class="sugg ph-no-capture" id="sugg"></div>
+      <button class="btn ghost" id="locbtn" type="button" style="margin-top:8px">Use my current location</button>
+      <div class="qhelp ph-no-capture" id="locnote">${lead.lat ? 'Location pinned.' : 'Only use this if you are at the site now. We use it only to send your team to the right place.'}</div>
+    </div>`;
+}
+function bindAddress(onChange){
   const inp = document.getElementById('addr'), list = document.getElementById('sugg');
   const note = document.getElementById('locnote'), loc = document.getElementById('locbtn');
   let lib = null, token = null, timer = null, seq = 0;
-  const refresh = () => { btn.disabled = !detailsOk(care); };
+  const refresh = onChange;
   loadPlaces();   // start loading while the customer fills the other fields
   inp.oninput = () => {
     lead.address = inp.value;
@@ -2247,14 +2293,7 @@ function renderDetails(r){
     + field('business', 'Business name', 'Restaurant, shop or company', 'text', true)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
     + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
-    + `<div class="q">
-        <div class="qlabel">Address of the site${care ? '<span class="opt">optional</span>' : ''}</div>
-        <div class="qhelp">Where should the team come? Start typing and pick your address.</div>
-        <input class="tinput big ph-no-capture" id="addr" type="text" autocomplete="off" placeholder="Shop number, street, area" value="${esc(lead.address||'')}">
-        <div class="sugg ph-no-capture" id="sugg"></div>
-        <button class="btn ghost" id="locbtn" type="button" style="margin-top:8px">Use my current location</button>
-        <div class="qhelp ph-no-capture" id="locnote">${lead.lat ? 'Location pinned.' : 'Only use this if you are at the site now. We use it only to send your team to the right place.'}</div>
-      </div>`
+
     + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
     + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
   if (verifiedPhone){
@@ -2268,7 +2307,6 @@ function renderDetails(r){
   $screen.querySelectorAll('[data-lead]').forEach(inp => {
     inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !detailsOk(care); };
   });
-  bindAddress(care, btn);
   btn.onclick = async () => {
     if (!detailsOk(care) || btn.dataset.busy) return;
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
@@ -2284,6 +2322,7 @@ function renderDetails(r){
     }
     leadError = ''; saveLead();
     bookings.unshift({
+      lines: care ? [] : reviewLines(r),
       ref, name:svc.name, status: care ? 'care' : 'ok', sheet:res, phone:payload.phone,
       when: care ? 'Call back requested' : `${d.name} ${d.num} ${d.mon} · ${slot.time}`,
       team: care ? careReasonOf(r) : teamText(r),
@@ -2302,6 +2341,7 @@ function renderDetails(r){
 function renderDone(){
   const b = bookings[0];
   const care = b.status === 'care';
+  if (!SERVICE_AVAILABLE) return renderNotAvailable(b, care);
   $top.innerHTML = `<div class="tbrow"><div class="tbtitle">${care ? 'Call back requested' : 'Booked'}</div></div>`;
   $screen.innerHTML = `<div class="done">
       <div class="donecircle">${care ? I.phone : I.bigtick}</div>
@@ -2318,6 +2358,23 @@ function renderDone(){
   if (wa) wa.onclick = () => track('whatsapp_clicked');
   document.getElementById('home').onclick = () => { view = 'home'; svc = null; slot = {day:0,time:null}; render(); };
   document.getElementById('mine').onclick = () => { view = 'bookings'; svc = null; slot = {day:0,time:null}; render(); };
+}
+
+// Shown after every booking or call-back request while the service is not open in the customer's area.
+function renderNotAvailable(b, care){
+  $top.innerHTML = `<div class="tbrow"><div class="tbtitle">Your request</div></div>`;
+  const rows = [['Service', b.name]].concat(care ? [['Request', 'Call back'], ['Reason', b.team]]
+      : [['When', b.when], ['Team', b.team]])
+    .concat((b.lines || []).map(l => { const i = l.indexOf(': '); return i > 0 ? [l.slice(0, i), l.slice(i + 2)] : ['', l]; }));
+  $screen.innerHTML = `<div class="done">
+      <div class="donecircle">${I.clock}</div>
+      <div class="donetitle">Not available in your area yet</div>
+      <div class="caretext">Our service is currently not available in your area. We will update you shortly.</div>
+      <div style="width:100%;text-align:left">${UI.sec('Your selections',
+        `<div class="list">${rows.map(([k, v]) => `<div class="li"><span class="k">${esc(k)}</span><span class="v">${esc(v)}</span></div>`).join('')}</div>`)}</div>
+    </div>`;
+  footerBar(`<button class="btn" id="home">Back to services</button>`);
+  document.getElementById('home').onclick = () => { view = 'home'; svc = null; slot = {day:0,time:null}; render(); };
 }
 
 /* ---------- customer care: now a call-back request, captured as a lead ---------- */
@@ -2474,6 +2531,7 @@ function goBack(){
 }
 
 applyContent();
+if (view === 'location' && addressOk()) view = 'home';   // location already saved on this phone
 render();
 loadContent();
 </script>
