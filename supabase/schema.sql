@@ -1,4 +1,4 @@
--- Instaff admin: editable content + service images.
+-- Shyft On admin: editable content + service images.
 -- Run once in Supabase: SQL Editor > New query > paste > Run.
 
 -- One row holds all editable content (banners, per-service images and text).

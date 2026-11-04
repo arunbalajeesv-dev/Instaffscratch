@@ -1,5 +1,5 @@
 /**
- * Instaff smoke test: writes each booking or call-back request from the prototype into this Google Sheet.
+ * Shyft On smoke test (formerly Instaff): writes each booking or call-back request from the prototype into this Google Sheet.
  *
  * Set up once (about 10 minutes):
  *  1. Create a new Google Sheet. Name it "Instaff smoke test leads".

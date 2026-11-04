@@ -3,10 +3,10 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Instaff</title>
-<meta name="description" content="Instaff booking prototype — nine services on one config-driven engine.">
+<title>Shyft On</title>
+<meta name="description" content="Shyft On: trained local professionals for your business, booked by the shift.">
 <meta name="theme-color" content="#0F7A63">
-<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F7A63'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='sans-serif' font-weight='bold' fill='white'>i</text></svg>">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%230F7A63'/><text y='72' x='50' text-anchor='middle' font-size='62' font-family='sans-serif' font-weight='bold' fill='white'>S</text></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
@@ -1829,7 +1829,7 @@ function tileHTML(s, f){
   </button>`;
 }
 function renderHome(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">S</span>Shyft On</div></div>`;
   const shown = FACILITIES.filter(f => homeFilter === 'all' || f.id === homeFilter);
   const hb = CONTENT.home || {};
   const hbTags = (Array.isArray(hb.tags) ? hb.tags.map(txt).filter(Boolean).slice(0, 4) : []);
@@ -1914,7 +1914,7 @@ function otpError(e){
   return "We couldn't send the code just now. Please try again in a moment.";
 }
 function renderSignup(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">S</span>Shyft On</div></div>`;
   const code = su.step === 'code';
   const field = (key, label, ph, type, help, opt) => `<div class="q">
       <div class="qlabel">${label}${opt ? '<span class="opt">optional</span>' : ''}</div>${help ? `<div class="qhelp">${help}</div>` : ''}
@@ -1997,7 +1997,7 @@ async function sendLocation(){
 }
 let changingLocation = false;
 function renderLocation(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">i</span>Instaff</div></div>`;
+  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark">S</span>Shyft On</div></div>`;
   $screen.innerHTML = `<div class="hometop"><div class="hello">${changingLocation ? 'Change location' : 'Almost there'}</div>
       <div class="h1">Where do you need the service?</div></div>` + addressBlock();
   footerBar(`<button class="btn" id="go" ${addressOk() ? '' : 'disabled'}>Continue</button>`
@@ -2351,7 +2351,7 @@ function renderDetails(r){
       ref, name:svc.name, status: care ? 'care' : 'ok', sheet:res, phone:payload.phone,
       when: care ? 'Call back requested' : `${d.name} ${d.num} ${d.mon} · ${slot.time}`,
       team: care ? careReasonOf(r) : teamText(r),
-      wa: [`Instaff ${payload.type.toLowerCase()} ${ref}`, svc.name,
+      wa: [`Shyft On ${payload.type.toLowerCase()} ${ref}`, svc.name,
            care ? payload.details : `${payload.date} at ${payload.time} · ${payload.team}`,
            care ? '' : payload.details,
            [payload.name, payload.business, payload.area].filter(Boolean).join(', '),
