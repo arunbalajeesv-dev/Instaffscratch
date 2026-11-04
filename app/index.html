@@ -26,15 +26,10 @@ body{
 }
 button{font-family:inherit;cursor:pointer}
 
-/* ---- device shell: full bleed on phones, a framed phone on desktop ---- */
+/* ---- device shell: full bleed on phones; on tablets and desktops a centred column, see the end of this style block ---- */
 #app{
   width:100%;height:100%;max-width:430px;background:var(--page);
   display:flex;flex-direction:column;overflow:hidden;position:relative;
-}
-@media (min-width:760px) and (min-height:760px){
-  body{padding:24px}
-  #app{height:860px;max-height:100%;border-radius:30px;border:1px solid #C9D5D0;
-    box-shadow:0 30px 70px -40px rgba(11,95,77,.55)}
 }
 
 /* ---- top bar ---- */
@@ -353,6 +348,36 @@ a.btn{text-decoration:none}
 .empty{display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;padding:52px 20px;color:var(--muted)}
 .emptytitle{font-size:16px;font-weight:800;color:var(--text)}
 .emptysub{font-size:13px;line-height:1.5;max-width:30ch}
+
+/* ============================================================
+   WIDER SCREENS (tablet and desktop): the same app in a centred column, no phone frame.
+   The top bar, content and bottom bar share one column width, set per screen on #app by render().
+   ============================================================ */
+button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
+@media (min-width:700px){
+  body{display:block;padding:0;background:var(--page)}
+  #app{max-width:none;height:100%;border-radius:0;border:0;box-shadow:none;--colw:680px}
+  #app[data-view="home"],#app[data-view="bookings"]{--colw:960px}
+  .topbar,.bottombar,.tabbar{padding-left:max(16px,calc((100% - var(--colw))/2));padding-right:max(16px,calc((100% - var(--colw))/2))}
+  .topbar{padding-top:16px;padding-bottom:12px}
+  .screen{padding:28px max(16px,calc((100% - var(--colw))/2)) 32px}
+  .screen::-webkit-scrollbar{width:10px}
+  .screen::-webkit-scrollbar-thumb{background:#C9D5D0;border-radius:6px}
+  .fchips{top:-28px}
+  .h1{font-size:31px}
+  .sgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:20px 14px}
+  .slots{grid-template-columns:repeat(4,1fr)}
+  .bottombar{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px}
+  .bottombar .estimate{margin-right:auto}
+  .bottombar .btn{width:auto;min-width:230px;padding:0 28px}
+  .bottombar .btn.ghost{min-width:0;padding:0 16px}
+  .tabbar{justify-content:center}
+  .gcard:hover .gtile,.card:hover,.chip:hover,.row:hover,.day:hover,.slot:hover{border-color:var(--primary)}
+  .btn:not(:disabled):hover{filter:brightness(1.08)}
+}
+@media (min-width:700px) and (max-width:1000px){
+  .sgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
+}
 </style>
 </head>
 <body>
@@ -1680,6 +1705,7 @@ let lastScreenKey = '';
 let lastTrackedKey = '';
 function render(){
   const k = [view, svc ? svc.id : '', stepIx, leadMode].join('|');
+  $screen.parentElement.dataset.view = view;   // lets the stylesheet pick a column width per screen
   const top = k === lastScreenKey ? $screen.scrollTop : 0;
   renderView();
   $screen.scrollTop = top;
