@@ -438,7 +438,10 @@ const INTERNAL = (() => {
     return localStorage.getItem('instaff.internal') === '1';
   } catch(e){ return false; }
 })();
-const TRACKING = !!(POSTHOG_KEY && POSTHOG_HOST) && !INTERNAL;
+// Demo mode (/app?demo=1), used by the landing page's embedded preview: no sign-up or location screens,
+// nothing saved on the visitor's phone, nothing sent to the Sheet or PostHog.
+const DEMO = new URLSearchParams(location.search).get('demo') === '1';
+const TRACKING = !!(POSTHOG_KEY && POSTHOG_HOST) && !INTERNAL && !DEMO;
 if (TRACKING){
   // Official PostHog snippet, from the project settings.
   !function(t,e){var o,n,p,r;e.__SV||(window.posthog && window.posthog.__loaded)||(window.posthog=e,e._i=[],e.init=function(i,s,a){function g(t,e){var o=e.split(".");2==o.length&&(t=t[o[0]],e=o[1]),t[e]=function(){t.push([e].concat(Array.prototype.slice.call(arguments,0)))}}p||((p=t.createElement("script")).type="text/javascript",p.crossOrigin="anonymous",p.async=!0,p.src=s.api_host.replace(".i.posthog.com","-assets.i.posthog.com")+"/static/array.js",p.onerror=function(){p=null},(r=t.getElementsByTagName("script")[0]).parentNode.insertBefore(p,r));var u=e;for(void 0!==a?u=e[a]=[]:a="posthog",u.people=u.people||[],Object.defineProperty(u,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(t){var e="posthog";return"posthog"!==a&&(e+="."+a),t||(e+=" (stub)"),e}}),Object.defineProperty(u.people,"toString",{configurable:!0,enumerable:!0,writable:!0,value:function(){return u.toString(1)+".people (stub)"}}),o="th ih nh sh ah init Lh Nh Ah Oh zh Gu Dh Hh Eh Zh Jh Kh Xh Yh td capture getExtension qh dr rd calculateEventProperties nd register register_once register_for_session unregister unregister_for_session ud Rh od getFeatureFlag getFeatureFlagPayload getFeatureFlagResult getAllFeatureFlags isFeatureEnabled reloadFeatureFlags updateFlags updateEarlyAccessFeatureEnrollment getEarlyAccessFeatures on onFeatureFlags onSurveysLoaded onSessionId getSurveys getActiveMatchingSurveys onActiveMatchingSurveysChanged renderSurvey displaySurvey cancelPendingSurvey canRenderSurvey canRenderSurveyAsync hd identify setPersonProperties unsetPersonProperties group resetGroups setPersonPropertiesForFlags resetPersonPropertiesForFlags setGroupPropertiesForFlags resetGroupPropertiesForFlags reset dd shutdown setIdentity clearIdentity get_distinct_id getGroups get_session_id get_session_replay_url alias set_config startSessionRecording stopSessionRecording sessionRecordingStarted captureException addExceptionStep captureLog startExceptionAutocapture stopExceptionAutocapture loadToolbar get_property getSessionProperty ad Vh createPersonProfile setInternalOrTestUser ld fh hh opt_in_capturing opt_out_capturing dh has_opted_in_capturing has_opted_out_capturing get_explicit_consent_status is_capturing clear_opt_in_out_capturing Uh debug Qu Os getPageViewId captureTraceFeedback captureTraceMetric Ch".split(" "),n=0;n<o.length;n++)g(u,o[n]);e._i.push([i,s,a])},e.__SV=1)}(document,window.posthog||[]);
@@ -1623,7 +1626,7 @@ const OTP_ON = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 let verifiedPhone = '';
 try { verifiedPhone = localStorage.getItem('instaff.verified') || ''; } catch(e){}
 // signup | location | home | bookings | service | form | review | slot | done | care
-let view = (OTP_ON && !verifiedPhone) ? 'signup' : 'location';   // a saved location skips ahead to home, see the end of the script
+let view = (OTP_ON && !verifiedPhone && !DEMO) ? 'signup' : 'location';   // a saved location skips ahead to home, see the end of the script
 let svc = null;             // active service definition
 let st = {};                // active service answers
 let stepIx = 0;             // 0-based index into svc.steps
@@ -1637,11 +1640,17 @@ let lead = {name:'', business:'', phone:'', area:'', address:'', lat:'', lng:'',
 let leadMode = 'booking';                                             // 'booking' or 'care' (call back)
 let leadError = '';
 try { Object.assign(lead, JSON.parse(localStorage.getItem('instaff.lead') || '{}'), {website:''}); } catch(e){}
+if (DEMO){   // a sample customer, and no saved bookings
+  bookings = [];
+  Object.assign(lead, {name:'Demo customer', business:'Demo business', phone:'9876543210', area:'',
+    address:'Demo location, Chennai', lat:'13.0827', lng:'80.2707', pinSrc:'demo'});
+}
 function saveLead(){
+  if (DEMO) return;
   try { localStorage.setItem('instaff.lead', JSON.stringify({name:lead.name, business:lead.business, phone:lead.phone, area:lead.area,
       address:lead.address, lat:lead.lat, lng:lead.lng, pinSrc:lead.pinSrc})); } catch(e){}
 }
-function saveBookings(){ try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
+function saveBookings(){ if (DEMO) return; try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
 
 const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','14:00','16:00','18:00','20:00','21:00','22:00'];
 function days(){
@@ -1841,7 +1850,7 @@ function renderHome(){
     <div class="hometop">
       <div class="hello">${greeting()}</div>
       <div class="h1">What do you need today?</div>
-      <button class="locchip ph-no-capture" id="chgloc" type="button">${esc(lead.address ? lead.address.slice(0, 48) : 'Pinned location')} · Change</button>
+      ${DEMO ? '' : `<button class="locchip ph-no-capture" id="chgloc" type="button">${esc(lead.address ? lead.address.slice(0, 48) : 'Pinned location')} · Change</button>`}
     </div>
     <div class="hbanner">
       <div class="hbtext">
@@ -1873,7 +1882,8 @@ function renderHome(){
           ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
         </div>
       </section>`).join('');
-  document.getElementById('chgloc').onclick = () => { changingLocation = true; view = 'location'; render(); };
+  const chg = document.getElementById('chgloc');
+  if (chg) chg.onclick = () => { changingLocation = true; view = 'location'; render(); };
   $screen.querySelectorAll('.fchip').forEach(c => c.onclick = () => {
     homeFilter = c.dataset.filter;
     if (homeFilter !== 'all') track('facility_selected', {facility:homeFilter});
@@ -2205,6 +2215,7 @@ function buildLead(r, ref){
 // Apps Script web apps do not answer browser preflight checks, so the row goes as plain text
 // with no-cors. The browser cannot read the reply; a network failure still throws, and is shown.
 async function sendLead(payload){
+  if (DEMO) return 'demo';
   if (!SHEET_URL) return 'not-configured';
   try {
     await fetch(SHEET_URL, {method:'POST', mode:'no-cors',
@@ -2369,16 +2380,17 @@ function renderDetails(r){
 function renderDone(){
   const b = bookings[0];
   const care = b.status === 'care';
-  if (!SERVICE_AVAILABLE) return renderNotAvailable(b, care);
+  if (!SERVICE_AVAILABLE && !DEMO) return renderNotAvailable(b, care);
   $top.innerHTML = `<div class="tbrow"><div class="tbtitle">${care ? 'Call back requested' : 'Booked'}</div></div>`;
   $screen.innerHTML = `<div class="done">
       <div class="donecircle">${care ? I.phone : I.bigtick}</div>
       <div class="donetitle">${care ? "We'll call you back" : "You're booked"}</div>
       <div class="caretext">${b.name}<br>${care ? esc(b.team) : b.when + '<br>' + b.team}</div>
       <div class="ref">${b.ref}</div>
+      ${DEMO ? '<div class="warnnote">This is a demo. Nothing was booked or sent.</div>' : ''}
       <div class="caretext ph-no-capture">We'll call you on ${esc(b.phone)} to confirm the team and the price before anyone is sent. Nothing is charged here.</div>
     </div>`;
-  footerBar((WHATSAPP_NUMBER
+  footerBar((WHATSAPP_NUMBER && !DEMO
       ? `<a class="btn alt" href="https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(b.wa)}" target="_blank" rel="noopener" id="wa">Send these details on WhatsApp</a>` : '')
     + `<button class="btn" id="home">Back to services</button>
        <button class="btn ghost" id="mine">See my bookings</button>`);
@@ -2559,7 +2571,7 @@ function goBack(){
 }
 
 applyContent();
-if (view === 'location' && addressOk()) view = 'home';   // location already saved on this phone
+if (view === 'location' && (addressOk() || DEMO)) view = 'home';   // location already saved on this phone
 render();
 loadContent();
 </script>
