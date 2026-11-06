@@ -230,7 +230,7 @@ function renderLeads(){
       <td>${esc(l.Business)}</td><td><a href="tel:${esc(l.Phone.replace(/[^\d+]/g,''))}">${esc(l.Phone)}</a>${l.Verified==='Yes' ? ' <span title="Phone verified with a one-time code" style="color:var(--primary-d)">&#10003;</span>' : ''}</td><td>${esc(l.Facility)}</td>
       <td>${esc([l.Date, l['Start time']].filter(Boolean).join(' '))}</td><td>${/^https:\/\/www\.google\.com\/maps/.test(l['Map link']||'') ? `<a href="${esc(l['Map link'])}" target="_blank" rel="noopener">Map</a>` : ''}</td><td>${esc([l.Source, l.Medium, l.Campaign].filter(Boolean).join(' / '))}</td></tr>
       <tr class="det" hidden><td colspan="10"><b>Ref</b> ${esc(l.Ref)} · <b>Area</b> ${esc(l.Area||'-')} · <b>Team</b> ${esc(l.Team||'-')} · <b>On site</b> ${esc(l['Time on site']||'-')}<br>
-      <b>Address</b> ${esc(l.Address||'-')}<br><b>Details</b> ${esc(l['Booking details']||'-')}${l.Note ? `<br><b>Note</b> ${esc(l.Note)}` : ''}</td></tr>`).join('')
+      <b>Price shown</b> ${esc(l['Price shown']||'-')} · <b>Address</b> ${esc(l.Address||'-')}<br><b>Details</b> ${esc(l['Booking details']||'-')}${l.Note ? `<br><b>Note</b> ${esc(l.Note)}` : ''}</td></tr>`).join('')
       : '<tr><td colspan="10" style="text-align:center;color:var(--muted);padding:30px">No leads match.</td></tr>'}
     </tbody></table></div><div class="hint" style="margin-top:8px">Shows the newest 1,000 leads from the Google Sheet. Tap a row for the details.</div>`);
   const bind = (id, k, ev='onchange') => { document.getElementById(id)[ev] = e => { filt[k] = e.target.type === 'checkbox' ? e.target.checked : e.target.value; renderLeads(); if (id==='fq') { const q = document.getElementById('fq'); q.focus(); q.setSelectionRange(q.value.length,q.value.length); } }; };

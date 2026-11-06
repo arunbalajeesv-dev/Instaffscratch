@@ -1,0 +1,11 @@
+{
+  "name": "shyft-on",
+  "private": true,
+  "scripts": {
+    "build:prices": "node tools/build-prices.mjs",
+    "test": "node tests/price-cases.cjs"
+  },
+  "devDependencies": {
+    "jsdom": "^30.1.3"
+  }
+}

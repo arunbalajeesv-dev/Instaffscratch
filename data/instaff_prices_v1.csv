@@ -1,0 +1,228 @@
+service_id,item_key,value,item,charged_per
+toilet_cleaning,fac_single,70,Single toilet (up to 300 sqft),per booking
+toilet_cleaning,fac_small,100,Small (300 to 600 sqft),per booking
+toilet_cleaning,fac_medium,150,"Medium (600 to 1,000 sqft)",per booking
+toilet_cleaning,fac_large,200,"Large (1,000 to 2,000 sqft)",per booking
+toilet_cleaning,fac_xl,250,"Very large (2,000 to 4,000 sqft)",per booking
+toilet_cleaning,fac_complex,320,"Complex (above 4,000 sqft)",per booking
+toilet_cleaning,wc_qty,15,WC / toilets,each
+toilet_cleaning,urinal_qty,15,Urinals,each
+toilet_cleaning,wash_basin_qty,10,Wash basins,each
+toilet_cleaning,mirror_qty,10,Mirrors,each
+toilet_cleaning,countertop_qty,15,Countertops,each
+toilet_cleaning,setting.method,package,,
+toilet_cleaning,setting.rate_per_worker_hour,,,
+toilet_cleaning,setting.min_price,,,
+toilet_cleaning,setting.two_pro_extra,,,
+toilet_cleaning,setting.live,Y,,
+opening_closing,pkg_small,180,Small (0 to 20 seats),per booking
+opening_closing,pkg_medium,230,Medium (21 to 50 seats),per booking
+opening_closing,pkg_large,300,Large (51 to 75 seats),per booking
+opening_closing,pkg_xl,350,Extra Large (76 to 100 seats),per booking
+opening_closing,fan_qty,15,Fan cleaning,per fan
+opening_closing,sofa_qty,25,Sofa cleaning,per sofa
+opening_closing,carpet_sqft,40,Carpet cleaning (100 to 500 sqft),per 100 sqft
+opening_closing,outdoor_sqft,70,"Outdoor cleaning (250 to 1,500 sqft)",per 250 sqft
+opening_closing,glass_section_qty,50,High glass (up to 6 ft),per section
+opening_closing,stain_zone_qty,15,Stain removal,per spot
+opening_closing,setting.method,package,,
+opening_closing,setting.rate_per_worker_hour,,,
+opening_closing,setting.min_price,,,
+opening_closing,setting.two_pro_extra,,,
+opening_closing,setting.live,Y,,
+service_time_cleaning,pkg_small,160,"Small (up to 20 seats), 45 min minimum",per booking
+service_time_cleaning,pkg_medium,200,"Medium (21 to 50 seats), 60 min minimum",per booking
+service_time_cleaning,pkg_large,230,"Large (51 to 75 seats), 90 min minimum",per booking
+service_time_cleaning,pkg_xl,280,"Extra Large (76 to 100 seats), 120 min minimum",per booking
+service_time_cleaning,extra_30min,60,Extra live cleaning time,per extra 30 min
+service_time_cleaning,glass_section_qty,50,High glass / facade,per section
+service_time_cleaning,sofa_qty,25,Sofa cleaning,per sofa
+service_time_cleaning,carpet_sqft,40,Carpet cleaning,per 100 sqft
+service_time_cleaning,outdoor_sqft,70,Outdoor cleaning,per 250 sqft
+service_time_cleaning,stain_zone_qty,15,Special stain removal,per zone
+service_time_cleaning,washbasin_qty,10,Washbasin cleaning,per washbasin
+service_time_cleaning,setting.method,package,,
+service_time_cleaning,setting.rate_per_worker_hour,,,
+service_time_cleaning,setting.min_price,,,
+service_time_cleaning,setting.two_pro_extra,,,
+service_time_cleaning,setting.live,Y,,
+store_cleaning,SC01,200,"Up to 2,000 sqft",per booking
+store_cleaning,SC02,300,"2,001 to 4,000 sqft",per booking
+store_cleaning,SC03,380,"4,001 to 6,000 sqft",per booking
+store_cleaning,SC04,420,"6,001 to 8,000 sqft",per booking
+store_cleaning,SC05,460,"8,001 to 14,000 sqft",per booking
+store_cleaning,deep_rack_bays,15,Shelf & rack deep cleaning,per rack or bay
+store_cleaning,wall_area_sqft,15,Wall cleaning,per 100 sqft
+store_cleaning,ceiling_area_sqft,15,Ceiling dusting (up to 8 ft),per 100 sqft
+store_cleaning,fixture_count,15,Fixture cleaning,per 3 fixtures
+store_cleaning,exterior_rack_bays,15,Shelf & rack exterior dusting,per 3 racks
+store_cleaning,setting.method,package,,
+store_cleaning,setting.rate_per_worker_hour,,,
+store_cleaning,setting.min_price,,,
+store_cleaning,setting.two_pro_extra,,,
+store_cleaning,setting.live,Y,,
+kitchen_equipment_cleaning,small,120,Small kitchen (up to 300 sqft),per booking
+kitchen_equipment_cleaning,medium,170,Medium kitchen (up to 600 sqft),per booking
+kitchen_equipment_cleaning,large,220,"Large kitchen (up to 1,000 sqft)",per booking
+kitchen_equipment_cleaning,xl,250,"XL kitchen (up to 1,500 sqft)",per booking
+kitchen_equipment_cleaning,tile.small,15,"Tile cleaning, small kitchen",per booking
+kitchen_equipment_cleaning,tile.medium,20,"Tile cleaning, medium kitchen",per booking
+kitchen_equipment_cleaning,tile.large,25,"Tile cleaning, large kitchen",per booking
+kitchen_equipment_cleaning,tile.xl,30,"Tile cleaning, XL kitchen",per booking
+kitchen_equipment_cleaning,extra_counters_qty,20,Counters and work surfaces,each
+kitchen_equipment_cleaning,extra_shelf_exterior_qty,15,Shelf exteriors,each
+kitchen_equipment_cleaning,extra_storage_exterior_qty,15,Storage exteriors,each
+kitchen_equipment_cleaning,extra_sink_qty,15,Sinks,each
+kitchen_equipment_cleaning,extra_hob_qty,15,Hob,each
+kitchen_equipment_cleaning,extra_burner_qty,15,Stove / burner,each
+kitchen_equipment_cleaning,griddle,15,Griddle / Hot plate,each
+kitchen_equipment_cleaning,deep_fryer,20,Deep fryer,each
+kitchen_equipment_cleaning,oven,20,Oven,each
+kitchen_equipment_cleaning,tandoor,20,Tandoor,each
+kitchen_equipment_cleaning,microwave,20,Microwave,each
+kitchen_equipment_cleaning,fridge_1door,80,"Refrigerator, 1 door",each
+kitchen_equipment_cleaning,fridge_2door,120,"Refrigerator, 2 door",each
+kitchen_equipment_cleaning,fridge_3door,150,"Refrigerator, 3 door",each
+kitchen_equipment_cleaning,freezer_70_140,80,"Freezer, 70 to 140 L",each
+kitchen_equipment_cleaning,freezer_150_300,120,"Freezer, 150 to 300 L",each
+kitchen_equipment_cleaning,freezer_300_750,150,"Freezer, 300 to 750 L",each
+kitchen_equipment_cleaning,rack_interior,20,"Rack / equipment stand, interior",each
+kitchen_equipment_cleaning,mixer,20,Mixer / Grinder / Blender,each
+kitchen_equipment_cleaning,dishwasher,40,Dishwasher machine,each
+kitchen_equipment_cleaning,exhaust_fan,20,Exhaust fan,each
+kitchen_equipment_cleaning,chimney,30,Chimney exterior,each
+kitchen_equipment_cleaning,fan,15,Fan,each
+kitchen_equipment_cleaning,window,20,Window,each
+kitchen_equipment_cleaning,sanitisation,40,Kitchen sanitisation,each
+kitchen_equipment_cleaning,setting.method,package,,
+kitchen_equipment_cleaning,setting.rate_per_worker_hour,,,
+kitchen_equipment_cleaning,setting.min_price,,,
+kitchen_equipment_cleaning,setting.two_pro_extra,,,
+kitchen_equipment_cleaning,setting.live,Y,,
+kst_dishwashing,pkg_small,120,Up to 150 pcs,per booking
+kst_dishwashing,pkg_moderate,150,151 to 350 pcs,per booking
+kst_dishwashing,pkg_high,180,351 to 700 pcs,per booking
+kst_dishwashing,pkg_bulk,220,"701 to 1,200 pcs",per booking
+kst_dishwashing,large_vessel_qty,20,Extra-large vessels (30 L and above),per vessel
+kst_dishwashing,oven_accessory_qty,15,Oven accessories,per item
+kst_dishwashing,tandoor_accessory_qty,15,Tandoor accessories,per item
+kst_dishwashing,fryer_accessory_qty,15,Fryer accessories,per item
+kst_dishwashing,crate_container_qty,10,Crates and containers,per item
+kst_dishwashing,trolley_qty,10,Trolleys,per trolley
+kst_dishwashing,rack_qty,10,Racks,per rack
+kst_dishwashing,dishwasher_machine_qty,40,Dishwasher machine,per machine
+kst_dishwashing,bulk_sanitisation_qty,40,Bulk sanitisation,per 100 pcs
+kst_dishwashing,setting.method,package,,
+kst_dishwashing,setting.rate_per_worker_hour,,,
+kst_dishwashing,setting.min_price,,,
+kst_dishwashing,setting.two_pro_extra,,,
+kst_dishwashing,setting.live,Y,,
+guest_assistance_server,dur_2,270,"2-hour block, per server",per server
+guest_assistance_server,dur_4,400,"4-hour block, per server",per server
+guest_assistance_server,extra_hour,90,"Extra hour on a 2-hour block, per server",per server per hour
+guest_assistance_server,setting.method,package,,
+guest_assistance_server,setting.rate_per_worker_hour,,,
+guest_assistance_server,setting.min_price,,,
+guest_assistance_server,setting.two_pro_extra,,,
+guest_assistance_server,setting.live,Y,,
+pos_support,dur_2,270,"2-hour block, per professional",per professional
+pos_support,dur_4,400,"4-hour block, per professional",per professional
+pos_support,extra_hour,90,"Extra hour on a 2-hour block, per professional",per professional per hour
+pos_support,setting.method,package,,
+pos_support,setting.rate_per_worker_hour,,,
+pos_support,setting.min_price,,,
+pos_support,setting.two_pro_extra,,,
+pos_support,setting.live,Y,,
+busser_table_support,dur_2,270,"2-hour block, per person",per person
+busser_table_support,dur_4,400,"4-hour block, per person",per person
+busser_table_support,extra_hour,90,"Extra hour on a 2-hour block, per person",per person per hour
+busser_table_support,setting.method,package,,
+busser_table_support,setting.rate_per_worker_hour,,,
+busser_table_support,setting.min_price,,,
+busser_table_support,setting.two_pro_extra,,,
+busser_table_support,setting.live,Y,,
+stock_counting,retail.q1,120,"Retail, Up to 250 units",per booking
+stock_counting,retail.q2,150,"Retail, 251 to 500 units",per booking
+stock_counting,retail.q3,280,"Retail, 501 to 1,000 units",per booking
+stock_counting,retail.q4,420,"Retail, 1,001 to 2,000 units",per booking
+stock_counting,restaurant.q1,120,"Restaurant, Up to 250 units",per booking
+stock_counting,restaurant.q2,150,"Restaurant, 251 to 500 units",per booking
+stock_counting,restaurant.q3,280,"Restaurant, 501 to 1,000 units",per booking
+stock_counting,restaurant.q4,420,"Restaurant, 1,001 to 2,000 units",per booking
+stock_counting,fmcg.q1,120,"FMCG / Grocery, Up to 250 units",per booking
+stock_counting,fmcg.q2,150,"FMCG / Grocery, 251 to 500 units",per booking
+stock_counting,fmcg.q3,280,"FMCG / Grocery, 501 to 1,000 units",per booking
+stock_counting,fmcg.q4,420,"FMCG / Grocery, 1,001 to 2,000 units",per booking
+stock_counting,warehouse.q1,150,"Warehouse, Up to 250 units",per booking
+stock_counting,warehouse.q2,240,"Warehouse, 251 to 500 units",per booking
+stock_counting,warehouse.q3,350,"Warehouse, 501 to 1,000 units",per booking
+stock_counting,warehouse.q4,480,"Warehouse, 1,001 to 2,000 units",per booking
+stock_counting,setting.method,package,,
+stock_counting,setting.rate_per_worker_hour,,,
+stock_counting,setting.min_price,,,
+stock_counting,setting.two_pro_extra,,,
+stock_counting,setting.live,Y,,
+packing_tagging_scanning,packing_only.small,150,"Packing only, up to 250 units",per booking
+packing_tagging_scanning,packing_only.medium,280,"Packing only, 251 to 500 units",per booking
+packing_tagging_scanning,packing_only.large,380,"Packing only, 501 to 1,000 units",per booking
+packing_tagging_scanning,tagging_only.small,150,"Tagging only, up to 250 units",per booking
+packing_tagging_scanning,tagging_only.medium,200,"Tagging only, 251 to 500 units",per booking
+packing_tagging_scanning,tagging_only.large,230,"Tagging only, 501 to 1,000 units",per booking
+packing_tagging_scanning,scanning_only.small,150,"Scanning only, up to 250 units",per booking
+packing_tagging_scanning,scanning_only.medium,200,"Scanning only, 251 to 500 units",per booking
+packing_tagging_scanning,scanning_only.large,250,"Scanning only, 501 to 1,000 units",per booking
+packing_tagging_scanning,packing_tagging.small,250,"Packing + Tagging, up to 250 units",per booking
+packing_tagging_scanning,packing_tagging.medium,340,"Packing + Tagging, 251 to 500 units",per booking
+packing_tagging_scanning,packing_tagging.large,420,"Packing + Tagging, 501 to 1,000 units",per booking
+packing_tagging_scanning,tagging_scanning.small,180,"Tagging + Scanning, up to 250 units",per booking
+packing_tagging_scanning,tagging_scanning.medium,240,"Tagging + Scanning, 251 to 500 units",per booking
+packing_tagging_scanning,tagging_scanning.large,300,"Tagging + Scanning, 501 to 1,000 units",per booking
+packing_tagging_scanning,packing_tagging_scanning.small,250,"Packing + Tagging + Scanning, up to 250 units",per booking
+packing_tagging_scanning,packing_tagging_scanning.medium,370,"Packing + Tagging + Scanning, 251 to 500 units",per booking
+packing_tagging_scanning,packing_tagging_scanning.large,450,"Packing + Tagging + Scanning, 501 to 1,000 units",per booking
+packing_tagging_scanning,setting.method,package,,
+packing_tagging_scanning,setting.rate_per_worker_hour,,,
+packing_tagging_scanning,setting.min_price,,,
+packing_tagging_scanning,setting.two_pro_extra,,,
+packing_tagging_scanning,setting.live,Y,,
+garbage_waste,dry_small,120,"Dry waste, Small (0 to 10 bags)",per booking
+garbage_waste,dry_medium,180,"Dry waste, Medium (11 to 25 bags)",per booking
+garbage_waste,dry_large,250,"Dry waste, Large (26 to 50 bags)",per booking
+garbage_waste,dry_xl,380,"Dry waste, XL (51 to 75 bags)",per booking
+garbage_waste,dry_block,40,"Dry waste above 75, each extra block of 25 cartons",per extra block of 25 cartons
+garbage_waste,dry_medium.mix,150,"Dry Medium, when mixed with wet",per booking
+garbage_waste,dry_large.mix,200,"Dry Large, when mixed with wet",per booking
+garbage_waste,dry_xl.mix,280,"Dry XL or more, when mixed with wet",per booking
+garbage_waste,dry_block.mix,40,"Each extra block of 25 cartons, when mixed",per extra block of 25 cartons
+garbage_waste,wet_small,150,"Wet waste, Small (up to 30 L)",per booking
+garbage_waste,wet_medium,200,"Wet waste, Medium (30 to 60 L)",per booking
+garbage_waste,wet_block,280,"Wet waste above 60 L, each extra 30 L",per extra 30 L
+garbage_waste,wet_medium.mix,40,"Wet Medium or more, when mixed with dry",per booking
+garbage_waste,wet_block.mix,40,"Each extra 30 L, when mixed",per extra 30 L
+garbage_waste,extra_25ft,20,"Carrying distance, each extra 25 ft beyond 50 ft",per extra 25 ft
+garbage_waste,setting.method,package,,
+garbage_waste,setting.rate_per_worker_hour,,,
+garbage_waste,setting.min_price,,,
+garbage_waste,setting.two_pro_extra,,,
+garbage_waste,setting.live,Y,,
+loading_unloading,small,10,Small item (up to 10 kg),per item
+loading_unloading,medium,20,Medium item (11 to 25 kg),per item
+loading_unloading,large,30,Large item (26 to 50 kg),per item
+loading_unloading,setting.method,package,,
+loading_unloading,setting.rate_per_worker_hour,,,
+loading_unloading,setting.min_price,,,
+loading_unloading,setting.two_pro_extra,,,
+loading_unloading,setting.live,Y,,
+_all,setting.tax_included,Y,,
+_all,setting.gst_percent,,,
+_all,setting.round_price_to,,,
+_all,setting.show_price_as,Fixed,,
+opening_closing,question.same_price_open_close,Y,,
+stock_counting,question.price_follows_sku_factor,Y,,
+packing_tagging_scanning,question.price_follows_sku_factor,Y,,
+packing_tagging_scanning,question.price_follows_mixed_stock,Y,,
+garbage_waste,question.price_follows_access,Y,,
+loading_unloading,question.price_follows_service,Y,,
+loading_unloading,question.price_follows_item_type,N,,
+loading_unloading,question.price_follows_access,Y,,
+loading_unloading,question.price_follows_distance,Y,,

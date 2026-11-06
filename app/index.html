@@ -380,6 +380,7 @@ a.btn{text-decoration:none}
 .bkmeta{font-size:12px;color:var(--muted);line-height:1.5}
 .pill{display:inline-block;font-size:10px;font-weight:800;letter-spacing:.05em;text-transform:uppercase;
   border-radius:999px;padding:3px 9px}
+.pricev{font-size:16px;font-weight:800;color:var(--ptext);font-variant-numeric:tabular-nums}
 .pill.ok{background:var(--tint);color:var(--dark);border:1px solid var(--tint-border)}
 .pill.care{background:var(--warn-bg);color:var(--warn-text);border:1px solid var(--warn-border)}
 .empty{display:flex;flex-direction:column;align-items:center;gap:9px;text-align:center;padding:52px 20px;color:var(--muted)}
@@ -425,6 +426,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
   <div id="footer"></div>
 </div>
 
+<script src="/app/prices.js"></script>
 <script>
 "use strict";
 
@@ -1452,7 +1454,7 @@ const SERVICES = [
     else subtotal = dryBase >= wetBase ? dryBase + wetMix : wetBase + dryMix;
     const distMins = st.extraFt * GARB_FT_STEP_MIN;
     const workload = subtotal * a.f + distMins;
-    return Object.assign({a, subtotal, distMins, d, w}, staffing(workload));
+    return Object.assign({a, subtotal, distMins, d, w, dryBase, wetBase}, staffing(workload));
   },
   rows:(st,r) => {
     const out = [['Waste type', st.waste === 'dry' ? 'Dry' : st.waste === 'wet' ? 'Wet' : 'Mixed']];
@@ -1654,6 +1656,120 @@ const CATS = ['Cleaning','Front of house','Operations'];
 const byId = id => SERVICES.find(s => s.id === id);
 
 /* ============================================================
+   PRICES
+   Read from app/prices.js, which is built from data/instaff_prices_v1.csv by tools/build-prices.mjs.
+   A price is found by service id and item key only, never by the item's label. There is no payout here.
+   If the file is missing, or anything the customer chose has no price, the WHOLE booking shows
+   "Price confirmed on call". A partial figure is never shown.
+   ============================================================ */
+const PRICES = (typeof window !== 'undefined' && window.INSTAFF_PRICES && window.INSTAFF_PRICES.services) ? window.INSTAFF_PRICES : null;
+const NO_PRICE = {};                       // thrown when something chosen has no price
+const pSvc = id => (PRICES && PRICES.services[id]) || null;
+function pNeed(id, key){
+  const v = pSvc(id) && pSvc(id).items[key];
+  if (typeof v !== 'number' || !isFinite(v)) throw NO_PRICE;
+  return v;
+}
+function pOpt(id, key){ const v = pSvc(id) && pSvc(id).items[key]; return (typeof v === 'number' && isFinite(v)) ? v : 0; }   // no key = 0
+function pFollows(id, name, dflt){ const q = pSvc(id) && pSvc(id).questions; return q && name in q ? q[name] : dflt; }
+function pSet(id, name){
+  const s = pSvc(id) && pSvc(id).settings;
+  if (s && s[name] !== undefined && s[name] !== '') return s[name];
+  const a = PRICES && PRICES.all && PRICES.all.settings;
+  return a && a[name] !== undefined ? a[name] : '';
+}
+// Add-ons: block add-ons are charged per started block, the same way addonMins counts them.
+const pAddons = (id, list, qty) => list.reduce((t, a) => {
+  const v = qty[a.id] || 0;
+  return v ? t + pNeed(id, a.id) * (a.block ? Math.ceil(v / a.block) : v) : t;
+}, 0);
+const pBlockPrice = (id, st, r) => r.people * (pNeed(id, st.dur) + (r.extra ? r.extra * pNeed(id, 'extra_hour') : 0));
+const PRICERS = {
+  toilet_cleaning:(id, st) => pNeed(id, st.facility)
+    + TOILET_FIX.reduce((t, x) => st.qty[x.id] ? t + st.qty[x.id] * pNeed(id, x.id) : t, 0),
+  opening_closing:(id, st) => {
+    if (pFollows(id, 'same_price_open_close', true) === false) throw NO_PRICE;   // separate opening and closing prices are not supported
+    return pNeed(id, st.pkg) + pAddons(id, OC_ADDONS, st.qty);
+  },
+  service_time_cleaning:(id, st, r) => pNeed(id, st.pkg)
+    + (r.live > r.p.min ? Math.ceil((r.live - r.p.min) / STC_STEP) * pNeed(id, 'extra_30min') : 0)
+    + pAddons(id, STC_ADDONS, st.qty),
+  store_cleaning:(id, st) => pNeed(id, st.size) + pAddons(id, SC_ADDONS, st.qty),
+  kitchen_equipment_cleaning:(id, st) => pNeed(id, st.size)
+    + (st.tile ? pNeed(id, 'tile.' + st.size) : 0)
+    + KE_EXTRAS.concat(KE_EQUIP).reduce((t, x) => st.qty[x.id] ? t + st.qty[x.id] * pNeed(id, x.id) : t, 0),
+  kst_dishwashing:(id, st) => pNeed(id, st.pkg) + pAddons(id, DW_ADDONS, st.qty),
+  guest_assistance_server:pBlockPrice,
+  pos_support:pBlockPrice,
+  busser_table_support:pBlockPrice,
+  stock_counting:(id, st, r) => pNeed(id, st.stock_type + '.' + r.qty.id)
+    * (pFollows(id, 'price_follows_sku_factor', true) ? r.sku.factor : 1),
+  packing_tagging_scanning:(id, st, r) => pNeed(id, st.task + '.' + r.qty.id)
+    * (pFollows(id, 'price_follows_sku_factor', true) ? r.sku.factor : 1)
+    * (pFollows(id, 'price_follows_mixed_stock', true) ? r.cf : 1),
+  garbage_waste:(id, st, r) => {
+    const hasDry = st.waste === 'dry' || st.waste === 'mixed', hasWet = st.waste === 'wet' || st.waste === 'mixed';
+    const dCustom = st.dry === 'dry_custom', wCustom = st.wet === 'wet_custom';
+    const dKey = dCustom ? 'dry_xl' : st.dry, wKey = wCustom ? 'wet_medium' : st.wet;   // "More" uses the XL / Medium price
+    const dryPrice = hasDry ? pNeed(id, dKey) + (dCustom ? st.dryBlocks * pNeed(id, 'dry_block') : 0) : 0;
+    const wetPrice = hasWet ? pNeed(id, wKey) + (wCustom ? st.wetBlocks * pNeed(id, 'wet_block') : 0) : 0;
+    const dryMix = hasDry ? pOpt(id, dKey + '.mix') + (dCustom ? st.dryBlocks * pOpt(id, 'dry_block.mix') : 0) : 0;
+    const wetMix = hasWet ? pOpt(id, wKey + '.mix') + (wCustom ? st.wetBlocks * pOpt(id, 'wet_block.mix') : 0) : 0;
+    // Mixed: the same choice the time engine makes. The bigger one is charged in full, the other at its mixed price.
+    const sub = st.waste === 'dry' ? dryPrice : st.waste === 'wet' ? wetPrice
+      : (r.dryBase >= r.wetBase ? dryPrice + wetMix : wetPrice + dryMix);
+    return sub * (pFollows(id, 'price_follows_access', true) ? r.a.f : 1)
+      + (st.extraFt ? st.extraFt * pNeed(id, 'extra_25ft') : 0);   // extra distance is added after the factor
+  },
+  loading_unloading:(id, st, r) => {
+    const itemType = pFollows(id, 'price_follows_item_type', false);
+    let t = st.lines.reduce((sum, l, i) => sum + (l.qty || 0) * pNeed(id, l.size) * (itemType ? r.lines[i].tf : 1), 0);
+    if (pFollows(id, 'price_follows_service', true)) t *= r.svcT.mult;
+    if (pFollows(id, 'price_follows_distance', true)) t *= r.df;
+    if (pFollows(id, 'price_follows_access', true)) t *= r.a.f;
+    return t;
+  }
+};
+// The booking price in whole rupees, or null when it has to be confirmed on a call.
+function priceFor(s, st, r){
+  try {
+    if (!PRICES || !s || !r || r.care) return null;
+    const fn = PRICERS[s.id];
+    if (!fn || (pSet(s.id, 'method') || 'package') !== 'package') return null;   // only the package method exists
+    let t = fn(s.id, st, r);
+    const two = Number(pSet(s.id, 'two_pro_extra'));     // blank = no extra for 2 professionals
+    if (r.pros === 2 && two > 0) t += two;
+    const min = Number(pSet(s.id, 'min_price'));         // blank = no minimum
+    if (min > 0 && t < min) t = min;
+    if (String(pSet(s.id, 'tax_included')).toUpperCase() === 'N'){   // Y: prices are shown as they are, no GST added
+      const g = Number(pSet(s.id, 'gst_percent')); if (g > 0) t *= 1 + g / 100;
+    }
+    const step = Number(pSet(s.id, 'round_price_to')) > 0 ? Number(pSet(s.id, 'round_price_to')) : 1;   // blank = nearest rupee
+    t = Math.round(t / step) * step;
+    return isFinite(t) ? t : null;
+  } catch(e){
+    if (e === NO_PRICE) return null;
+    throw e;
+  }
+}
+const inr = n => '\u20B9' + Number(n).toLocaleString('en-IN');
+const priceLabel = () => { const m = String(pSet('', 'show_price_as')).toLowerCase(); return m && m !== 'fixed' ? 'Estimated price' : 'Price'; };   // Fixed or blank: "Price"
+// A service with setting.live = N is hidden from the home page. Y or blank shows it.
+const serviceLive = id => String(pSet(id, 'live')).toUpperCase() !== 'N';
+function priceBlock(r){
+  const p = priceFor(svc, st, r);
+  return UI.sec(priceLabel(), p === null
+    ? `<div class="list"><div class="li"><span class="k">${esc(svc.name)}</span><span class="tbc">Price confirmed on call</span></div></div>`
+    : `<div class="list"><div class="li"><span class="k">${esc(svc.name)}</span><span class="pricev">${inr(p)}</span></div></div>
+       <div class="qhelp" style="margin-top:8px">Nothing is charged on this screen.</div>`);
+}
+function priceRow(r){
+  const p = priceFor(svc, st, r);
+  return `<div class="list"><div class="li"><span class="k">${priceLabel()}</span>${p === null
+    ? '<span class="tbc">Price confirmed on call</span>' : `<span class="pricev">${inr(p)}</span>`}</div></div>`;
+}
+
+/* ============================================================
    APP STATE + STORAGE
    ============================================================ */
 // The phone number this browser has verified with a one-time code ('' = not yet).
@@ -1769,11 +1885,14 @@ function trackScreen(){
     return track('step_viewed', {service_id:svc.id, step:stepIx + 1, step_title:svc.steps[stepIx].title});
   if (view === 'care')
     return track('care_shown', {service_id:svc.id, reason:careReasonOf(r)});
-  if (view === 'review' && r && !r.care)
+  if (view === 'review' && r && !r.care){
+    const p = priceFor(svc, st, r);
     return track('review_viewed', {service_id:svc.id,
       workload_minutes: r.workload,
       professionals: r.blocks ? r.people : r.pros,
-      time_on_site_minutes: r.blocks ? r.per*60 : r.onsite});
+      time_on_site_minutes: r.blocks ? r.per*60 : r.onsite,
+      price_shown: p !== null, price_rs: p});
+  }
 }
 function openService(t, facility){
   svc = t; if (facility !== undefined) svcFacility = facility;
@@ -1899,18 +2018,18 @@ function renderHome(){
     <div class="fchips" role="tablist" aria-label="Type of facility">
       ${[{id:'all', name:'All'}].concat(FACILITIES).map(f => `
         <button class="fchip" role="tab" data-filter="${f.id}" aria-selected="${homeFilter === f.id}">
-          ${f.icon || ''}<span>${f.name}</span>${f.services ? `<span class="n">${f.services.length}</span>` : ''}
+          ${f.icon || ''}<span>${f.name}</span>${f.services ? `<span class="n">${f.services.filter(serviceLive).length}</span>` : ''}
         </button>`).join('')}
     </div>
-    ` + shown.map(f => `
+    ` + shown.filter(f => f.more || f.services.some(serviceLive)).map(f => `
       <section class="fsec" aria-label="${esc(f.name)}">
         <div class="fsechead">
           <span class="fsecicon">${f.icon}</span>
           <span><span class="fsectitle">${f.name}</span>
-            <span class="fsecsub">${f.sub} · ${plural(f.services.length, 'service')}</span></span>
+            <span class="fsecsub">${f.sub} · ${plural(f.services.filter(serviceLive).length, 'service')}</span></span>
         </div>
         <div class="sgrid">
-          ${f.services.map(id => tileHTML(byId(id), f)).join('')}
+          ${f.services.filter(serviceLive).map(id => tileHTML(byId(id), f)).join('')}
           ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
         </div>
       </section>`).join('');
@@ -2158,8 +2277,7 @@ function renderReview(r){
     + UI.sec('Your booking', `<div class="list">${rows.map(([k,v]) =>
         `<div class="li"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')
         + (st.note ? `<div class="li"><span class="k">Note</span><span class="v">${esc(st.note.slice(0,32))}${st.note.length>32?'…':''}</span></div>` : '')}</div>`)
-    + UI.sec('Estimated price', `<div class="list"><div class="li"><span class="k">${svc.name}</span><span class="tbc">Price to be confirmed</span></div></div>
-        <div class="qhelp" style="margin-top:8px">Prices are not set yet, so nothing is charged on this screen.</div>`)
+    + priceBlock(r)
     + (svc.contentOnReview ? contentHTML(svc, st, 'review') : '')
     + (svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '')
     + (note ? `<div class="note">${note}</div>` : '')
@@ -2182,7 +2300,7 @@ function renderSlot(r){
   const total = journey(), n = svc.steps.length;
   bar(svc.name, `Step ${n+2} of ${total} · Date and time`, total, n+1);
   const ds = days();
-  $screen.innerHTML =
+  $screen.innerHTML = priceRow(r) +
     UI.q('Which day?','', `<div class="dayscroll" data-input="day">` + ds.map((d,i) =>
       `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}">
         <span class="dname">${i===0?'Today':d.name}</span><span class="dnum">${d.num}</span><span class="dmon">${d.mon}</span>
@@ -2244,6 +2362,7 @@ function buildLead(r, ref){
     name: lead.name.trim(), business: lead.business.trim(),
     phone: '+91' + normPhone(lead.phone), area: lead.area.trim(),
     address: lead.address.trim(), lat: lead.lat, lng: lead.lng,
+    price_shown: !care && priceFor(svc, st, r) !== null, price_rs: care ? '' : (priceFor(svc, st, r) === null ? '' : priceFor(svc, st, r)),
     utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium: UTM.utm_medium, utm_campaign: UTM.utm_campaign
   };
 }
