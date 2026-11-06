@@ -159,7 +159,16 @@ button{font-family:inherit;cursor:pointer}
 .spin{width:16px;height:16px;border:2px solid currentColor;border-right-color:transparent;border-radius:50%;animation:sp .8s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .pinned{display:flex;gap:11px;align-items:center;padding:11px 13px;border-radius:14px;background:var(--tint);border:1px solid var(--tint-border)}
-.pinned[hidden],.aclear[hidden]{display:none}
+.pinned[hidden],.aclear[hidden],.confirm[hidden],.q[hidden]{display:none}
+.confirm{display:flex;flex-direction:column;gap:12px;padding:14px;border-radius:16px;background:var(--tint);border:1.5px solid var(--tint-border)}
+.cfrow{display:flex;gap:11px;align-items:flex-start}
+.cfrow .ci{flex:0 0 auto;width:34px;height:34px;border-radius:50%;background:var(--white);color:var(--ptext);display:grid;place-items:center}
+.cfrow b{display:block;font-size:14px}
+.cfrow span{display:block;font-size:13px;color:var(--text);line-height:1.4;margin-top:2px}
+.cfrow small{display:block;font-size:11.5px;color:var(--muted);margin-top:3px}
+.cfbtns{display:flex;flex-direction:column;gap:4px}
+.cfbtns .btn{min-height:46px;font-size:14.5px}
+.cfbtns .btn.ghost{min-height:38px}
 .pinned .tk{flex:0 0 auto;width:26px;height:26px;border-radius:50%;background:var(--accent);color:#fff;display:grid;place-items:center}
 .pinned b{display:block;font-size:13.5px}
 .pinned span{display:block;font-size:12px;color:var(--muted);line-height:1.35}
@@ -1974,6 +1983,37 @@ function renderSignup(){
   sync();
   go.onclick = code ? verifyOtp : sendOtp;
 }
+// Turns coordinates into a readable address. Needs the Geocoding API on the Maps key; without it this returns null
+// and the checkout simply shows "your current location" for the customer to confirm.
+async function reverseGeocode(lat, lng){
+  try {
+    if (!await loadPlaces()) return null;
+    const {Geocoder} = await google.maps.importLibrary('geocoding');
+    const res = await new Geocoder().geocode({location:{lat:Number(lat), lng:Number(lng)}});
+    const rs = (res && res.results) || [];
+    const r = rs.find(x => /street_address|premise|route|sublocality/.test((x.types || []).join(' '))) || rs[0];
+    if (!r) return null;
+    const part = (r.address_components || []).find(c => /sublocality|locality/.test((c.types || []).join(' ')));
+    return {text:r.formatted_address, area: part ? part.long_name : ''};
+  } catch(e){ return null; }
+}
+let locAccuracy = 0;
+function autoLocate(){
+  if (DEMO || !navigator.geolocation) return;
+  navigator.geolocation.getCurrentPosition(async p => {
+    lead.lat = p.coords.latitude.toFixed(6); lead.lng = p.coords.longitude.toFixed(6); lead.pinSrc = 'gps';
+    locAccuracy = Math.round(p.coords.accuracy);
+    const g = await reverseGeocode(lead.lat, lead.lng);
+    if (g){ lead.address = g.text; if (!lead.area.trim() && g.area) lead.area = g.area; }
+    saveLead(); track('location_captured', {method:'auto'});
+    // It also goes to the Sheet, so a customer who signs in but never books still leaves a pin.
+    sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
+      service:'', facility:'', name:lead.name.trim(), business:'', phone:'+91' + normPhone(lead.phone),
+      area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
+      utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+  }, () => track('location_denied'), {enableHighAccuracy:false, timeout:12000, maximumAge:300000});
+}
+
 async function sendOtp(){
   const go = document.getElementById('go');
   if (!normPhone(lead.phone) || go.dataset.busy) return;
@@ -2010,6 +2050,7 @@ async function verifyOtp(){
       utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
     su = {step:'form', error:'', confirm:null, verifier:null};
     view = 'home';
+    autoLocate();   // asks the browser for the location once, right after sign-in
   } catch(e){
     su.error = otpError(e);
     track('signup_failed', {step:'verify', code:(e && e.code) || 'unknown'});
@@ -2153,7 +2194,7 @@ function renderSlot(r){
         `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${t}</button>`).join('') + `</div>`);
   bindInputs();
   footerBar(estimateLine(r) + `<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
-  document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; view = 'details'; render(); };
+  document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
 }
 
 /* ---------- customer details (smoke test lead capture) ---------- */
@@ -2167,7 +2208,9 @@ function leadValid(){
   return lead.name.trim().length > 1 && !!normPhone(lead.phone);   // business name is optional
 }
 // A booking needs an address or a map pin; a call back does not, the team asks on the call.
-function addressOk(){ return lead.address.trim().length > 5 || !!lead.lat; }
+// The location found at sign-in, or saved from a past visit, only counts once the customer confirms it at checkout.
+let locConfirmed = false;
+function addressOk(){ return locConfirmed && (lead.address.trim().length > 5 || !!lead.lat); }
 function detailsOk(care){ return leadValid() && addressOk(); }   // name, verified phone and a location, for bookings and call backs
 function isoDate(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
@@ -2244,7 +2287,14 @@ const ICO_TICK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" st
 function addressBlock(){
   return `<div class="q">
       <div class="qlabel">Where do you need the team?</div>
-      <div class="qhelp">Search the address of your shop, store or site, then pick it from the list.</div>
+      <div class="confirm ph-no-capture" id="locconfirm" hidden>
+        <div class="cfrow"><span class="ci">${ICO_PIN}</span>
+          <div><b>Is this where the team should come?</b><span id="cfaddr"></span><small id="cfnote"></small></div></div>
+        <div class="cfbtns"><button class="btn" id="cfyes" type="button">Yes, confirm this location</button>
+          <button class="btn ghost" id="cfno" type="button">Use a different address</button></div>
+      </div>
+      <div class="q" id="addrpick">
+      <div class="qhelp" id="addrhelp">Search the address of your shop, store or site, then pick it from the list.</div>
       <div class="afield">
         <span class="aico">${ICO_PIN}</span>
         <input class="tinput big ph-no-capture" id="addr" type="text" autocomplete="off" placeholder="Search shop number, street or area" value="${esc(lead.address||'')}">
@@ -2252,7 +2302,8 @@ function addressBlock(){
       </div>
       <div class="sugg ph-no-capture" id="sugg"></div>
       <button class="locbtn" id="locbtn" type="button">${ICO_AIM}<span>Use my current location</span></button>
-      <div class="pinned ph-no-capture" id="pinned" ${lead.lat ? '' : 'hidden'}><span class="tk">${ICO_TICK}</span><div><b>Location pinned</b><span id="pinnote"></span></div></div>
+      </div>
+      <div class="pinned ph-no-capture" id="pinned" ${lead.lat ? '' : 'hidden'}><span class="tk">${ICO_TICK}</span><div><b>Location confirmed</b><span id="pinnote"></span></div></div>
       <div class="aerr ph-no-capture" id="locnote"></div>
     </div>`;
 }
@@ -2260,23 +2311,40 @@ function bindAddress(onChange){
   const inp = document.getElementById('addr'), list = document.getElementById('sugg'), clr = document.getElementById('aclear');
   const err = document.getElementById('locnote'), loc = document.getElementById('locbtn');
   const pinned = document.getElementById('pinned'), pinnote = document.getElementById('pinnote');
-  let lib = null, token = null, timer = null, seq = 0, accuracy = 0;
+  const conf = document.getElementById('locconfirm'), cfaddr = document.getElementById('cfaddr'), cfnote = document.getElementById('cfnote');
+  let lib = null, token = null, timer = null, seq = 0, accuracy = locAccuracy;
+  const hasLoc = () => !!lead.lat || lead.address.trim().length > 5;
   const sync = () => {
     clr.hidden = !inp.value;
-    pinned.hidden = !lead.lat;
+    const pending = !locConfirmed && hasLoc();
+    conf.hidden = !pending;
+    document.getElementById('addrpick').hidden = pending;   // the search box returns once they choose a different address
+    cfaddr.textContent = lead.address.trim() || 'Your current location';
+    cfnote.textContent = lead.pinSrc === 'gps' ? 'Found from your phone' + (accuracy ? ', accurate to about ' + accuracy + ' m' : '')
+      : lead.pinSrc === 'place' ? 'Matched on the map' : 'Saved from your last visit';
+    pinned.hidden = !(locConfirmed && lead.lat);
     pinnote.textContent = lead.pinSrc === 'gps' ? 'From your phone' + (accuracy ? ', accurate to about ' + accuracy + ' m' : '')
       : lead.pinSrc === 'place' ? 'Matched to the address above' : 'Saved from your last visit';
     onChange();
   };
+  document.getElementById('cfyes').onclick = () => {
+    locConfirmed = true; track('location_confirmed', {method: lead.pinSrc || 'saved'}); sync();
+  };
+  document.getElementById('cfno').onclick = () => {
+    inp.value = ''; lead.address = ''; lead.lat = lead.lng = ''; lead.pinSrc = ''; accuracy = 0; locConfirmed = false;
+    list.innerHTML = ''; err.textContent = ''; sync(); inp.focus();
+  };
+  if (!inp.value && lead.lat && !lead.address) inp.placeholder = 'Search to add the street address (optional)';
   sync();
   loadPlaces();   // start loading while the customer fills the other fields
   clr.onclick = () => {
-    inp.value = ''; lead.address = ''; lead.lat = lead.lng = ''; lead.pinSrc = ''; accuracy = 0;
+    inp.value = ''; lead.address = ''; lead.lat = lead.lng = ''; lead.pinSrc = ''; accuracy = 0; locConfirmed = false;
     list.innerHTML = ''; err.textContent = ''; sync(); inp.focus();
   };
   inp.oninput = () => {
     lead.address = inp.value; err.textContent = '';
     if (lead.pinSrc === 'place'){ lead.lat = lead.lng = ''; lead.pinSrc = ''; }   // the text no longer matches the pin
+    locConfirmed = inp.value.trim().length > 5;   // typing it themselves is their confirmation
     sync(); clearTimeout(timer); list.innerHTML = '';
     const q = inp.value.trim(); if (q.length < 3) return;
     timer = setTimeout(async () => {
@@ -2305,6 +2373,7 @@ function bindAddress(onChange){
               const part = (place.addressComponents || []).find(c => /sublocality|locality/.test((c.types || []).join(' ')));
               if (part && !lead.area.trim()) lead.area = part.longText;
               inp.value = lead.address; list.innerHTML = ''; token = null; err.textContent = '';
+              locConfirmed = true; track('location_confirmed', {method:'search'});
             } catch(e){ err.textContent = "We couldn't load that address. Please try another one, or type it in."; }
             sync();
           };
@@ -2320,7 +2389,11 @@ function bindAddress(onChange){
     loc.disabled = true; loc.innerHTML = '<i class="spin"></i><span>Finding your location…</span>';
     navigator.geolocation.getCurrentPosition(p => {
       lead.lat = p.coords.latitude.toFixed(6); lead.lng = p.coords.longitude.toFixed(6); lead.pinSrc = 'gps';
-      accuracy = Math.round(p.coords.accuracy); idle(); sync();
+      accuracy = Math.round(p.coords.accuracy); locAccuracy = accuracy; locConfirmed = true; idle(); sync();
+      track('location_confirmed', {method:'gps'});
+      if (!inp.value.trim()) reverseGeocode(lead.lat, lead.lng).then(g => {
+        if (g && !inp.value.trim()){ lead.address = g.text; inp.value = g.text; if (!lead.area.trim() && g.area) lead.area = g.area; sync(); }
+      });
     }, e => {
       idle();
       err.textContent = e && e.code === 1
@@ -2451,7 +2524,7 @@ function renderCare(r){
     <button class="btn ghost" id="chg">Change my answers</button>`);
   document.getElementById('callback').onclick = () => {
     track('callback_requested', {service_id:svc.id, reason:careReasonOf(r)});
-    leadMode = 'care'; leadError = ''; view = 'details'; render(); };
+    leadMode = 'care'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
   document.getElementById('chg').onclick = () => { view = 'form'; render(); };
 }
 
