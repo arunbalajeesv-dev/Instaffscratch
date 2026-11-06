@@ -1628,7 +1628,7 @@ const OTP_ON = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 let verifiedPhone = '';
 try { verifiedPhone = localStorage.getItem('instaff.verified') || ''; } catch(e){}
 // signup | location | home | bookings | service | form | review | slot | done | care
-let view = (OTP_ON && !verifiedPhone && !DEMO) ? 'signup' : 'location';   // a saved location skips ahead to home, see the end of the script
+let view = (OTP_ON && !verifiedPhone && !DEMO) ? 'signup' : 'home';   // signup | home | bookings | service | form | review | slot | details | done | care
 let svc = null;             // active service definition
 let st = {};                // active service answers
 let stepIx = 0;             // 0-based index into svc.steps
@@ -1729,7 +1729,6 @@ function render(){
 }
 function trackScreen(){
   if (view === 'signup') return track('signup_viewed');
-  if (view === 'location') return track('location_viewed');
   if (view === 'home') return track('home_viewed');
   if (!svc) return;
   const r = result();
@@ -1752,7 +1751,6 @@ function openService(t, facility){
 function renderView(){
   const r = result();
   if (view === 'signup')    return renderSignup();
-  if (view === 'location')  return renderLocation();
   if (view === 'home')      return renderHome();
   if (view === 'bookings')  return renderBookings();
   if (view === 'service')   return renderService();
@@ -1852,7 +1850,6 @@ function renderHome(){
     <div class="hometop">
       <div class="hello">${greeting()}</div>
       <div class="h1">What do you need today?</div>
-      ${DEMO ? '' : `<button class="locchip ph-no-capture" id="chgloc" type="button">${esc(lead.address ? lead.address.slice(0, 48) : 'Pinned location')} · Change</button>`}
     </div>
     <div class="hbanner">
       <div class="hbtext">
@@ -1884,8 +1881,6 @@ function renderHome(){
           ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
         </div>
       </section>`).join('');
-  const chg = document.getElementById('chgloc');
-  if (chg) chg.onclick = () => { changingLocation = true; view = 'location'; render(); };
   $screen.querySelectorAll('.fchip').forEach(c => c.onclick = () => {
     homeFilter = c.dataset.filter;
     if (homeFilter !== 'all') track('facility_selected', {facility:homeFilter});
@@ -1931,24 +1926,20 @@ function otpError(e){
 function renderSignup(){
   $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark"></span>Shyft On</div></div>`;
   const code = su.step === 'code';
-  const field = (key, label, ph, type, help, opt) => `<div class="q">
-      <div class="qlabel">${label}${opt ? '<span class="opt">optional</span>' : ''}</div>${help ? `<div class="qhelp">${help}</div>` : ''}
-      <input class="tinput big" data-lead="${key}" type="${type}" placeholder="${ph}" value="${esc(lead[key]||'')}"
-        ${type === 'tel' ? 'inputmode="tel" autocomplete="tel"' : key === 'name' ? 'autocomplete="name"' : 'autocomplete="organization"'}></div>`;
   $screen.innerHTML = `<div class="hometop"><div class="hello">Welcome</div>
-      <div class="h1">${code ? 'Enter the code' : 'Tell us who you are'}</div></div>`
+      <div class="h1">${code ? 'Enter the code' : 'Sign in with your mobile number'}</div></div>`
     + (code
       ? `<div class="q"><div class="qlabel">6-digit code</div>
           <div class="qhelp">Sent to +91 ${esc(lead.phone)}.</div>
           <input class="tinput big" id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>
          <button class="btn ghost" id="changenum">Use a different number</button>`
-      : field('name', 'Your name', 'Full name', 'text')
-        + field('business', 'Business name', 'Restaurant, shop or company', 'text', '', true)
-        + field('phone', 'Phone number', '10-digit mobile number', 'tel', "We'll send a one-time code to this number. Our team also calls it to confirm bookings."))
+      : `<div class="q"><div class="qlabel">Mobile number</div>
+          <div class="qhelp">We'll send a one-time code to this number. Our team also calls it to confirm bookings.</div>
+          <input class="tinput big" data-lead="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number" value="${esc(lead.phone||'')}"></div>`)
     + (su.error ? `<div class="warnnote">${su.error}</div>` : '');
   footerBar(`<button class="btn" id="go" disabled>${code ? 'Verify and continue' : 'Send code'}</button>`);
   const go = document.getElementById('go');
-  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim()) : leadValid();
+  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim()) : !!normPhone(lead.phone);
   const sync = () => { go.disabled = !ok(); };
   if (code){
     document.getElementById('otp').oninput = sync;
@@ -1994,37 +1985,12 @@ async function verifyOtp(){
       area:lead.area.trim(), id_token:idToken, utm_source: INTERNAL ? 'internal' : UTM.utm_source,
       utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
     su = {step:'form', error:'', confirm:null, verifier:null};
-    view = addressOk() ? 'home' : 'location';   // a location saved on this phone is reused
+    view = 'home';
   } catch(e){
     su.error = otpError(e);
     track('signup_failed', {step:'verify', code:(e && e.code) || 'unknown'});
   }
   render();
-}
-
-/* ---------- location, asked once at the start and changeable from the home screen ---------- */
-async function sendLocation(){
-  if (!leadValid()) return;   // without a name and verified phone there is nothing to attach it to yet
-  sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
-    service:'', facility:'', name:lead.name.trim(), business:lead.business.trim(), phone:'+91' + normPhone(lead.phone),
-    area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
-    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
-}
-let changingLocation = false;
-function renderLocation(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark"></span>Shyft On</div></div>`;
-  $screen.innerHTML = `<div class="hometop"><div class="hello">${changingLocation ? 'Change location' : 'Almost there'}</div>
-      <div class="h1">Where do you need the service?</div></div>` + addressBlock();
-  footerBar(`<button class="btn" id="go" ${addressOk() ? '' : 'disabled'}>Continue</button>`
-    + (changingLocation && addressOk() ? `<button class="btn ghost" id="cancel">Cancel</button>` : ''));
-  const go = document.getElementById('go');
-  bindAddress(() => { go.disabled = !addressOk(); });
-  go.onclick = () => {
-    saveLead(); track('location_set', {method: lead.pinSrc || 'typed'}); sendLocation();
-    changingLocation = false; view = 'home'; render();
-  };
-  const cancel = document.getElementById('cancel');
-  if (cancel) cancel.onclick = () => { changingLocation = false; view = 'home'; render(); };
 }
 
 /* ---------- bookings ---------- */
@@ -2178,7 +2144,7 @@ function leadValid(){
 }
 // A booking needs an address or a map pin; a call back does not, the team asks on the call.
 function addressOk(){ return lead.address.trim().length > 5 || !!lead.lat; }
-function detailsOk(care){ return leadValid(); }   // the location was already set at the start
+function detailsOk(care){ return leadValid() && addressOk(); }   // name, verified phone and a location, for bookings and call backs
 function isoDate(d){
   return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
 }
@@ -2250,7 +2216,7 @@ function loadPlaces(){
 }
 function addressBlock(){
   return `<div class="q">
-      <div class="qlabel">Business address</div>
+      <div class="qlabel">Address of the site</div>
       <div class="qhelp">Where should the team come? Start typing and pick your address.</div>
       <input class="tinput big ph-no-capture" id="addr" type="text" autocomplete="off" placeholder="Shop number, street, area" value="${esc(lead.address||'')}">
       <div class="sugg ph-no-capture" id="sugg"></div>
@@ -2291,8 +2257,7 @@ function bindAddress(onChange){
               lead.address = place.formattedAddress || pp.text.text;
               lead.lat = place.location.lat().toFixed(6); lead.lng = place.location.lng().toFixed(6); lead.pinSrc = 'place';
               const part = (place.addressComponents || []).find(c => /sublocality|locality/.test((c.types || []).join(' ')));
-              const area = $screen.querySelector('[data-lead="area"]');
-              if (part && area && !lead.area.trim()){ lead.area = part.longText; area.value = part.longText; }
+              if (part && !lead.area.trim()) lead.area = part.longText;
               inp.value = lead.address; list.innerHTML = ''; token = null;
               note.textContent = 'Address pinned.';
             } catch(e){ note.textContent = 'Could not load that address. Please type it in.'; }
@@ -2331,9 +2296,8 @@ function renderDetails(r){
       ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
       : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, teamText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
-    + field('business', 'Business name', 'Restaurant, shop or company', 'text', false)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
-    + field('area', 'Area', 'For example Thoraipakkam, OMR', 'text', false)
+    + addressBlock()
 
     + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
     + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
@@ -2348,6 +2312,7 @@ function renderDetails(r){
   $screen.querySelectorAll('[data-lead]').forEach(inp => {
     inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !detailsOk(care); };
   });
+  bindAddress(() => { btn.disabled = !detailsOk(care); });
   btn.onclick = async () => {
     if (!detailsOk(care) || btn.dataset.busy) return;
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
@@ -2573,7 +2538,6 @@ function goBack(){
 }
 
 applyContent();
-if (view === 'location' && (addressOk() || DEMO)) view = 'home';   // location already saved on this phone
 render();
 loadContent();
 </script>
