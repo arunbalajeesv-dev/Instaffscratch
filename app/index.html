@@ -358,6 +358,7 @@ a.btn{text-decoration:none}
 .dayscroll::-webkit-scrollbar{height:0}
 .day{flex:0 0 auto;width:62px;background:var(--white);border:1px solid var(--card-border);border-radius:15px;
   padding:10px 0;display:flex;flex-direction:column;align-items:center;gap:1px}
+.day:disabled{opacity:.4;cursor:default}
 .day[aria-pressed="true"]{border-color:var(--primary);background:var(--primary);color:var(--on-primary)}
 .dname{font-size:10.5px;font-weight:700;opacity:.8}
 .dnum{font-size:18px;font-weight:800;letter-spacing:-.02em}
@@ -1807,7 +1808,15 @@ function saveLead(){
 }
 function saveBookings(){ if (DEMO) return; try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
 
-const TIMES = ['07:00','08:00','09:00','10:00','11:00','12:00','14:00','16:00','18:00','20:00','21:00','22:00'];
+// Every half hour from 7:00 AM to 10:00 PM. Stored as 24-hour text ("14:30") for the lead; shown as "02:30 PM".
+const TIMES = (() => { const t = []; for (let m = 7*60; m <= 22*60; m += 30) t.push(String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0')); return t; })();
+const fmt12 = t => { const h = parseInt(t, 10), m = t.slice(3, 5); return String(h % 12 || 12).padStart(2,'0') + ':' + m + (h < 12 ? ' AM' : ' PM'); };
+// Today only offers times after the current time. Other days offer every slot.
+function slotsFor(dayIndex){
+  if (dayIndex !== 0) return TIMES;
+  const now = new Date(), mins = now.getHours()*60 + now.getMinutes();
+  return TIMES.filter(t => parseInt(t, 10)*60 + parseInt(t.slice(3), 10) > mins);
+}
 function days(){
   const out = [], now = new Date();
   for (let i = 0; i < 10; i++){
@@ -2309,14 +2318,18 @@ function renderSlot(r){
   const total = journey(), n = svc.steps.length;
   bar(svc.name, `Step ${n+2} of ${total} · Date and time`, total, n+1);
   const ds = days();
+  const todayLeft = slotsFor(0).length > 0;
+  if (!todayLeft && slot.day === 0){ slot.day = 1; slot.time = null; }   // nothing left today, start on tomorrow
+  const times = slotsFor(slot.day);
+  if (slot.time && times.indexOf(slot.time) < 0) slot.time = null;       // a time that has since passed
   $screen.innerHTML = priceRow(r) +
     UI.q('Which day?','', `<div class="dayscroll" data-input="day">` + ds.map((d,i) =>
-      `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}">
+      `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}" ${i===0 && !todayLeft ? 'disabled' : ''}>
         <span class="dname">${i===0?'Today':d.name}</span><span class="dnum">${d.num}</span><span class="dmon">${d.mon}</span>
       </button>`).join('') + `</div>`)
     + UI.q('What time do we start?', r.care ? '' : approxText(r),
-      `<div class="slots" data-input="time">` + TIMES.map(t =>
-        `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${t}</button>`).join('') + `</div>`);
+      `<div class="slots" data-input="time">` + times.map(t =>
+        `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${fmt12(t)}</button>`).join('') + `</div>`);
   bindInputs();
   footerBar(estimateLine(r) + `<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
   document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
@@ -2544,7 +2557,7 @@ function renderDetails(r){
   $screen.innerHTML =
     (care
       ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
-      : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, approxText(r)))
+      : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${fmt12(slot.time)}`, approxText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
     + addressBlock()
@@ -2580,7 +2593,7 @@ function renderDetails(r){
     bookings.unshift({
       lines: care ? [] : reviewLines(r),
       ref, name:svc.name, status: care ? 'care' : 'ok', sheet:res, phone:payload.phone,
-      when: care ? 'Call back requested' : `${d.name} ${d.num} ${d.mon} · ${slot.time}`,
+      when: care ? 'Call back requested' : `${d.name} ${d.num} ${d.mon} · ${fmt12(slot.time)}`,
       team: care ? careReasonOf(r) : teamText(r),
       wa: [`Shyft On ${payload.type.toLowerCase()} ${ref}`, svc.name,
            care ? payload.details : `${payload.date} at ${payload.time} · ${payload.team}`,
