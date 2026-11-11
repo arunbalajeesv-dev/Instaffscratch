@@ -28,6 +28,14 @@ const KEYS    = ['ref', 'type', 'service', 'date', 'time', 'team', 'onsite',
                  'details', 'note', 'name', 'business', 'phone', 'area', 'facility',
                  'utm_source', 'utm_medium', 'utm_campaign'];
 const MAX_LEN = 1000;
+// Fixer applications from shyfton.in/fixer go to their own tab.
+const FIXER_SHEET = 'Fixers';
+const FIXER_HEADERS = ['Submitted at', 'Ref', 'Name', 'Phone', 'Gender', 'Age', 'City', 'Pincode', 'Area',
+                       'Work they can do', 'Experience', 'Working now', 'Availability', 'Times', 'Languages',
+                       'Has', 'Heard from', 'About', 'Source', 'Medium', 'Campaign', 'Status'];
+const FIXER_KEYS    = ['ref', 'name', 'phone', 'gender', 'age', 'city', 'pincode', 'area',
+                       'services', 'experience', 'current', 'availability', 'shifts', 'languages',
+                       'have', 'heard', 'about', 'utm_source', 'utm_medium', 'utm_campaign'];
 // Firebase web API key (public). Used to check the one-time-code sign-in sent with each lead.
 const FIREBASE_API_KEY = 'AIzaSyC64PuU-tzmLIyH03ldJjJczZqzF_6xE0I';
 
@@ -39,6 +47,7 @@ function doPost(e) {
 
     // Ignore anything that did not come from the prototype, and anything a bot filled in
     // (the hidden "website" field is invisible to people, so only bots fill it).
+    if (d.source === 'shyfton-fixer') return fixerApplication(d);
     if (d.source !== 'instaff-prototype' || d.website) return reply({ok: true, skipped: true});
     // A sign-up is just a verified phone number. Bookings and call backs also need a name and a service.
     const signup = d.type === 'Sign-up' || d.type === 'Location';
@@ -54,6 +63,25 @@ function doPost(e) {
   } finally {
     lock.releaseLock();
   }
+}
+
+// A Fixer application. Bots (hidden "website" field filled) are dropped; a row needs a name and a phone.
+// Status starts as "New" so the team can track calls in the sheet.
+function fixerApplication(d) {
+  if (d.website) return reply({ok: true, skipped: true});
+  if (!d.name || !/^\+91[6-9]\d{9}$/.test(String(d.phone || ''))) return reply({ok: false, error: 'missing fields'});
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  let sheet = ss.getSheetByName(FIXER_SHEET);
+  if (!sheet) sheet = ss.insertSheet(FIXER_SHEET);
+  if (sheet.getLastRow() === 0) {
+    sheet.appendRow(FIXER_HEADERS);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, FIXER_HEADERS.length).setFontWeight('bold');
+    sheet.getRange('D:D').setNumberFormat('@');   // keep +91 phone numbers as text
+    sheet.getRange('H:H').setNumberFormat('@');   // keep pincodes as text
+  }
+  sheet.appendRow([new Date()].concat(FIXER_KEYS.map(k => clean(d[k]))).concat(['New']));
+  return reply({ok: true});
 }
 
 // The price the customer saw on screen, in rupees. "On call" when the app could not price the booking.

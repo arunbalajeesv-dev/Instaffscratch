@@ -1,0 +1,419 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Become a Fixer</title>
+<meta name="description" content="Work as a Fixer with Shyft On. Pick up paid shifts at businesses near you in cleaning, operations and front of house.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Plus+Jakarta+Sans:wght@600;700;800&display=swap">
+<style>
+:root {
+  --bg: #EEEEEE; --surface: #FFFFFF; --surface-2: #EEF1F6;
+  --fg: #0E1B33; --muted: #586277; --line: #D9DEE6;
+  --accent: #2373F4; --accent-text: #1D62D6; --accent-ink: #FFFFFF; --tint: #E7F0FE; --tint-line: #BCD3FB;
+  --warn: #B23A22; --warn-bg: #FDF1EE; --warn-line: #F2C7BC;
+  --display: "Plus Jakarta Sans", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --body: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body {
+  background: var(--bg); color: var(--fg); font-family: var(--body); font-size: 16px; line-height: 1.55; margin: 0;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+a { color: inherit; }
+h1, h2, h3 { font-family: var(--display); line-height: 1.12; margin: 0; letter-spacing: -0.025em; text-wrap: balance; }
+p { margin: 0; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.wrap { max-width: 1080px; margin: 0 auto; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 16px; padding-block: 22px; }
+.brand { font-family: var(--display); font-weight: 800; font-size: 23px; letter-spacing: -0.03em; text-decoration: none; display: flex; align-items: center; gap: 9px; }
+.brand i { width: 11px; height: 11px; border-radius: 3px; background: var(--accent); transform: rotate(45deg); }
+.back { font-size: 14px; color: var(--muted); text-decoration: none; }
+.back:hover { color: var(--fg); }
+
+.layout { display: grid; grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr); gap: 48px; align-items: start; padding-top: 28px; }
+@media (max-width: 860px) { .layout { grid-template-columns: minmax(0, 1fr); gap: 28px; padding-top: 8px; } }
+.intro { position: sticky; top: 24px; }
+@media (max-width: 860px) { .intro { position: static; } }
+.eyebrow { font-size: 12px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-text); }
+.intro h1 { font-size: clamp(34px, 5vw, 54px); font-weight: 800; margin-top: 14px; }
+.intro h1 em { font-style: normal; color: var(--accent); }
+.intro .lead { color: var(--muted); margin-top: 16px; max-width: 30em; }
+.perks { list-style: none; padding: 0; margin: 26px 0 0; display: grid; gap: 14px; }
+.perks li { display: flex; gap: 12px; align-items: flex-start; }
+.perks .ic { flex: 0 0 auto; width: 30px; height: 30px; border-radius: 9px; background: var(--surface); border: 1px solid var(--line); display: grid; place-items: center; color: var(--accent); }
+.perks b { display: block; font-size: 15px; }
+.perks span { display: block; font-size: 14px; color: var(--muted); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 22px; padding: clamp(20px, 4vw, 34px); }
+.sec + .sec { margin-top: 30px; padding-top: 26px; border-top: 1px solid var(--line); }
+.sechead { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; }
+.sechead .n { font: 700 12px var(--body); color: var(--accent-text); background: var(--tint); border-radius: 999px; padding: 3px 9px; }
+.sechead h2 { font-size: 20px; }
+.field { margin-top: 16px; }
+.field:first-of-type { margin-top: 0; }
+.row2 { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 14px; margin-top: 16px; }
+.row2 .field { margin-top: 0; }
+@media (max-width: 520px) { .row2 { grid-template-columns: minmax(0, 1fr); } }
+label.lab, .lab { display: block; font-weight: 600; font-size: 14.5px; margin-bottom: 6px; }
+.lab .opt { font-weight: 500; color: var(--muted); font-size: 12.5px; margin-left: 6px; }
+.help { font-size: 13px; color: var(--muted); margin: -2px 0 8px; }
+input[type=text], input[type=tel], input[type=number], select, textarea {
+  width: 100%; font: 400 15.5px var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line);
+  border-radius: 12px; padding: 12px 13px; min-height: 48px; appearance: none;
+}
+select { background-image: linear-gradient(45deg, transparent 50%, var(--muted) 50%), linear-gradient(135deg, var(--muted) 50%, transparent 50%);
+  background-position: calc(100% - 19px) 21px, calc(100% - 14px) 21px; background-size: 5px 5px; background-repeat: no-repeat; padding-right: 36px; }
+textarea { min-height: 92px; resize: vertical; }
+input:focus, select:focus, textarea:focus { outline: 2px solid var(--accent); outline-offset: -1px; border-color: transparent; }
+.phone { display: flex; align-items: stretch; }
+.phone .cc { display: grid; place-items: center; padding: 0 12px; border: 1px solid var(--line); border-right: 0; border-radius: 12px 0 0 12px; background: var(--surface-2); font-weight: 600; color: var(--muted); }
+.phone input { border-radius: 0 12px 12px 0; }
+.bad input, .bad select, .bad .chips, .bad .seg { border-color: var(--warn) !important; }
+.err { display: none; font-size: 12.5px; color: var(--warn); margin-top: 6px; }
+.bad .err { display: block; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 8px; border: 1px solid transparent; border-radius: 14px; }
+.chip { font: 500 14px var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; min-height: 40px; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; }
+.chip:hover { border-color: var(--muted); }
+.chip[aria-pressed="true"] { background: var(--tint); border-color: var(--accent); color: var(--accent-text); font-weight: 600; }
+.chip[aria-pressed="true"]::before { content: ""; width: 7px; height: 12px; border: solid currentColor; border-width: 0 2px 2px 0; transform: rotate(45deg) translateY(-2px); }
+.grp { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); margin: 14px 0 8px; }
+.grp:first-child { margin-top: 0; }
+.seg { display: grid; grid-template-columns: repeat(auto-fit, minmax(118px, 1fr)); gap: 8px; border: 1px solid transparent; border-radius: 14px; }
+.seg button { font: 500 14px var(--body); color: var(--fg); background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 11px 10px; min-height: 46px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 600; }
+
+.consent { display: flex; gap: 12px; align-items: flex-start; font-size: 14px; color: var(--fg); cursor: pointer; margin-top: 4px; }
+.consent input { width: 20px; height: 20px; margin: 2px 0 0; accent-color: var(--accent); flex: 0 0 auto; }
+.submit { margin-top: 26px; display: grid; gap: 10px; }
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 9px; background: var(--accent); color: var(--accent-ink); font: 600 16px var(--body); padding: 14px 22px; min-height: 52px; border-radius: 12px; border: 0; cursor: pointer; text-decoration: none; }
+.btn:hover { filter: brightness(1.08); }
+.btn[disabled] { opacity: .65; cursor: default; filter: none; }
+.btn.ghost { background: transparent; color: var(--fg); border: 1px solid var(--line); }
+.formerr { font-size: 14px; color: var(--warn); background: var(--warn-bg); border: 1px solid var(--warn-line); border-radius: 12px; padding: 10px 13px; }
+.fine { font-size: 12.5px; color: var(--muted); text-align: center; }
+.hp { position: absolute; left: -9999px; width: 1px; height: 1px; opacity: 0; }
+.spin { width: 16px; height: 16px; border: 2px solid currentColor; border-right-color: transparent; border-radius: 50%; animation: sp .8s linear infinite; }
+@keyframes sp { to { transform: rotate(360deg); } }
+
+.done { text-align: center; padding-block: clamp(24px, 6vw, 48px); display: grid; justify-items: center; gap: 14px; }
+.done .tick { width: 64px; height: 64px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; }
+.done h2 { font-size: 28px; }
+.done p { color: var(--muted); max-width: 28em; }
+.done .ref { font: 600 13px var(--body); color: var(--accent-text); background: var(--tint); border-radius: 999px; padding: 5px 12px; }
+.done .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin-top: 6px; }
+
+footer { margin-top: 56px; padding-block: 28px 40px; border-top: 1px solid var(--line); color: var(--muted); font-size: 13px; display: flex; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+@media (prefers-reduced-motion: reduce) { .spin { animation: none; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <a class="brand" href="/"><i></i>Shyft On</a>
+    <a class="back" href="/">&larr; Back to home</a>
+  </header>
+
+  <main class="layout">
+    <section class="intro">
+      <p class="eyebrow">Join as a Fixer</p>
+      <h1>Work shifts that <em>fit your day.</em></h1>
+      <p class="lead">Fixers are the trained people on the Shyft On network. You take paid shifts at shops, restaurants and offices near you, and choose when you work.</p>
+      <ul class="perks">
+        <li><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></span>
+          <div><b>Choose your hours</b><span>Full-time, part-time or weekends only.</span></div></li>
+        <li><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 21s-7-6.1-7-11.2A7 7 0 0 1 19 9.8C19 14.9 12 21 12 21z"/><circle cx="12" cy="9.8" r="2.6"/></svg></span>
+          <div><b>Work close to home</b><span>Shifts are matched by distance.</span></div></li>
+        <li><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></span>
+          <div><b>Get trained for the role</b><span>Cleaning, operations or front of house.</span></div></li>
+        <li><span class="ic"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 16.9v3a2 2 0 0 1-2.2 2 19.8 19.8 0 0 1-8.6-3.1 19.5 19.5 0 0 1-6-6A19.8 19.8 0 0 1 2.1 4.2 2 2 0 0 1 4.1 2h3a2 2 0 0 1 2 1.7c.1.9.4 1.8.7 2.7a2 2 0 0 1-.5 2.1L8 9.8a16 16 0 0 0 6 6l1.3-1.3a2 2 0 0 1 2.1-.4c.9.3 1.8.6 2.7.7a2 2 0 0 1 1.7 2z"/></svg></span>
+          <div><b>We call you back</b><span>Our team reviews every application and calls you about next steps.</span></div></li>
+      </ul>
+    </section>
+
+    <section class="card" aria-live="polite">
+      <form id="form" novalidate>
+        <div class="sec">
+          <div class="sechead"><span class="n">1</span><h2>About you</h2></div>
+          <div class="field" data-f="name">
+            <label class="lab" for="name">Full name</label>
+            <input id="name" name="name" type="text" autocomplete="name" placeholder="As on your ID card" maxlength="80">
+            <div class="err">Please enter your full name.</div>
+          </div>
+          <div class="field" data-f="phone">
+            <label class="lab" for="phone">Mobile number</label>
+            <p class="help">We'll call or WhatsApp you on this number.</p>
+            <div class="phone"><span class="cc">+91</span>
+              <input id="phone" name="phone" type="tel" inputmode="numeric" autocomplete="tel-national" placeholder="10-digit mobile number" maxlength="14"></div>
+            <div class="err">Enter a 10-digit Indian mobile number.</div>
+          </div>
+          <div class="row2">
+            <div class="field" data-f="gender">
+              <span class="lab">Gender</span>
+              <div class="seg" data-single="gender">
+                <button type="button" data-v="Male">Male</button><button type="button" data-v="Female">Female</button><button type="button" data-v="Other">Other</button>
+              </div>
+              <div class="err">Please pick one.</div>
+            </div>
+            <div class="field" data-f="age">
+              <label class="lab" for="age">Age</label>
+              <input id="age" name="age" type="number" inputmode="numeric" min="18" max="65" placeholder="For example 26">
+              <div class="err">You need to be between 18 and 65.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sechead"><span class="n">2</span><h2>Where you live</h2></div>
+          <div class="row2">
+            <div class="field" data-f="city">
+              <label class="lab" for="city">City</label>
+              <select id="city" name="city">
+                <option value="">Choose your city</option>
+                <option>Chennai</option><option>Bengaluru</option><option>Hyderabad</option><option>Coimbatore</option><option>Other</option>
+              </select>
+              <div class="err">Please choose your city.</div>
+            </div>
+            <div class="field" data-f="pincode">
+              <label class="lab" for="pincode">Pincode</label>
+              <input id="pincode" name="pincode" type="text" inputmode="numeric" maxlength="6" placeholder="6 digits" autocomplete="postal-code">
+              <div class="err">Enter a 6-digit pincode.</div>
+            </div>
+          </div>
+          <div class="field" data-f="city_other" hidden>
+            <label class="lab" for="city_other">Which city?</label>
+            <input id="city_other" name="city_other" type="text" maxlength="60" placeholder="Your city">
+            <div class="err">Please tell us your city.</div>
+          </div>
+          <div class="field" data-f="area">
+            <label class="lab" for="area">Area or locality</label>
+            <input id="area" name="area" type="text" maxlength="80" placeholder="For example Thoraipakkam, OMR" autocomplete="address-level3">
+            <div class="err">Please enter your area.</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sechead"><span class="n">3</span><h2>Work you can do</h2></div>
+          <div class="field" data-f="services">
+            <span class="lab">Pick every kind of work you can do</span>
+            <p class="help">Choose as many as you like. We train you for the role before your first shift.</p>
+            <div id="services"></div>
+            <div class="err">Pick at least one kind of work.</div>
+          </div>
+          <div class="field" data-f="experience">
+            <span class="lab">Experience in this kind of work</span>
+            <div class="seg" data-single="experience">
+              <button type="button" data-v="No experience">None yet</button><button type="button" data-v="Under 1 year">Under 1 year</button>
+              <button type="button" data-v="1 to 3 years">1 to 3 years</button><button type="button" data-v="More than 3 years">3+ years</button>
+            </div>
+            <div class="err">Please pick one.</div>
+          </div>
+          <div class="field" data-f="current">
+            <span class="lab">Are you working now?</span>
+            <div class="seg" data-single="current">
+              <button type="button" data-v="Full-time job">Full-time job</button><button type="button" data-v="Part-time job">Part-time job</button>
+              <button type="button" data-v="Studying">Studying</button><button type="button" data-v="Not working">Not working</button>
+            </div>
+            <div class="err">Please pick one.</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sechead"><span class="n">4</span><h2>When you can work</h2></div>
+          <div class="field" data-f="availability">
+            <span class="lab">How much would you like to work?</span>
+            <div class="seg" data-single="availability">
+              <button type="button" data-v="Full-time">Full-time</button><button type="button" data-v="Part-time">Part-time</button><button type="button" data-v="Weekends only">Weekends only</button>
+            </div>
+            <div class="err">Please pick one.</div>
+          </div>
+          <div class="field" data-f="shifts">
+            <span class="lab">Which times suit you?</span>
+            <div class="chips" data-multi="shifts">
+              <button type="button" class="chip" data-v="Early morning (6 to 9 AM)">Early morning · 6 to 9 AM</button>
+              <button type="button" class="chip" data-v="Day (9 AM to 5 PM)">Day · 9 AM to 5 PM</button>
+              <button type="button" class="chip" data-v="Evening (5 to 10 PM)">Evening · 5 to 10 PM</button>
+              <button type="button" class="chip" data-v="Late night (after 10 PM)">Late night · after 10 PM</button>
+            </div>
+            <div class="err">Pick at least one time.</div>
+          </div>
+        </div>
+
+        <div class="sec">
+          <div class="sechead"><span class="n">5</span><h2>Languages and documents</h2></div>
+          <div class="field" data-f="languages">
+            <span class="lab">Languages you speak</span>
+            <div class="chips" data-multi="languages">
+              <button type="button" class="chip" data-v="Tamil">Tamil</button><button type="button" class="chip" data-v="English">English</button>
+              <button type="button" class="chip" data-v="Hindi">Hindi</button><button type="button" class="chip" data-v="Telugu">Telugu</button>
+              <button type="button" class="chip" data-v="Malayalam">Malayalam</button><button type="button" class="chip" data-v="Kannada">Kannada</button>
+            </div>
+            <div class="err">Pick at least one language.</div>
+          </div>
+          <div class="field" data-f="have">
+            <span class="lab">Which of these do you have?<span class="opt">pick all that apply</span></span>
+            <p class="help">You don't need to upload anything now. We check documents when we call.</p>
+            <div class="chips" data-multi="have">
+              <button type="button" class="chip" data-v="Aadhaar card">Aadhaar card</button><button type="button" class="chip" data-v="PAN card">PAN card</button>
+              <button type="button" class="chip" data-v="Bank account">Bank account</button><button type="button" class="chip" data-v="Smartphone">Smartphone</button>
+              <button type="button" class="chip" data-v="Two-wheeler">Two-wheeler</button><button type="button" class="chip" data-v="Driving licence">Driving licence</button>
+            </div>
+          </div>
+          <div class="field" data-f="source">
+            <label class="lab" for="heard">How did you hear about us?<span class="opt">optional</span></label>
+            <select id="heard" name="heard">
+              <option value="">Choose one</option>
+              <option>A friend or family member</option><option>WhatsApp</option><option>Instagram or Facebook</option>
+              <option>YouTube</option><option>Job portal</option><option>A Shyft On business</option><option>Other</option>
+            </select>
+          </div>
+          <div class="field">
+            <label class="lab" for="about">Anything else we should know?<span class="opt">optional</span></label>
+            <textarea id="about" name="about" maxlength="500" placeholder="For example, past jobs, special skills, or when you can start"></textarea>
+          </div>
+        </div>
+
+        <input class="hp" id="website" name="website" tabindex="-1" autocomplete="off" aria-hidden="true">
+
+        <div class="submit">
+          <div class="field" data-f="consent">
+            <label class="consent"><input type="checkbox" id="consent">
+              <span>I agree that Shyft On may contact me on this number by call, SMS or WhatsApp about work as a Fixer.</span></label>
+            <div class="err">Please tick this box so we can contact you.</div>
+          </div>
+          <div class="formerr" id="formerr" hidden></div>
+          <button class="btn" id="go" type="submit">Submit application</button>
+          <p class="fine">It takes about 2 minutes. Applying is free. Shyft On never asks for money to join.</p>
+        </div>
+      </form>
+
+      <div class="done" id="done" hidden>
+        <div class="tick"><svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg></div>
+        <h2>Application received</h2>
+        <p id="donetext">Thank you. Our team will call you within a few days about the next steps.</p>
+        <span class="ref" id="ref"></span>
+        <div class="actions"><a class="btn ghost" href="/">Back to home</a></div>
+      </div>
+    </section>
+  </main>
+
+  <footer><span>Shyft On · Flexible staff on demand</span><span>© 2026</span></footer>
+</div>
+
+<script>
+"use strict";
+// Applications go to the "Fixers" tab of the leads Sheet, through the same Apps Script web app as bookings.
+const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzKmq-2YD5FlXJKudyp9brSv5CdZ0a3L9-SLx3XnfgRrxBem7zTQKt6s28pMh3le0-A/exec';
+// The same services customers book in the app, grouped the same way.
+const SERVICES = {
+  'Cleaning': ['Toilet cleaning', 'Opening and closing cleaning', 'Service-time cleaning', 'Store cleaning', 'Kitchen equipment cleaning', 'Dishwashing (KST)'],
+  'Operations': ['Loading and unloading', 'Garbage and waste handling', 'Stock counting', 'Packing, tagging and scanning'],
+  'Front of house': ['Guest assistance and server', 'POS / billing counter', 'Busser and table support']
+};
+const UTM = (() => { const q = new URLSearchParams(location.search), u = {};
+  ['utm_source', 'utm_medium', 'utm_campaign'].forEach(k => { u[k] = q.get(k) || ''; }); return u; })();
+
+const $ = id => document.getElementById(id);
+const state = {gender:'', experience:'', current:'', availability:'', services:[], shifts:[], languages:[], have:[]};
+
+$('services').innerHTML = Object.keys(SERVICES).map(g =>
+  `<div class="grp">${g}</div><div class="chips" data-multi="services">` +
+  SERVICES[g].map(s => `<button type="button" class="chip" data-v="${s}">${s}</button>`).join('') + `</div>`).join('');
+
+document.querySelectorAll('[data-single]').forEach(box => {
+  const key = box.dataset.single;
+  box.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', 'false');
+    b.onclick = () => {
+      state[key] = b.dataset.v;
+      box.querySelectorAll('button').forEach(x => x.setAttribute('aria-pressed', String(x === b)));
+      clearBad(key);
+    };
+  });
+});
+document.querySelectorAll('[data-multi]').forEach(box => {
+  const key = box.dataset.multi;
+  box.querySelectorAll('button').forEach(b => {
+    b.setAttribute('aria-pressed', 'false');
+    b.onclick = () => {
+      const list = state[key], i = list.indexOf(b.dataset.v);
+      if (i > -1) list.splice(i, 1); else list.push(b.dataset.v);
+      b.setAttribute('aria-pressed', String(i < 0));
+      clearBad(key);
+    };
+  });
+});
+$('city').onchange = () => { $('city_other').closest('.field').hidden = $('city').value !== 'Other'; clearBad('city'); };
+['name', 'phone', 'age', 'pincode', 'area', 'city_other'].forEach(id => $(id).addEventListener('input', () => clearBad(id)));
+$('consent').onchange = () => clearBad('consent');
+['phone', 'pincode', 'age'].forEach(id => $(id).addEventListener('input', () => { $(id).value = $(id).value.replace(/[^\d ]/g, ''); }));
+
+function clearBad(key){ const f = document.querySelector(`[data-f="${key}"]`); if (f) f.classList.remove('bad'); }
+const normPhone = v => { let d = String(v || '').replace(/\D/g, ''); if (d.length === 12 && d.startsWith('91')) d = d.slice(2); if (d.length === 11 && d.startsWith('0')) d = d.slice(1); return /^[6-9]\d{9}$/.test(d) ? d : ''; };
+
+function check(){
+  const bad = [];
+  const v = id => $(id).value.trim();
+  if (v('name').length < 3) bad.push('name');
+  if (!normPhone(v('phone'))) bad.push('phone');
+  if (!state.gender) bad.push('gender');
+  const age = Number(v('age')); if (!(age >= 18 && age <= 65)) bad.push('age');
+  if (!v('city')) bad.push('city');
+  if (v('city') === 'Other' && v('city_other').length < 2) bad.push('city_other');
+  if (!/^\d{6}$/.test(v('pincode'))) bad.push('pincode');
+  if (v('area').length < 2) bad.push('area');
+  if (!state.services.length) bad.push('services');
+  if (!state.experience) bad.push('experience');
+  if (!state.current) bad.push('current');
+  if (!state.availability) bad.push('availability');
+  if (!state.shifts.length) bad.push('shifts');
+  if (!state.languages.length) bad.push('languages');
+  if (!$('consent').checked) bad.push('consent');
+  document.querySelectorAll('.field.bad').forEach(f => f.classList.remove('bad'));
+  bad.forEach(k => { const f = document.querySelector(`[data-f="${k}"]`); if (f) f.classList.add('bad'); });
+  return bad;
+}
+
+$('form').onsubmit = async e => {
+  e.preventDefault();
+  $('formerr').hidden = true;
+  const bad = check();
+  if (bad.length){
+    const first = document.querySelector('.field.bad');
+    if (first) first.scrollIntoView({behavior: 'smooth', block: 'center'});
+    const inp = first && first.querySelector('input, select'); if (inp) setTimeout(() => inp.focus({preventScroll: true}), 350);
+    return;
+  }
+  const go = $('go');
+  go.disabled = true; go.innerHTML = '<i class="spin"></i>Sending…';
+  const ref = 'FX' + Math.floor(100000 + Math.random() * 899999);
+  const city = $('city').value === 'Other' ? $('city_other').value.trim() : $('city').value;
+  const payload = Object.assign({
+    source: 'shyfton-fixer', website: $('website').value, ref,
+    name: $('name').value.trim(), phone: '+91' + normPhone($('phone').value),
+    gender: state.gender, age: $('age').value.trim(), city, pincode: $('pincode').value.trim(), area: $('area').value.trim(),
+    services: state.services.join(', '), experience: state.experience, current: state.current,
+    availability: state.availability, shifts: state.shifts.join(', '), languages: state.languages.join(', '),
+    have: state.have.join(', '), heard: $('heard').value, about: $('about').value.trim()
+  }, UTM);
+  try {
+    // no-cors: Apps Script does not send CORS headers, so the reply cannot be read. A network failure still throws.
+    await fetch(SHEET_URL, {method: 'POST', mode: 'no-cors', headers: {'Content-Type': 'text/plain;charset=utf-8'}, body: JSON.stringify(payload)});
+    $('form').hidden = true;
+    $('ref').textContent = 'Application ' + ref;
+    $('donetext').textContent = `Thank you, ${payload.name.split(' ')[0]}. Our team will call you on ${payload.phone} within a few days about the next steps.`;
+    $('done').hidden = false;
+    $('done').scrollIntoView({behavior: 'smooth', block: 'start'});
+  } catch (err) {
+    $('formerr').textContent = "We couldn't send your application. Check your internet connection and try again.";
+    $('formerr').hidden = false;
+    go.disabled = false; go.textContent = 'Submit application';
+  }
+};
+</script>
+</body>
+</html>
