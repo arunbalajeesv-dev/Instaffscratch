@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Shyft On</title>
-<meta name="description" content="Shyft On: trained local professionals for your business, booked by the shift.">
+<meta name="description" content="Shyft On: trained local fixers for your business, booked by the shift.">
 <meta name="theme-color" content="#EEEEEE">
 <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23EEEEEE'/><rect x='34' y='34' width='32' height='32' rx='8' fill='%232373F4' transform='rotate(45 50 50)'/></svg>">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -687,7 +687,7 @@ function blockSteps(labels){
       + (max > 0 ? UI.q('Need longer?', `Add up to ${plural(max,'more hour')}.`,
           `<div class="rows">` + UI.stepRow('extra','Extra hours',
             st.extra >= max ? 'maximum reached' : (max-st.extra)+' more available', st.extra, 0, max, st.extra>0) + `</div>`) : '')
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, labels.notePh));
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, labels.notePh));
   }};
   return [howMany, howLong];
 }
@@ -909,7 +909,7 @@ function luLineCard(l, i, n){
     <div class="sectitle">Size and weight</div>
     <div class="chips">${LU_SIZE.map(s =>
       `<button class="chip" data-line="${i}" data-size="${s.id}" aria-pressed="${l.size===s.id}">${s.label}<span class="sub">${s.sub}</span></button>`).join('')}</div>
-    ${size.care ? `<div class="warnnote"><strong>Items above 50 kg.</strong> We take these over a call so the team can plan the lift safely.</div>` : ''}
+    ${size.care ? `<div class="warnnote"><strong>Items above 50 kg.</strong> We take these over a call so the fixer can plan the lift safely.</div>` : ''}
     ${UI.stepRow('lines.' + i + '.qty', 'How many items?', 'Hold + to count up faster', l.qty, 1, 9999, false)}
     <div class="sectitle">Item type · pick all that apply</div>
     <div class="chips">${LU_TYPES.map(t =>
@@ -1047,11 +1047,11 @@ const SERVICES = [
             return UI.stepRow('qty.'+x.id, x.name, `${per} min each${v?` · ${v*per} min`:''}`, v, 0, x.max, v>0);
           }).join('') + `</div>`)
         + (total === 0 ? `<div class="warnnote"><strong>Pick at least one fixture.</strong> There is nothing to clean yet.</div>` : '')
-        + UI.q('Add a photo','Optional. Helps the team see the space before they arrive.',
+        + UI.q('Add a photo','Optional. Helps your fixer see the space before they arrive.',
             `<label class="upload"><input type="file" accept="image/*" data-input="photo" data-key="photo">
              ${st.photo ? `<span class="uplabel">${esc(st.photo)}</span><span class="upsub">Tap to choose a different photo</span>`
                         : `<span class="uplabel">Choose a photo</span><span class="upsub">JPG or PNG</span>`}</label>`)
-        + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Second floor washroom, key is at reception'));
+        + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Second floor washroom, key is at reception'));
     }}
   ],
   valid:st => Object.values(st.qty).reduce((a,b)=>a+b,0) > 0,
@@ -1094,7 +1094,7 @@ const SERVICES = [
     {title:'Add-ons', build:st => ''
       + UI.q('Anything beyond the standard clean?','All optional. Leave them at zero if you only want the standard clean.',
           addonRows(OC_ADDONS, st.qty))
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Entrance glass gets heavy fingerprints, please do that first'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Entrance glass gets heavy fingerprints, please do that first'))}
   ],
   calc:st => {
     const p = OC_PACKAGES.find(x => x.id === st.pkg);
@@ -1140,7 +1140,7 @@ const SERVICES = [
     }},
     {title:'Add-ons', build:st => ''
       + UI.q('Anything beyond live cleaning?','All optional, each added on top of your live-cleaning time.', addonRows(STC_ADDONS, st.qty))
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Lunch rush is 12:30 to 2:30, focus on the window section'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Lunch rush is 12:30 to 2:30, focus on the window section'))}
   ],
   calc:st => {
     const p = STC_PACKAGES.find(x => x.id === st.pkg);
@@ -1175,14 +1175,14 @@ const SERVICES = [
   init:() => ({size:'SC01', qty:Object.fromEntries(SC_ADDONS.map(a => [a.id, 0])), note:''}),
   steps:[
     {title:'Your store', content:true, build:st =>
-      UI.q('How big is your store?','Go by the floor area. One professional does the whole job.',
+      UI.q('How big is your store?','Go by the floor area. One fixer does the whole job.',
         UI.cards('size', SC_SIZES, st.size, {sub:'sub'}))},
     {title:'Add-ons', build:st => ''
       + UI.q('Anything beyond the routine clean?','All optional. Leave them at zero for the routine clean only.', addonRows(SC_ADDONS, st.qty))
       + UI.q('Need dustbins cleaned?','',
           `<div class="gotocard"><span class="rname">Dustbin cleaning<span class="rsub">Available through Garbage & Waste Handling. Book it separately.</span></span>
            <button class="gotobtn" data-goto="garbage_waste">Book it</button></div>`)
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Store opens at 10, please finish the trial rooms first'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Store opens at 10, please finish the trial rooms first'))}
   ],
   calc:st => {
     const s = SC_SIZES.find(x => x.id === st.size);
@@ -1250,7 +1250,7 @@ const SERVICES = [
           }).join('') + `</div>`)
         + UI.q('Wall tiles','Sized to your kitchen.',
             UI.toggle('tile','Tile cleaning, up to 6 ft', `${s.tile} min for a ${s.name.toLowerCase()} kitchen`, st.tile))
-        + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Fryer oil is drained, chimney filters are in the sink'));
+        + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Fryer oil is drained, chimney filters are in the sink'));
     }}
   ],
   calc:st => {
@@ -1297,8 +1297,8 @@ const SERVICES = [
       + UI.q("Anything that isn't a regular utensil?",'All optional, and each one is added on top of your package.',
           addonRows(DW_ADDONS, st.qty))
       + UI.q('Anything unusually difficult?','Burnt-on vessels, delicate or antique items.',
-          UI.toggle('difficult','Needs special handling','We take this one over a call so the team can see what is involved first.', st.difficult))
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Wash area is behind the kitchen, hot water tap on the left'))}
+          UI.toggle('difficult','Needs special handling','We take this one over a call so the fixer can see what is involved first.', st.difficult))
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Wash area is behind the kitchen, hot water tap on the left'))}
   ],
   calc:st => {
     const p = DW_PACKAGES.find(x => x.id === st.pkg);
@@ -1312,7 +1312,7 @@ const SERVICES = [
     .concat(r.lines.map(l => [l.a.name, addonText(l.a, l.qty)])),
   disclaimer:{
     title:'Before you confirm',
-    text:'The professional and the platform are not responsible for accidental breakage, cracks, dents, scratches or damage to utensils, cookware, glassware, equipment accessories or other items during handling and cleaning.',
+    text:'The fixer and the platform are not responsible for accidental breakage, cracks, dents, scratches or damage to utensils, cookware, glassware, equipment accessories or other items during handling and cleaning.',
     accept:'I understand and accept the breakage and damage disclaimer'
   }
 },
@@ -1360,7 +1360,7 @@ const SERVICES = [
         <div class="qhelp">Add one line for each kind of item. Mixed sizes go on separate lines.</div></div>`
       + st.lines.map((l,i) => luLineCard(l, i, st.lines.length)).join('')
       + `<button class="addline" id="addline">+ Add another item</button>`
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Truck parks at the back gate, dock 2'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Truck parks at the back gate, dock 2'))}
   ],
   valid:st => st.lines.length > 0 && st.lines.every(luLineValid),
   calc:st => {
@@ -1438,7 +1438,7 @@ const SERVICES = [
         `<div class="rows">` + UI.stepRow('extraFt','Extra distance',
           st.extraFt ? `${GARB_FT_INCLUDED + st.extraFt*FT_STEP} ft in total · +${st.extraFt*GARB_FT_STEP_MIN} min` : `None beyond the ${GARB_FT_INCLUDED} ft included`,
           st.extraFt, 0, 20, st.extraFt>0, {fmt:'ft25'}) + `</div>`);
-      h += UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Bins are behind the kitchen, gate code 4410'));
+      h += UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Bins are behind the kitchen, gate code 4410'));
       return h;
     }}
   ],
@@ -1490,13 +1490,13 @@ const SERVICES = [
     {title:'Your stock', build:st => ''
       + UI.q('How will the count be done?','Both take the same time. Barcode needs your scanner and app.',
           UI.seg('count_method', [{v:'manual',n:'Manual counting'},{v:'barcode',n:'Barcode scanning'}], st.count_method))
-      + (st.count_method === 'barcode' ? `<div class="note">Please keep your scanner, the app and any login ready for the team.</div>` : '')
+      + (st.count_method === 'barcode' ? `<div class="note">Please keep your scanner, the app and any login ready for the fixer.</div>` : '')
       + UI.q('What kind of stock is it?','This sets the base time for a given number of units.',
           UI.cards('stock_type', SC_TYPES.map(k => ({id:k, name:SC_BASE[k].label})), st.stock_type, {}))},
     {title:'How much', build:st => ''
       + UI.q('How many types of products?','Each extra type adds handling time.', UI.chips('sku_band', SC_SKU, st.sku_band))
       + UI.q('How many units in total?','A rough count is fine.', UI.chips('quantity_band', SC_QTY, st.quantity_band))
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Back store room first, then the shop floor'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Back store room first, then the shop floor'))}
   ],
   calc:st => {
     const sku = SC_SKU.find(s => s.id === st.sku_band), qty = SC_QTY.find(q => q.id === st.quantity_band);
@@ -1549,7 +1549,7 @@ const SERVICES = [
           UI.seg('stock_condition', [{v:'sorted',n:'Sorted'},{v:'mixed',n:'Mixed'}], st.stock_condition))
       + UI.q('What packaging are you using?','Yours, kept ready at the work area.',
           UI.chips('packaging_type', PK_PACKAGING, st.packaging_type))
-      + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, 'Labels go on the top right of each box'))}
+      + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Labels go on the top right of each box'))}
   ],
   calc:st => {
     const task = PK_TASKS.find(t => t.id === st.task);
@@ -1585,7 +1585,7 @@ const SERVICES = [
       'Deep cleaning, washroom cleaning or equipment cleaning','Heavy lifting or stock movement',
       'Barista, bartending or cashiering, unless agreed separately','Operating your POS or billing system'],
     ready:null,
-    how:['Choose how many servers you need','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+    how:['Choose how many servers you need','Choose how long you need cover for','Pick your date and start time, and we confirm your fixers']
   },
   block:true,
   init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
@@ -1613,19 +1613,19 @@ const SERVICES = [
       'Refund approvals and management decisions','POS hardware or software repairs','Inventory counting and stock auditing',
       'Food preparation or cooking','Work outside the assigned counter'],
     ready:['POS access and operating instructions'],
-    how:['Choose how many professionals you need','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+    how:['Choose how many fixers you need','Choose how long you need cover for','Pick your date and start time, and we confirm your fixers']
   },
   banner:{title:'Cash stays with your staff',
-    text:'Our professionals take card and digital payments on your POS. They do not accept, hold or count cash, so please keep one of your own staff at the counter for cash billing.'},
+    text:'Our fixers take card and digital payments on your POS. They do not accept, hold or count cash, so please keep one of your own staff at the counter for cash billing.'},
   block:true,
   init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
-  steps:blockSteps({contentOn:'duration', sub:{dur_2:'peak cover', dur_4:'half shift'}, countQ:'How many professionals?',
-    unit:'professional', notePh:'Counter 2 only, the till code is on a card by the screen'}),
+  steps:blockSteps({contentOn:'duration', sub:{dur_2:'peak cover', dur_4:'half shift'}, countQ:'How many fixers?',
+    unit:'fixer', notePh:'Counter 2 only, the till code is on a card by the screen'}),
   calc:blockCalc,
-  rows:(st,r) => [['Professionals', r.people],['Base duration', r.base + ' hours']]
+  rows:(st,r) => [['Fixers', r.people],['Base duration', r.base + ' hours']]
     .concat(r.extra ? [['Extra hours','+' + r.extra + ' each']] : [])
-    .concat([['Each person works', hhmm(r.per*60)]]),
-  careReason:'More than 4 people at the counter'
+    .concat([['Each fixer works', hhmm(r.per*60)]]),
+  careReason:'More than 4 fixers at the counter'
 },
 
 /* ===== BUSSER & TABLE SUPPORT ===== */
@@ -1643,17 +1643,17 @@ const SERVICES = [
     ready:['Cloths and a mop or spill kit for floor spots','Bus tubs or trays for clearing',
       'A quick briefing on the table layout and where used items are dropped'],
     readyDraft:true,
-    how:['Choose how many people you need on the floor','Choose how long you need cover for','Pick your date and start time, and we confirm the team']
+    how:['Choose how many fixers you need on the floor','Choose how long you need cover for','Pick your date and start time, and we confirm your fixers']
   },
   block:true,
   init:() => ({dur:'dur_4', extra:0, people:2, note:''}),
-  steps:blockSteps({contentOn:'duration', sub:{dur_2:'service rush', dur_4:'full service'}, countQ:'How many people on the floor?',
-    unit:'person', notePh:'Clear the terrace section first, drop point is behind the bar'}),
+  steps:blockSteps({contentOn:'duration', sub:{dur_2:'service rush', dur_4:'full service'}, countQ:'How many fixers on the floor?',
+    unit:'fixer', notePh:'Clear the terrace section first, drop point is behind the bar'}),
   calc:blockCalc,
-  rows:(st,r) => [['People', r.people],['Base duration', r.base + ' hours']]
+  rows:(st,r) => [['Fixers', r.people],['Base duration', r.base + ' hours']]
     .concat(r.extra ? [['Extra hours','+' + r.extra + ' each']] : [])
-    .concat([['Each person works', hhmm(r.per*60)]]),
-  careReason:'More than 4 people on the floor'
+    .concat([['Each fixer works', hhmm(r.per*60)]]),
+  careReason:'More than 4 fixers on the floor'
 }
 ];
 
@@ -2015,8 +2015,8 @@ function renderHome(){
     </div>
     <div class="hbanner">
       <div class="hbtext">
-        <div class="hbtitle">${esc(txt(hb.title) || 'Trained staff for your business')}</div>
-        <div class="hbsub">${esc(txt(hb.sub) || 'Cleaning, front of house and operations. Pick a service to see the team and the time straight away.')}</div>
+        <div class="hbtitle">${esc(txt(hb.title) || 'Trained fixers for your business')}</div>
+        <div class="hbsub">${esc(txt(hb.sub) || 'Cleaning, front of house and operations. Pick a service to see the price straight away.')}</div>
         <div class="hbtags">${hbTags.map(t => `<span>${esc(t)}</span>`).join('')}</div>
       </div>
       <div class="hbart" aria-hidden="true">
@@ -2352,8 +2352,8 @@ function isoDate(d){
 }
 function teamText(r){
   if (r.care) return '';
-  return r.blocks ? `${plural(r.people,'person')} · ${hhmm(r.per*60)} each`
-                  : `${plural(r.pros,'professional')} · ${hhmm(r.onsite)} on site`;
+  return r.blocks ? `${plural(r.people,'fixer')} · ${hhmm(r.per*60)} each`
+                  : `${plural(r.pros,'fixer')} · ${hhmm(r.onsite)} on site`;
 }
 function careReasonOf(r){ return r.reason || svc.careReason || 'This one needs a call'; }
 function reviewLines(r){
@@ -2422,10 +2422,10 @@ const ICO_AIM = '<svg width="19" height="19" viewBox="0 0 24 24" fill="none" str
 const ICO_TICK = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6L9 17l-5-5"/></svg>';
 function addressBlock(){
   return `<div class="q">
-      <div class="qlabel">Where do you need the team?</div>
+      <div class="qlabel">Where do you need the fixer?</div>
       <div class="confirm ph-no-capture" id="locconfirm" hidden>
         <div class="cfrow"><span class="ci">${ICO_PIN}</span>
-          <div><b>Is this where the team should come?</b><span id="cfaddr"></span><small id="cfnote"></small></div></div>
+          <div><b>Is this where the fixer should come?</b><span id="cfaddr"></span><small id="cfnote"></small></div></div>
         <div class="cfbtns"><button class="btn" id="cfyes" type="button">Yes, confirm this location</button>
           <button class="btn ghost" id="cfno" type="button">Use a different address</button></div>
       </div>
@@ -2553,7 +2553,7 @@ function renderDetails(r){
     </div>`;
   $screen.innerHTML =
     (care
-      ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
+      ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the fixers, the time and the price.</div>`
       : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${fmt12(slot.time)}`, approxText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
@@ -2615,7 +2615,7 @@ function renderDone(){
       <div class="caretext">${b.name}<br>${care ? esc(b.team) : b.when}</div>
       <div class="ref">${b.ref}</div>
       ${DEMO ? '<div class="warnnote">This is a demo. Nothing was booked or sent.</div>' : ''}
-      <div class="caretext ph-no-capture">We'll call you on ${esc(b.phone)} to confirm the team and the price before anyone is sent. Nothing is charged here.</div>
+      <div class="caretext ph-no-capture">We'll call you on ${esc(b.phone)} to confirm your fixer and the price before anyone is sent. Nothing is charged here.</div>
     </div>`;
   footerBar((WHATSAPP_NUMBER && !DEMO
       ? `<a class="btn alt" href="https://wa.me/${WHATSAPP_NUMBER.replace(/\D/g,'')}?text=${encodeURIComponent(b.wa)}" target="_blank" rel="noopener" id="wa">Send these details on WhatsApp</a>` : '')
@@ -2651,7 +2651,7 @@ function renderCare(r){
   $screen.innerHTML = `<div class="care-screen">
       <div class="carecircle">${I.phone}</div>
       <div class="caretitle">Let's talk it through</div>
-      <div class="caretext">${reason}. Our team will plan the people and the time with you, and confirm a price before anything starts.</div>
+      <div class="caretext">${reason}. Our team will plan the fixers and the time with you, and confirm a price before anything starts.</div>
       <div class="caretext">Leave your number and we'll call you back.</div>
       ${CARE_NUMBER ? `<a class="carenum" href="tel:${esc(CARE_NUMBER.replace(/[^\d+]/g,''))}">Or call us on ${esc(CARE_NUMBER)}</a>` : ''}
     </div>`;

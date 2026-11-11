@@ -135,7 +135,7 @@ function renderContent(note){
   const h = content.home, tags = Array.isArray(h.tags) ? h.tags.join(', ') : '';
   shell(`${note ? `<div class="msg ${note.err?'err':'ok'}">${esc(note.text)}</div>` : ''}
     <div class="card"><h2>Home banner</h2><div class="hint">Leave a field empty to keep the built-in text.</div>
-      <label>Title</label><input type="text" data-home="title" value="${esc(h.title||'')}" placeholder="Trained staff for your business">
+      <label>Title</label><input type="text" data-home="title" value="${esc(h.title||'')}" placeholder="Trained fixers for your business">
       <label>Text</label><textarea data-home="sub" placeholder="Cleaning, front of house and operations...">${esc(h.sub||'')}</textarea>
       <label>Tags <span class="hint">comma separated, up to 4</span></label><input type="text" data-home="tags" value="${esc(tags)}" placeholder="By the hour, By the job"></div>
     <div class="grid">${SERVICES.map(([id,name]) => { const c = svcData(id), b = c.banner || {}; return `
