@@ -672,8 +672,7 @@ function blockCalc(st){
 // Since 21 Oct: how many comes first, how long second. `contentOn` picks the screen that carries Included / Not included.
 function blockSteps(labels){
   const howMany = {title:'How many', content:labels.contentOn === 'count', build:(st,r) => ''
-    + UI.q(labels.countQ, 'You choose the hours on the next step.', UI.people('people', st.people, BLOCK_MAX_PEOPLE))
-    + big(plural(r.people, labels.unit), `each working ${hhmm(r.per*60)} unless you change it next`)};
+    + UI.q(labels.countQ, 'You choose the hours on the next step.', UI.people('people', st.people, BLOCK_MAX_PEOPLE))};
   const howLong = {title:'How long', content:labels.contentOn === 'duration', build:(st,r) => {
     const max = blockMaxExtra(st);
     return UI.q('How long do you need cover?',
@@ -682,7 +681,6 @@ function blockSteps(labels){
       + (max > 0 ? UI.q('Need longer?', `Add up to ${plural(max,'more hour')}.`,
           `<div class="rows">` + UI.stepRow('extra','Extra hours',
             st.extra >= max ? 'maximum reached' : (max-st.extra)+' more available', st.extra, 0, max, st.extra>0) + `</div>`) : '')
-      + big(hhmm(r.per*60) + ' each', `${plural(r.people,labels.unit)}, everyone starting together · ${r.totalHours} worker-hours`)
       + UI.q('Any special instruction?','Optional. Goes straight to the team.', UI.note('note', st.note, labels.notePh));
   }};
   return [howMany, howLong];
@@ -1025,7 +1023,7 @@ const SERVICES = [
     ready:['Cleaning material, provided by the facility'],
     how:['Choose your facility type and the fixture counts',
          'Floor, final mop and wall tiles up to 6 ft are already included',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({facility:'fac_small', qty:{wc_qty:1, urinal_qty:0, wash_basin_qty:1, mirror_qty:1, countertop_qty:0}, note:'', photo:''}),
   steps:[
@@ -1078,7 +1076,7 @@ const SERVICES = [
       'Moving or storing stock, crockery and equipment'],
     ready:null,
     how:['Choose opening or closing, and your restaurant size','Add anything beyond the standard clean',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({service:'opening', pkg:'pkg_medium', qty:Object.fromEntries(OC_ADDONS.map(a=>[a.id,0])), note:''}),
   steps:[
@@ -1115,7 +1113,7 @@ const SERVICES = [
     notIncluded:['Dishwashing, booked as KST / Dishwashing'],
     ready:null,
     how:['Choose your dining area size and how long you need live cleaning','Add anything beyond live cleaning',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({pkg:'pkg_medium', duration:60,
     qty:Object.fromEntries(STC_ADDONS.map(a => [a.id, 0])), note:''}),
@@ -1166,7 +1164,7 @@ const SERVICES = [
     notIncluded:['Moving or removing stock','Areas above 8 ft','Special stain treatment','Heavy or specialist cleaning',
       'Equipment repair','Bulk waste disposal'],
     ready:null,
-    how:['Choose your store size','Add any extra cleaning you need','We work out the time on site and the price']
+    how:['Choose your store size','Add any extra cleaning you need','We work out the price and the approximate time']
   },
   init:() => ({size:'SC01', qty:Object.fromEntries(SC_ADDONS.map(a => [a.id, 0])), note:''}),
   steps:[
@@ -1204,7 +1202,7 @@ const SERVICES = [
     notIncluded:['Extra equipment or items beyond the package allowance, unless you add them'],
     ready:null,
     how:['Choose your kitchen size and your package scope loads automatically','Add only the extra equipment and items you need',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   // On review, Included shows the actual quantities of the package they picked.
   reviewIncluded:st => {
@@ -1281,7 +1279,7 @@ const SERVICES = [
     ready:null,
     how:['Count all your regular utensils together and pick the package',
          "Add anything that isn't a regular utensil",
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({pkg:'pkg_moderate', qty:Object.fromEntries(DW_ADDONS.map(a=>[a.id,0])), difficult:false, accepted:false, note:''}),
   steps:[
@@ -1327,13 +1325,13 @@ const SERVICES = [
     notIncluded:['Basic stacking or arrangement, unless agreed separately'],
     ready:null,
     how:['Choose the service, the access and the distance','Add each kind of item: size, how many and what type',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({service_type:'loading', ground_floor:true, service_lift:true, floor_number:1,
                extraFt:0, lines:[newLine()], note:''}),
   steps:[
     // No items exist yet on this step, so a time here would only reflect the placeholder line.
-    {title:'Service and access', hideEstimate:'Time on site shows once you add your items', build:st => {
+    {title:'Service and access', build:st => {
       let h = UI.q('What service do you need?','', UI.cards('service_type', LU_SERVICE, st.service_type, {}))
         + UI.q('Is the destination on the ground floor?','Only the destination end affects the time.',
             UI.seg('ground_floor', [{v:'yes',n:'Ground floor'},{v:'no',n:'Upper floor'}], st.ground_floor?'yes':'no'));
@@ -1396,7 +1394,7 @@ const SERVICES = [
       'Waste transport beyond the designated disposal point, unless arranged separately'],
     ready:null,
     how:['Choose dry, wet or mixed, and how much there is','Tell us where the disposal point is and how far',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({waste:'dry', dry:'dry_small', dryBlocks:0, wet:'wet_small', wetBlocks:0,
                sameFloor:true, lift:true, floors:1, extraFt:0, note:''}),
@@ -1478,7 +1476,7 @@ const SERVICES = [
     notIncluded:null,
     ready:null,
     how:['Choose how you count and what kind of stock it is','Tell us how many product types and how many units',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   contentNote:'The Included and Not included lists are still being written for this service. They will be filled before it goes live.',
   init:() => ({count_method:'manual', stock_type:'retail', sku_band:'s1', quantity_band:'q1', note:''}),
@@ -1527,7 +1525,7 @@ const SERVICES = [
       'SKU list and product identification','Packing instructions','Tag and label placement instructions',
       'A staging or work area','Products ready at the work location'],
     how:['Choose the task, the number of SKUs and how much stock','Tell us whether the stock is sorted or mixed, and the packaging',
-         'We work out the team, the time on site and the price']
+         'We work out the price and the approximate time']
   },
   init:() => ({task:'packing_only', sku_band:'sku_2_5', qty_band:'small', stock_condition:'sorted', packaging_type:'carton', note:''}),
   steps:[
@@ -2189,7 +2187,7 @@ function renderBookings(){
     $screen.innerHTML = bookings.map(b => `
       <div class="bkcard">
         <div class="bkhead"><span class="bkname">${b.name}</span><span class="bkref">${b.ref}</span></div>
-        <div class="bkmeta">${b.when}<br>${b.team}</div>
+        <div class="bkmeta">${b.when}${b.status === 'care' && b.team ? '<br>' + esc(b.team) : ''}</div>
         <div><span class="pill ${b.status==='ok'?'ok':'care'}">${b.status==='ok' ? (SERVICE_AVAILABLE ? 'Confirmed' : 'Requested') : 'Needs a call'}</span></div>
       </div>`).join('') + `<button class="btn ghost" id="clear">Clear all bookings</button>`;
     const c = document.getElementById('clear');
@@ -2244,9 +2242,7 @@ function renderForm(r){
   bindInputs();
   if (step.bind) step.bind($screen);
   const blocked = !r.care && svc.valid && !svc.valid(st);
-  const est = (!r.care && step.hideEstimate)
-    ? `<div class="estimate">${I.clock}<span>${step.hideEstimate}</span></div>`
-    : estimateLine(r);
+  const est = estimateLine(r);
   footerBar(est + `<button class="btn" id="next" ${blocked?'disabled':''}>Continue</button>`);
   document.getElementById('next').onclick = () => {
     const rr = result();
@@ -2256,11 +2252,15 @@ function renderForm(r){
   };
 }
 
+// The customer never sees the team size or the time on site while building a booking. The approximate
+// service time appears once, on the date and time screen. Team and time still go to the lead for our own use.
+function approxText(r){
+  const m = r.blocks ? Math.round(r.per*60) : r.onsite, h = Math.floor(m/60), mm = m % 60;
+  const hs = h ? h + (h === 1 ? ' hr' : ' hrs') : '', ms = mm ? mm + (mm === 1 ? ' min' : ' mins') : '';
+  return 'Service will take approx. ' + [hs, ms].filter(Boolean).join(' & ');
+}
 function estimateLine(r){
-  if (!r) return '';
-  if (r.care) return `<div class="estimate care">${I.clock}<span>Needs a call</span></div>`;
-  if (r.blocks) return `<div class="estimate">${I.clock}<span>${plural(r.people,'person').replace('persons','people')} · ${hhmm(r.per*60)} each</span></div>`;
-  return `<div class="estimate">${I.clock}<span>${hhmm(r.onsite)} on site · ${plural(r.pros,'professional')}</span></div>`;
+  return r && r.care ? `<div class="estimate care">${I.clock}<span>Needs a call</span></div>` : '';
 }
 
 /* ---------- review ---------- */
@@ -2268,10 +2268,7 @@ function renderReview(r){
   const total = journey(), n = svc.steps.length;
   bar(svc.name, `Step ${n+1} of ${total} · Review`, total, n);
   const rows = svc.rows(st, r);
-  const head = r.blocks
-    ? big(`${plural(r.people,'person').replace('persons','people')} · ${hhmm(r.per*60)}`,
-          `${r.totalHours} worker-hours in total, everyone starting together`)
-    : big(hhmm(r.onsite), `${plural(r.pros,'professional')} on site · ${hhmm(r.workload)} of work in total`);
+  const head = '';
 
   const note = svc.reviewNote ? svc.reviewNote(st) : '';
   $screen.innerHTML = head
@@ -2306,9 +2303,7 @@ function renderSlot(r){
       `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}">
         <span class="dname">${i===0?'Today':d.name}</span><span class="dnum">${d.num}</span><span class="dmon">${d.mon}</span>
       </button>`).join('') + `</div>`)
-    + UI.q('What time do we start?', r.blocks
-        ? `Everyone starts together and works ${hhmm(r.per*60)}.`
-        : `${plural(r.pros,'professional')} on site for ${hhmm(r.onsite)}.`,
+    + UI.q('What time do we start?', r.care ? '' : approxText(r),
       `<div class="slots" data-input="time">` + TIMES.map(t =>
         `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${t}</button>`).join('') + `</div>`);
   bindInputs();
@@ -2538,7 +2533,7 @@ function renderDetails(r){
   $screen.innerHTML =
     (care
       ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the people, the time and the price.</div>`
-      : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, teamText(r)))
+      : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${slot.time}`, approxText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
     + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
     + addressBlock()
@@ -2596,7 +2591,7 @@ function renderDone(){
   $screen.innerHTML = `<div class="done">
       <div class="donecircle">${care ? I.phone : I.bigtick}</div>
       <div class="donetitle">${care ? "We'll call you back" : "You're booked"}</div>
-      <div class="caretext">${b.name}<br>${care ? esc(b.team) : b.when + '<br>' + b.team}</div>
+      <div class="caretext">${b.name}<br>${care ? esc(b.team) : b.when}</div>
       <div class="ref">${b.ref}</div>
       ${DEMO ? '<div class="warnnote">This is a demo. Nothing was booked or sent.</div>' : ''}
       <div class="caretext ph-no-capture">We'll call you on ${esc(b.phone)} to confirm the team and the price before anyone is sent. Nothing is charged here.</div>
@@ -2615,7 +2610,7 @@ function renderDone(){
 function renderNotAvailable(b, care){
   $top.innerHTML = `<div class="tbrow"><div class="tbtitle">Your request</div></div>`;
   const rows = [['Service', b.name]].concat(care ? [['Request', 'Call back'], ['Reason', b.team]]
-      : [['When', b.when], ['Team', b.team]])
+      : [['When', b.when]])
     .concat((b.lines || []).map(l => { const i = l.indexOf(': '); return i > 0 ? [l.slice(0, i), l.slice(i + 2)] : ['', l]; }));
   $screen.innerHTML = `<div class="done">
       <div class="donecircle">${I.clock}</div>
