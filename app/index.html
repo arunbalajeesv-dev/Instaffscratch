@@ -1768,11 +1768,6 @@ function priceBlock(r){
     : `<div class="list"><div class="li"><span class="k">${esc(svc.name)}</span><span class="pricev">${inr(p)}</span></div></div>
        <div class="qhelp" style="margin-top:8px">Nothing is charged on this screen.</div>`);
 }
-function priceRow(r){
-  const p = priceFor(svc, st, r);
-  return `<div class="list"><div class="li"><span class="k">${priceLabel()}</span>${p === null
-    ? '<span class="tbc">Price confirmed on call</span>' : `<span class="pricev">${inr(p)}</span>`}</div></div>`;
-}
 
 /* ============================================================
    APP STATE + STORAGE
@@ -2324,7 +2319,7 @@ function renderSlot(r){
   if (!todayLeft && slot.day === 0){ slot.day = 1; slot.time = null; }   // nothing left today, start on tomorrow
   const times = slotsFor(slot.day);
   if (slot.time && times.indexOf(slot.time) < 0) slot.time = null;       // a time that has since passed
-  $screen.innerHTML = priceRow(r) +
+  $screen.innerHTML =
     UI.q('Which day?','', `<div class="dayscroll" data-input="day">` + ds.map((d,i) =>
       `<button class="day" data-v="${i}" aria-pressed="${slot.day===i}" ${i===0 && !todayLeft ? 'disabled' : ''}>
         <span class="dname">${i===0?'Today':d.name}</span><span class="dnum">${d.num}</span><span class="dmon">${d.mon}</span>
