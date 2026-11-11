@@ -992,12 +992,12 @@ function addonMins(a, v){
 }
 function addonRate(a){
   if (a.rate) return a.rate;
-  return a.block ? `${a.mins} min per ${unitText(a.block, a.unit)}` : `${a.mins} min each`;
+  return a.block ? `per ${unitText(a.block, a.unit)}` : '';   // minutes are never shown to the customer
 }
 function addonRows(list, qty){
   return `<div class="rows">` + list.map(a => {
     const v = qty[a.id] || 0, m = addonMins(a, v);
-    const sub = [a.desc ? a.desc.replace(/\.$/, '') : '', addonRate(a), m ? `${m} min` : ''].filter(Boolean).join(' · ');
+    const sub = [a.desc ? a.desc.replace(/\.$/, '') : '', addonRate(a)].filter(Boolean).join(' · ');
     return a.kind === 'area'
       ? UI.stepRow('qty.'+a.id, a.name, sub, v, 0, a.max || 10000, v>0, {step:a.block, fmt:'unit', unit:a.unit})
       : UI.stepRow('qty.'+a.id, a.name, sub, v, 0, a.max || 99, v>0);
@@ -1040,11 +1040,11 @@ const SERVICES = [
     {title:'Fixtures', build:st => {
       const f = TOILET_FACILITY.find(x => x.id === st.facility);
       const total = Object.values(st.qty).reduce((a,b)=>a+b,0);
-      return UI.q('How many of each?', `Base allowance for ${f.name.toLowerCase()} is ${f.base} min. Each WC also carries ${CUBICLE_MIN} min of cubicle and partition work.`,
+      return UI.q('How many of each?', `The ${f.name.toLowerCase()} facility size already covers the floor, the final mop and wall tiles up to 6 ft.`,
           `<div class="rows">` + TOILET_FIX.map(x => {
             const v = st.qty[x.id];
             const per = x.id === 'wc_qty' ? x.min + CUBICLE_MIN : x.min;
-            return UI.stepRow('qty.'+x.id, x.name, `${per} min each${v?` · ${v*per} min`:''}`, v, 0, x.max, v>0);
+            return UI.stepRow('qty.'+x.id, x.name, '', v, 0, x.max, v>0);
           }).join('') + `</div>`)
         + (total === 0 ? `<div class="warnnote"><strong>Pick at least one fixture.</strong> There is nothing to clean yet.</div>` : '')
         + UI.q('Add a photo','Optional. Helps your fixer see the space before they arrive.',
@@ -1236,9 +1236,9 @@ const SERVICES = [
           groups.map(g => `<div class="grouplabel">${g}</div><div class="rows">` +
             KE_EQUIP.filter(e => e.g === g).map(e => {
               const v = st.qty[e.id];
-              const sub = e.inc ? `${s.inc[e.inc]} included · ${e.mins} min each extra` : `${e.mins} min each`;
+              const sub = e.inc ? `${s.inc[e.inc]} included` : '';
               return UI.stepRow('qty.'+e.id, e.inc ? 'Extra ' + e.name.toLowerCase() : e.name,
-                sub + (v ? ` · ${v*e.mins} min` : ''), v, 0, e.max || 99, v>0);
+                sub, v, 0, e.max || 99, v>0);
             }).join('') + `</div>`).join(''));
     }},
     {title:'Extra items', build:st => {
@@ -1246,10 +1246,10 @@ const SERVICES = [
       return UI.q('Need more than your package covers?','Only add the quantity above your allowance.',
           `<div class="rows">` + KE_EXTRAS.map(x => {
             const v = st.qty[x.id];
-            return UI.stepRow('qty.'+x.id, x.name, `${s.inc[x.inc]} included · ${x.mins} min each extra${v?` · ${v*x.mins} min`:''}`, v, 0, x.max, v>0);
+            return UI.stepRow('qty.'+x.id, x.name, `${s.inc[x.inc]} included`, v, 0, x.max, v>0);
           }).join('') + `</div>`)
         + UI.q('Wall tiles','Sized to your kitchen.',
-            UI.toggle('tile','Tile cleaning, up to 6 ft', `${s.tile} min for a ${s.name.toLowerCase()} kitchen`, st.tile))
+            UI.toggle('tile','Tile cleaning, up to 6 ft', `For a ${s.name.toLowerCase()} kitchen`, st.tile))
         + UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Fryer oil is drained, chimney filters are in the sink'));
     }}
   ],
@@ -1414,12 +1414,12 @@ const SERVICES = [
       if (hasDry){
         h += UI.q('How much dry waste?','Counted in cartons or equivalent bags.', UI.chips('dry', G_DRY, st.dry));
         if (d.custom) h += `<div class="rows">` + UI.stepRow('dryBlocks','Extra blocks of 25 cartons',
-          `${DRY_BLOCK} min each · ${st.dryBlocks*DRY_BLOCK} min`, st.dryBlocks, 0, 20, st.dryBlocks>0) + `</div>`;
+          `${st.dryBlocks ? st.dryBlocks*25 + ' cartons more' : 'Each block is 25 cartons'}`, st.dryBlocks, 0, 20, st.dryBlocks>0) + `</div>`;
       }
       if (hasWet){
         h += UI.q('How much wet waste?','Counted in litres.', UI.chips('wet', G_WET, st.wet));
         if (w.custom) h += `<div class="rows">` + UI.stepRow('wetBlocks','Extra blocks of 30 litres',
-          `${WET_BLOCK} min each · ${st.wetBlocks*WET_BLOCK} min`, st.wetBlocks, 0, 20, st.wetBlocks>0) + `</div>`;
+          `${st.wetBlocks ? st.wetBlocks*30 + ' litres more' : 'Each block is 30 litres'}`, st.wetBlocks, 0, 20, st.wetBlocks>0) + `</div>`;
       }
       return h;
     }},
@@ -1434,9 +1434,9 @@ const SERVICES = [
           h += `<div class="warnnote"><strong>Stairs above ${STAIRS_MAX} floors.</strong> We take this one over a call instead of online.</div>`;
       }
       h += UI.q('Any extra distance to the disposal point?',
-        `${GARB_FT_INCLUDED} ft is included. Each extra ${FT_STEP} ft adds ${GARB_FT_STEP_MIN} min.`,
+        `${GARB_FT_INCLUDED} ft is included. Add extra distance in steps of ${FT_STEP} ft.`,
         `<div class="rows">` + UI.stepRow('extraFt','Extra distance',
-          st.extraFt ? `${GARB_FT_INCLUDED + st.extraFt*FT_STEP} ft in total · +${st.extraFt*GARB_FT_STEP_MIN} min` : `None beyond the ${GARB_FT_INCLUDED} ft included`,
+          st.extraFt ? `${GARB_FT_INCLUDED + st.extraFt*FT_STEP} ft in total` : `None beyond the ${GARB_FT_INCLUDED} ft included`,
           st.extraFt, 0, 20, st.extraFt>0, {fmt:'ft25'}) + `</div>`);
       h += UI.q('Any special instruction?','Optional. Goes straight to your fixer.', UI.note('note', st.note, 'Bins are behind the kitchen, gate code 4410'));
       return h;
@@ -1466,7 +1466,7 @@ const SERVICES = [
     if (st.waste !== 'wet') out.push(['Dry waste', r.d.label + ' · ' + r.d.sub + (r.d.custom && st.dryBlocks ? ` +${st.dryBlocks} blocks` : '')]);
     if (st.waste !== 'dry') out.push(['Wet waste', r.w.label + ' · ' + r.w.sub + (r.w.custom && st.wetBlocks ? ` +${st.wetBlocks} blocks` : '')]);
     out.push(['Access', r.a.label + (r.a.f !== 1 ? ` · ×${r.a.f}` : '')]);
-    if (st.extraFt) out.push(['Extra distance', `+${st.extraFt*FT_STEP} ft · +${r.distMins} min`]);
+    if (st.extraFt) out.push(['Extra distance', `+${st.extraFt*FT_STEP} ft`]);
     return out;
   }
 },
