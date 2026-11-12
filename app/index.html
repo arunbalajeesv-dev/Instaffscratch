@@ -136,7 +136,6 @@ button{font-family:inherit;cursor:pointer}
 .svsoon{font-size:13px;color:var(--muted);padding:4px}
 .pgtitle{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .bizq{display:none;margin:0 0 -8px;font-size:22px;font-weight:800;letter-spacing:-.02em}
-.hero{overflow:hidden}
 .locchip{align-self:flex-start;border:1px solid var(--card-border);background:var(--white);border-radius:999px;
   padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;color:var(--dark);cursor:pointer;max-width:100%;
   overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-top:6px}
@@ -177,7 +176,6 @@ button{font-family:inherit;cursor:pointer}
 .pinned span{display:block;font-size:12px;color:var(--muted);line-height:1.35}
 .aerr{font-size:12.5px;line-height:1.45;color:var(--warn-text);background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:12px;padding:9px 12px}
 .aerr:empty{display:none}
-.hero .himg{width:100%;height:100%;object-fit:cover;display:block}
 .gplus{position:absolute;right:7px;bottom:7px;width:30px;height:30px;border-radius:10px;background:var(--white);
   color:var(--ptext);display:grid;place-items:center;box-shadow:0 2px 8px -2px rgba(14,27,51,.25)}
 .hello{font-size:13px;font-weight:700;color:var(--muted)}
@@ -197,8 +195,11 @@ button{font-family:inherit;cursor:pointer}
 .chev{color:var(--muted);flex:0 0 auto}
 
 /* ---- service details ---- */
-.hero{height:142px;border-radius:18px;background:var(--tint);border:1px solid var(--tint-border);
-  display:grid;place-items:center;color:var(--dark);flex:0 0 auto}
+.phrase{position:relative;overflow:hidden;flex:0 0 auto;display:flex;align-items:center;gap:14px;min-height:96px;padding:20px 20px;
+  border-radius:18px;background:var(--primary);color:#FFFFFF}
+.phrase .pht{font-family:var(--display);font-size:20px;font-weight:800;line-height:1.25;letter-spacing:-.02em;text-wrap:balance;min-width:0}
+.phrase .phi{order:2;margin-left:auto;flex:0 0 auto;width:60px;height:60px;border-radius:16px;display:grid;place-items:center;
+  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#FFFFFF}
 .detailtitle{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
 .detailsub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
 .inctiles{display:flex;flex-direction:column;gap:8px}
@@ -2243,9 +2244,7 @@ function renderService(){
     : UI.sec(title, `<div class="emptynote">To be confirmed</div>`);
 
   $screen.innerHTML = `
-    <div class="hero">${safeImg(svcContent(svc.id).hero_image)
-      ? `<img class="himg" src="${safeImg(svcContent(svc.id).hero_image)}" alt="">`
-      : svc.icon.replace(/width="22"/,'width="46"').replace(/height="22"/,'height="46"')}</div>
+    ${phraseHTML()}
     <div><div class="detailtitle">${svc.name}</div><div class="detailsub">${svc.sub}</div></div>
     ${svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : ''}
     ${svc.contentNote ? `<div class="note">${svc.contentNote}</div>` : ''}
@@ -2263,11 +2262,30 @@ function renderService(){
 }
 
 /* ---------- form steps ---------- */
-// Every service opens straight on step 1, so the admin's hero image and banner show there.
+// The phrase at the top of each service page. The admin can replace it (services.<id>.phrase).
+const SVC_PHRASE = {
+  toilet_cleaning:"Spotless washrooms your customers will notice",
+  opening_closing:"Open to a clean floor. Close without the mop.",
+  service_time_cleaning:"Clean tables all through service, even in the rush",
+  store_cleaning:"A store that shines from the door to the till",
+  kitchen_equipment_cleaning:"Grease-free hobs, hoods and fridges, back in service fast",
+  kst_dishwashing:"Every plate washed before the next order lands",
+  loading_unloading:"Deliveries unloaded on time, without pulling your team off the floor",
+  garbage_waste:"Waste out of sight before it becomes a problem",
+  stock_counting:"Know exactly what is on your shelves",
+  packing_tagging_scanning:"Orders packed, tagged and scanned, ready to go",
+  guest_assistance_server:"Extra hands on the floor when the tables fill up",
+  pos_support:"No queue at the counter, even at peak hour",
+  busser_table_support:"Tables cleared and reset fast, so you seat more guests"
+};
+function phraseHTML(){
+  const t = txt(svcContent(svc.id).phrase) || SVC_PHRASE[svc.id];
+  return t ? `<div class="phrase"><span class="phi" aria-hidden="true">${svc.icon.replace(/width="22"/,'width="30"').replace(/height="22"/,'height="30"')}</span><div class="pht">${esc(t)}</div></div>` : '';
+}
+// Every service opens straight on step 1, so the phrase and the admin's banner show there.
 // The banner is skipped when this step's own content block already shows it.
 function introHTML(step){
-  const img = safeImg(svcContent(svc.id).hero_image);
-  return (img ? `<div class="hero"><img class="himg" src="${img}" alt=""></div>` : '')
+  return phraseHTML()
     + (svc.banner && !step.content ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '');
 }
 function renderForm(r){
