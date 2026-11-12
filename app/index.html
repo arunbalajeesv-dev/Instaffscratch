@@ -1761,13 +1761,6 @@ const inr = n => '\u20B9' + Number(n).toLocaleString('en-IN');
 const priceLabel = () => { const m = String(pSet('', 'show_price_as')).toLowerCase(); return m && m !== 'fixed' ? 'Estimated price' : 'Price'; };   // Fixed or blank: "Price"
 // A service with setting.live = N is hidden from the home page. Y or blank shows it.
 const serviceLive = id => String(pSet(id, 'live')).toUpperCase() !== 'N';
-function priceBlock(r){
-  const p = priceFor(svc, st, r);
-  return UI.sec(priceLabel(), p === null
-    ? `<div class="list"><div class="li"><span class="k">${esc(svc.name)}</span><span class="tbc">Price confirmed on call</span></div></div>`
-    : `<div class="list"><div class="li"><span class="k">${esc(svc.name)}</span><span class="pricev">${inr(p)}</span></div></div>
-       <div class="qhelp" style="margin-top:8px">Nothing is charged on this screen.</div>`);
-}
 
 /* ============================================================
    APP STATE + STORAGE
@@ -1902,6 +1895,10 @@ function trackScreen(){
       professionals: r.blocks ? r.people : r.pros,
       time_on_site_minutes: r.blocks ? r.per*60 : r.onsite,
       price_shown: p !== null, price_rs: p});
+  }
+  if (view === 'details' && leadMode !== 'care' && r && !r.care){
+    const p = priceFor(svc, st, r);
+    return track('checkout_viewed', {service_id:svc.id, price_shown: p !== null, price_rs: p});
   }
 }
 function openService(t, facility){
@@ -2253,8 +2250,7 @@ function renderForm(r){
   bindInputs();
   if (step.bind) step.bind($screen);
   const blocked = !r.care && svc.valid && !svc.valid(st);
-  const est = estimateLine(r);
-  footerBar(est + `<button class="btn" id="next" ${blocked?'disabled':''}>Continue</button>`);
+  footerBar(`<button class="btn" id="next" ${blocked?'disabled':''}>Continue</button>`);
   document.getElementById('next').onclick = () => {
     const rr = result();
     if (rr.care){ view = 'care'; render(); return; }
@@ -2270,7 +2266,8 @@ function approxText(r){
   const hs = h ? h + (h === 1 ? ' hr' : ' hrs') : '', ms = mm ? mm + (mm === 1 ? ' min' : ' mins') : '';
   return 'Service will take approx. ' + [hs, ms].filter(Boolean).join(' & ');
 }
-// The footer shows only the price of the selected service, worked out from the current choices.
+// The price of the selected service, worked out from all the choices. Shown only in the checkout footer,
+// once every choice has been made.
 function estimateLine(r){
   if (!r) return '';
   if (r.care) return `<div class="estimate care">${I.clock}<span>Needs a call</span></div>`;
@@ -2292,7 +2289,6 @@ function renderReview(r){
     + UI.sec('Your booking', `<div class="list">${rows.map(([k,v]) =>
         `<div class="li"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')
         + (st.note ? `<div class="li"><span class="k">Note</span><span class="v">${esc(st.note.slice(0,32))}${st.note.length>32?'…':''}</span></div>` : '')}</div>`)
-    + priceBlock(r)
     + (svc.contentOnReview ? contentHTML(svc, st, 'review') : '')
     + (svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '')
     + (note ? `<div class="note">${note}</div>` : '')
@@ -2305,7 +2301,7 @@ function renderReview(r){
   bindInputs();
   const blocked = !!(svc.disclaimer && !st.accepted);
   footerBar(
-    (blocked ? `<div class="estimate care">${I.clock}<span>Accept the disclaimer to continue</span></div>` : estimateLine(r))
+    (blocked ? `<div class="estimate care">${I.clock}<span>Accept the disclaimer to continue</span></div>` : '')
     + `<button class="btn" id="next" ${blocked?'disabled':''}>Choose date and time</button>`);
   document.getElementById('next').onclick = () => { view = 'slot'; render(); };
 }
@@ -2328,7 +2324,7 @@ function renderSlot(r){
       `<div class="slots" data-input="time">` + times.map(t =>
         `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${fmt12(t)}</button>`).join('') + `</div>`);
   bindInputs();
-  footerBar(estimateLine(r) + `<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
+  footerBar(`<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
   document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
 }
 
@@ -2777,7 +2773,7 @@ function bindInputs(){
 function refreshFooter(){
   const r = result();
   const est = $footer.querySelector('.estimate');
-  if (est && r) est.outerHTML = estimateLine(r);
+  if (est && r && view === 'details') est.outerHTML = estimateLine(r);
   const nx = document.getElementById('next');
   if (nx && view === 'form' && svc.valid) nx.disabled = !r.care && !svc.valid(st);
 }
