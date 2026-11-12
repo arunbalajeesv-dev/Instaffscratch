@@ -1797,8 +1797,8 @@ function saveLead(){
 function saveBookings(){ if (DEMO) return; try { localStorage.setItem('instaff.bookings', JSON.stringify(bookings)); } catch(e){} }
 
 // Every half hour from 7:00 AM to 10:00 PM. Stored as 24-hour text ("14:30") for the lead; shown as "02:30 PM".
-const TIMES = (() => { const t = []; for (let m = 7*60; m <= 22*60; m += 30) t.push(String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0')); return t; })();
-const fmt12 = t => { const h = parseInt(t, 10), m = t.slice(3, 5); return String(h % 12 || 12).padStart(2,'0') + ':' + m + (h < 12 ? ' AM' : ' PM'); };
+const TIMES = (() => { const t = []; for (let m = 6*60; m <= 24*60; m += 30) t.push(String(Math.floor(m/60)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0')); return t; })();
+const fmt12 = t => { const h = parseInt(t, 10), m = t.slice(3, 5); return String(h % 12 || 12).padStart(2,'0') + ':' + m + (h % 24 < 12 ? ' AM' : ' PM'); };
 // Today only offers times at least 1 hour 30 minutes from now (a slot exactly 90 minutes away is allowed).
 // Other days offer every slot.
 const MIN_NOTICE_MIN = 90;
