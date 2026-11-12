@@ -324,9 +324,6 @@ a.btn{text-decoration:none}
 .li .k{color:var(--muted);white-space:nowrap}
 .li .v{font-weight:700;text-align:right}
 .tbc{font-weight:800;color:var(--warn-text)}
-.incbtn{align-self:flex-start;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border:1px solid var(--tint-border);
-  border-radius:20px;background:var(--tint);font:inherit;font-size:13px;font-weight:700;color:var(--ptext)}
-.incbtn svg{width:15px;height:15px}
 /* terms sheet: what's included, not included, have ready, warnings, and the accept tick */
 .tsheet{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(14,27,51,.45)}
 .tsbox{background:var(--page);border-radius:22px 22px 0 0;max-height:88%;display:flex;flex-direction:column;overflow:hidden;
@@ -668,7 +665,6 @@ function contentHTML(s, st, where){
   const c = s.content;
   const inc = (where === 'review' && s.reviewIncluded) ? s.reviewIncluded(st) : c.included;
   let h = '';
-  if (where === 'step' && s.banner) h += `<div class="warnnote"><strong>${s.banner.title}</strong><br>${s.banner.text}</div>`;
   h += UI.sec("What's included", inc && inc.length
     ? `<ul class="ticklist">${inc.map(t => `<li>${I.tick}<span>${t}</span></li>`).join('')}</ul>`
       + (c.includedNote ? `<div class="note" style="margin-top:9px">${c.includedNote}</div>` : '')
@@ -2302,8 +2298,8 @@ function phraseHTML(){
   const t = txt(svcContent(svc.id).phrase) || SVC_PHRASE[svc.id];
   return t ? `<div class="phrase"><div class="pht">${esc(t)}</div></div>` : '';
 }
-// Every service opens straight on step 1, so the phrase shows there. What's included and the
-// warnings live in the terms sheet, shown before the date and time.
+// Every service opens straight on step 1, so the phrase shows there. The warnings live in the
+// terms sheet, shown before the date and time.
 function introHTML(step){
   return phraseHTML();
 }
@@ -2312,7 +2308,7 @@ function renderForm(r){
   const step = svc.steps[stepIx];
   bar(svc.name, `Step ${stepIx+1} of ${total} · ${step.title}`, total, stepIx);
   $screen.innerHTML = (stepIx === 0 ? introHTML(step) : '') + step.build(st, r)
-    + (step.content ? incBtnHTML() : '');
+    + (step.content ? `<div class="sepline"></div>` + contentHTML(svc, st, 'step') : '');
   bindInputs();
   if (step.bind) step.bind($screen);
   const blocked = !r.care && svc.valid && !svc.valid(st);
@@ -2346,8 +2342,6 @@ function estimateLine(r){
 /* ---------- terms sheet ---------- */
 // Accepted once per service while the app is open; changing the booking does not ask again.
 const termsAccepted = {};
-const ICO_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>';
-function incBtnHTML(){ return `<button class="incbtn" type="button" data-terms>${ICO_LIST}What's included</button>`; }
 function termsHTML(){
   const note = svc.reviewNote ? svc.reviewNote(st) : '';
   const warn = [
@@ -2357,8 +2351,8 @@ function termsHTML(){
   ].filter(Boolean);
   return contentHTML(svc, st, 'review') + (warn.length ? UI.sec('Important', `<div class="tswarn">${warn.join('')}</div>`) : '');
 }
-// asking = true when it stands between the review and the date and time; false when opened just to read.
-function openTerms(asking){
+// Stands between the review and the date and time: the terms, then "I accept the service terms".
+function openTerms(asking = true){
   closeTerms();
   let ok = !!termsAccepted[svc.id];
   const el = document.createElement('div');
@@ -2391,7 +2385,6 @@ function openTerms(asking){
 }
 function closeTerms(){ const el = document.getElementById('tsheet'); if (el) el.remove(); }
 document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTerms(); });
-document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-terms]'); if (b && svc) openTerms(false); });
 
 /* ---------- review ---------- */
 function renderReview(r){
@@ -2404,7 +2397,7 @@ function renderReview(r){
     + UI.sec('Your booking', `<div class="list">${rows.map(([k,v]) =>
         `<div class="li"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')
         + (st.note ? `<div class="li"><span class="k">Note</span><span class="v">${esc(st.note.slice(0,32))}${st.note.length>32?'…':''}</span></div>` : '')}</div>`)
-    + incBtnHTML();
+    + (svc.contentOnReview ? contentHTML(svc, st, 'review') : '');
   bindInputs();
   footerBar(`<button class="btn" id="next">Choose date and time</button>`);
   document.getElementById('next').onclick = () => {
