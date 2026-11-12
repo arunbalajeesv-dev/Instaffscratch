@@ -160,7 +160,7 @@ function renderContent(note){
         <label>Banner title <span class="hint">empty = built-in</span></label><input type="text" data-b="${id}|title" value="${esc(b.title||'')}">
         <label>Banner text</label><textarea data-b="${id}|text">${esc(b.text||'')}</textarea>
         <label class="chk"><input type="checkbox" data-boff="${id}" ${c.banner_off?'checked':''}> Hide this service's banner</label>
-        <div class="hint">A custom banner needs both a title and text.</div></div>`; }).join('')}</div>
+        <div class="hint">Shown under Important in the &ldquo;Before you book&rdquo; popup. A custom banner needs both a title and text.</div></div>`; }).join('')}</div>
     <div class="savebar"><button class="btn" id="save">Save changes</button><span class="hint" id="sstate">${dirty?'Unsaved changes':'All saved'}</span></div>`);
   const mark = () => { dirty = true; const s = document.getElementById('sstate'); if (s) s.textContent = 'Unsaved changes'; };
   $app.querySelectorAll('[data-home]').forEach(i => i.oninput = () => {

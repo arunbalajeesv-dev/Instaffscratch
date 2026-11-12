@@ -324,6 +324,25 @@ a.btn{text-decoration:none}
 .li .k{color:var(--muted);white-space:nowrap}
 .li .v{font-weight:700;text-align:right}
 .tbc{font-weight:800;color:var(--warn-text)}
+.incbtn{align-self:flex-start;display:flex;align-items:center;gap:8px;height:40px;padding:0 14px;border:1px solid var(--tint-border);
+  border-radius:20px;background:var(--tint);font:inherit;font-size:13px;font-weight:700;color:var(--ptext)}
+.incbtn svg{width:15px;height:15px}
+/* terms sheet: what's included, not included, have ready, warnings, and the accept tick */
+.tsheet{position:absolute;inset:0;z-index:50;display:flex;flex-direction:column;justify-content:flex-end;background:rgba(14,27,51,.45)}
+.tsbox{background:var(--page);border-radius:22px 22px 0 0;max-height:88%;display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 -12px 30px -12px rgba(14,27,51,.35)}
+.tshead{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 16px 12px;background:var(--white);border-bottom:1px solid var(--card-border)}
+.tshead b{font-family:var(--display);font-size:18px;font-weight:800;letter-spacing:-.02em}
+.tshead small{display:block;font-size:12.5px;color:var(--muted);font-weight:500;margin-top:2px}
+.tsclose{width:36px;height:36px;border:0;border-radius:50%;background:var(--tint);color:var(--ptext);font-size:20px;line-height:1;flex:0 0 auto}
+.tsbody{overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:18px}
+.tsfoot{background:var(--white);border-top:1px solid var(--card-border);padding:12px 16px calc(14px + env(safe-area-inset-bottom,0px));display:flex;flex-direction:column;gap:10px}
+.tsfoot .acceptrow{margin-top:0;border-color:var(--card-border)}
+.tsfoot .acceptrow .box{border-color:var(--card-border)}
+.tsfoot .accepttext{color:var(--text);font-size:14px}
+.tsbox:focus{outline:none}
+.tsfoot .acceptrow[aria-pressed="true"] .box{border-color:var(--primary)}
+.tswarn{display:flex;flex-direction:column;gap:8px}
 .disclaim{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:16px;padding:13px}
 .disctitle{font-size:12.5px;font-weight:800;color:var(--warn-text);margin-bottom:5px}
 .disctext{font-size:11.5px;line-height:1.55;color:var(--warn-text)}
@@ -390,6 +409,8 @@ a.btn{text-decoration:none}
 h1,.h1,.pgtitle,.bizq,.tbtitle,.brand,.detailtitle,.donetitle,.gsectitle,.caretitle,.hbtitle,.fsectitle{font-family:var(--display)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 @media (min-width:700px){
+  .tsheet{justify-content:center;align-items:center;padding:24px}
+  .tsbox{width:min(600px,100%);border-radius:22px;max-height:86%}
   body{display:block;padding:0;background:var(--page)}
   #app{max-width:none;height:100%;border-radius:0;border:0;box-shadow:none;--colw:680px}
   #app[data-view="home"]{--colw:1320px}
@@ -1914,6 +1935,7 @@ function openService(t, facility){
   render();
 }
 function renderView(){
+  closeTerms();
   const r = result();
   if (view === 'signup')    return renderSignup();
   if (view === 'home')      return renderHome();
@@ -2280,18 +2302,17 @@ function phraseHTML(){
   const t = txt(svcContent(svc.id).phrase) || SVC_PHRASE[svc.id];
   return t ? `<div class="phrase"><div class="pht">${esc(t)}</div></div>` : '';
 }
-// Every service opens straight on step 1, so the phrase and the admin's banner show there.
-// The banner is skipped when this step's own content block already shows it.
+// Every service opens straight on step 1, so the phrase shows there. What's included and the
+// warnings live in the terms sheet, shown before the date and time.
 function introHTML(step){
-  return phraseHTML()
-    + (svc.banner && !step.content ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '');
+  return phraseHTML();
 }
 function renderForm(r){
   const total = journey();
   const step = svc.steps[stepIx];
   bar(svc.name, `Step ${stepIx+1} of ${total} · ${step.title}`, total, stepIx);
   $screen.innerHTML = (stepIx === 0 ? introHTML(step) : '') + step.build(st, r)
-    + (step.content ? `<div class="sepline"></div>` + contentHTML(svc, st, 'step') : '');
+    + (step.content ? incBtnHTML() : '');
   bindInputs();
   if (step.bind) step.bind($screen);
   const blocked = !r.care && svc.valid && !svc.valid(st);
@@ -2322,6 +2343,56 @@ function estimateLine(r){
     : `<div class="estimate"><span class="estk">${priceLabel()}</span><span class="estv">${inr(p)}</span></div>`;
 }
 
+/* ---------- terms sheet ---------- */
+// Accepted once per service while the app is open; changing the booking does not ask again.
+const termsAccepted = {};
+const ICO_LIST = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M9 6h11M9 12h11M9 18h11M4 6h.01M4 12h.01M4 18h.01"/></svg>';
+function incBtnHTML(){ return `<button class="incbtn" type="button" data-terms>${ICO_LIST}What's included</button>`; }
+function termsHTML(){
+  const note = svc.reviewNote ? svc.reviewNote(st) : '';
+  const warn = [
+    svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '',
+    note ? `<div class="warnnote">${note}</div>` : '',
+    svc.disclaimer ? `<div class="warnnote"><strong>${svc.disclaimer.title}</strong><br>${svc.disclaimer.text}</div>` : ''
+  ].filter(Boolean);
+  return contentHTML(svc, st, 'review') + (warn.length ? UI.sec('Important', `<div class="tswarn">${warn.join('')}</div>`) : '');
+}
+// asking = true when it stands between the review and the date and time; false when opened just to read.
+function openTerms(asking){
+  closeTerms();
+  let ok = !!termsAccepted[svc.id];
+  const el = document.createElement('div');
+  el.className = 'tsheet'; el.id = 'tsheet';
+  el.innerHTML = `<div class="tsbox" role="dialog" aria-modal="true" aria-labelledby="tstitle" tabindex="-1">
+    <div class="tshead"><div><b id="tstitle">Before you book</b><small>${esc(svc.name)}</small></div>
+      <button class="tsclose" type="button" aria-label="Close">&times;</button></div>
+    <div class="tsbody">${termsHTML()}</div>
+    ${asking ? `<div class="tsfoot">
+      <button class="acceptrow" type="button" id="tsok" aria-pressed="${ok}"><span class="box">${ok ? I.tick : ''}</span>
+        <span class="accepttext">I accept the service terms</span></button>
+      <button class="btn" id="tsgo" type="button" ${ok ? '' : 'disabled'}>Continue to date and time</button>
+    </div>` : ''}</div>`;
+  $screen.parentElement.appendChild(el);
+  track('terms_viewed', {service_id:svc.id, asking:!!asking});
+  el.onclick = e => { if (e.target === el) closeTerms(); };
+  el.querySelector('.tsclose').onclick = closeTerms;
+  if (asking){
+    const tick = el.querySelector('#tsok'), go = el.querySelector('#tsgo');
+    tick.onclick = () => {
+      ok = !ok; tick.setAttribute('aria-pressed', ok); tick.querySelector('.box').innerHTML = ok ? I.tick : ''; go.disabled = !ok;
+    };
+    go.onclick = () => {
+      termsAccepted[svc.id] = true; st.accepted = true;
+      track('terms_accepted', {service_id:svc.id});
+      closeTerms(); view = 'slot'; render();
+    };
+  }
+  el.querySelector('.tsbox').focus();
+}
+function closeTerms(){ const el = document.getElementById('tsheet'); if (el) el.remove(); }
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeTerms(); });
+document.addEventListener('click', e => { const b = e.target.closest && e.target.closest('[data-terms]'); if (b && svc) openTerms(false); });
+
 /* ---------- review ---------- */
 function renderReview(r){
   const total = journey(), n = svc.steps.length;
@@ -2329,26 +2400,17 @@ function renderReview(r){
   const rows = svc.rows(st, r);
   const head = '';
 
-  const note = svc.reviewNote ? svc.reviewNote(st) : '';
   $screen.innerHTML = head
     + UI.sec('Your booking', `<div class="list">${rows.map(([k,v]) =>
         `<div class="li"><span class="k">${k}</span><span class="v">${esc(v)}</span></div>`).join('')
         + (st.note ? `<div class="li"><span class="k">Note</span><span class="v">${esc(st.note.slice(0,32))}${st.note.length>32?'…':''}</span></div>` : '')}</div>`)
-    + (svc.contentOnReview ? contentHTML(svc, st, 'review') : '')
-    + (svc.banner ? `<div class="warnnote"><strong>${svc.banner.title}</strong><br>${svc.banner.text}</div>` : '')
-    + (note ? `<div class="note">${note}</div>` : '')
-    + (svc.disclaimer ? `<div class="disclaim">
-        <div class="disctitle">${svc.disclaimer.title}</div>
-        <div class="disctext">${svc.disclaimer.text}</div>
-        <button class="acceptrow" data-input="toggle" data-key="accepted" aria-pressed="${st.accepted}">
-          <span class="box">${st.accepted?I.tick:''}</span>
-          <span class="accepttext">${svc.disclaimer.accept}</span></button></div>` : '');
+    + incBtnHTML();
   bindInputs();
-  const blocked = !!(svc.disclaimer && !st.accepted);
-  footerBar(
-    (blocked ? `<div class="estimate care">${I.clock}<span>Accept the disclaimer to continue</span></div>` : '')
-    + `<button class="btn" id="next" ${blocked?'disabled':''}>Choose date and time</button>`);
-  document.getElementById('next').onclick = () => { view = 'slot'; render(); };
+  footerBar(`<button class="btn" id="next">Choose date and time</button>`);
+  document.getElementById('next').onclick = () => {
+    if (termsAccepted[svc.id]){ view = 'slot'; render(); }
+    else openTerms(true);
+  };
 }
 
 /* ---------- slot ---------- */
@@ -2420,6 +2482,7 @@ function buildLead(r, ref){
     name: lead.name.trim(), business: lead.business.trim(),
     phone: '+91' + normPhone(lead.phone), area: lead.area.trim(),
     address: lead.address.trim(), lat: lead.lat, lng: lead.lng,
+    terms_accepted: !care && !!termsAccepted[svc.id],
     price_shown: !care && priceFor(svc, st, r) !== null, price_rs: care ? '' : (priceFor(svc, st, r) === null ? '' : priceFor(svc, st, r)),
     utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium: UTM.utm_medium, utm_campaign: UTM.utm_campaign
   };
