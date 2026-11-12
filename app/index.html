@@ -198,8 +198,6 @@ button{font-family:inherit;cursor:pointer}
 .phrase{position:relative;overflow:hidden;flex:0 0 auto;display:flex;align-items:center;gap:14px;min-height:96px;padding:20px 20px;
   border-radius:18px;background:var(--primary);color:#FFFFFF}
 .phrase .pht{font-family:var(--display);font-size:20px;font-weight:800;line-height:1.25;letter-spacing:-.02em;text-wrap:balance;min-width:0}
-.phrase .phi{order:2;margin-left:auto;flex:0 0 auto;width:60px;height:60px;border-radius:16px;display:grid;place-items:center;
-  background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.35);color:#FFFFFF}
 .detailtitle{font-size:22px;font-weight:800;letter-spacing:-.025em;line-height:1.2}
 .detailsub{font-size:13px;color:var(--muted);line-height:1.5;margin-top:4px}
 .inctiles{display:flex;flex-direction:column;gap:8px}
@@ -2280,7 +2278,7 @@ const SVC_PHRASE = {
 };
 function phraseHTML(){
   const t = txt(svcContent(svc.id).phrase) || SVC_PHRASE[svc.id];
-  return t ? `<div class="phrase"><span class="phi" aria-hidden="true">${svc.icon.replace(/width="22"/,'width="30"').replace(/height="22"/,'height="30"')}</span><div class="pht">${esc(t)}</div></div>` : '';
+  return t ? `<div class="phrase"><div class="pht">${esc(t)}</div></div>` : '';
 }
 // Every service opens straight on step 1, so the phrase and the admin's banner show there.
 // The banner is skipped when this step's own content block already shows it.
