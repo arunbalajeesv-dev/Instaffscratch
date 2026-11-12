@@ -91,53 +91,47 @@ button{font-family:inherit;cursor:pointer}
 .warnnote strong{font-weight:800}
 
 /* ---- home ---- */
-.hometop{display:flex;flex-direction:column;gap:4px}
 .brand{display:flex;align-items:center;gap:9px;font-size:19px;font-weight:800;letter-spacing:-.02em}
 .brandmark{width:11px;height:11px;border-radius:3px;background:var(--accent);transform:rotate(45deg);flex:0 0 auto}
-.gsec{display:flex;flex-direction:column;gap:12px}
-.gsechead{display:flex;flex-direction:column;gap:2px}
-.gsectitle{font-size:18px;font-weight:800;letter-spacing:-.02em}
-.gsecsub{font-size:12.5px;color:var(--muted);line-height:1.4}
-.hbanner{flex:0 0 auto;position:relative;overflow:hidden;display:flex;align-items:center;gap:10px;border-radius:20px;
-  padding:18px 16px 18px 18px;background:linear-gradient(120deg,#2373F4 0%,#578EF5 55%,#65D0F4 100%);color:#FFFFFF;box-shadow:0 12px 26px -16px rgba(35,115,244,.7)}
-.hbanner::after{content:"";position:absolute;right:-48px;top:-48px;width:170px;height:170px;border-radius:50%;
-  background:rgba(255,255,255,.14)}
 .hbtext{flex:1;min-width:0;display:flex;flex-direction:column;gap:6px;position:relative;z-index:1}
 .hbtitle{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .hbsub{font-size:12.5px;line-height:1.45;color:#EAF1FE}
 .hbtags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
 .hbtags span{font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--hi);color:var(--text)}
-.hbart{position:relative;z-index:1;width:92px;height:96px;flex:0 0 auto}
-.hbart span{position:absolute;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.2);color:#FFFFFF;border:1px solid rgba(255,255,255,.45);
-  box-shadow:0 8px 18px -10px rgba(0,0,0,.6)}
-.hb1{width:58px;height:58px;right:0;top:0}
-.hb2{width:46px;height:46px;left:0;top:34px;transform:rotate(-8deg)}
-.hb3{width:42px;height:42px;right:8px;bottom:-2px;transform:rotate(6deg)}
-.fchips{flex:0 0 auto;display:flex;gap:8px;overflow-x:auto;margin:0 -16px;padding:6px 16px 8px;position:sticky;top:-18px;z-index:2;
-  background:var(--page)}
-.fchips::-webkit-scrollbar{height:0}
-.fchip{flex:0 0 auto;display:flex;align-items:center;gap:6px;border:1px solid var(--card-border);background:var(--white);
-  border-radius:999px;padding:8px 12px;font-size:12.5px;font-weight:700;color:var(--text);min-height:38px}
-.fchip svg{width:15px;height:15px}
-.fchip .n{font-size:11px;font-weight:700;color:var(--muted)}
-.fchip[aria-selected="true"]{background:var(--primary);border-color:var(--primary);color:var(--on-primary)}
-.fchip[aria-selected="true"] .n{color:rgba(255,255,255,.85)}
-.fsec{display:flex;flex-direction:column;gap:12px}
-.fsechead{display:flex;align-items:center;gap:11px}
-.fsechead > span:last-child{display:flex;flex-direction:column;gap:1px;min-width:0}
-.fsecicon{width:40px;height:40px;border-radius:12px;background:var(--white);border:1px solid var(--card-border);
-  display:grid;place-items:center;color:var(--dark);flex:0 0 auto}
-.fsectitle{font-size:18px;font-weight:800;letter-spacing:-.02em}
-.fsecsub{font-size:12px;color:var(--muted)}
-.gsoon{aspect-ratio:1/1;border:1.5px dashed var(--card-border);border-radius:18px;display:grid;place-items:center;
-  text-align:center;padding:10px;font-size:11.5px;font-weight:700;color:var(--muted);line-height:1.35;background:var(--white)}
-.sgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px 10px}
-.gcard{border:0;background:none;padding:0;text-align:left;display:flex;flex-direction:column;gap:8px;min-width:0;color:var(--text)}
-.gtile{position:relative;aspect-ratio:1/1;border-radius:18px;display:grid;place-items:center;
-  border:1px solid var(--card-border);transition:transform .12s ease}
-.gcard:active .gtile{transform:scale(.97)}
-.gtile .timg{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;border-radius:inherit}
-.gtile .gplus{z-index:1}
+/* home (layout D): header with area, business picker tiles, compact banner, grouped service rows */
+.tbrow.home{justify-content:space-between}
+.hloc{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0;max-width:55%}
+.hloc svg{flex:0 0 auto;color:var(--primary)}
+.hloc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.topnav{display:none;gap:6px}
+.topnav button{height:40px;padding:0 14px;border:0;border-radius:20px;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--muted)}
+.topnav button[aria-selected="true"]{background:var(--tint);color:var(--primary)}
+.hright{display:flex;align-items:center;gap:10px;min-width:0}
+.bizpick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.biz{height:78px;border:1px solid var(--card-border);border-radius:14px;background:var(--white);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:6px;padding:6px 4px;color:#3A4458;font:inherit;font-size:11.5px;font-weight:600;line-height:1.15;text-align:center}
+.biz svg{width:24px;height:24px;flex:0 0 auto}
+.biz[aria-selected="true"]{border:1.5px solid var(--primary);background:var(--tint);color:var(--ptext);font-weight:700}
+.hb2d{position:relative;display:flex;min-height:118px;border-radius:18px;overflow:hidden;background:var(--primary);color:#FFFFFF;flex:0 0 auto}
+.hb2d .hbtext{padding:16px 0 16px 18px;justify-content:center}
+.hb2d .hbtitle{font-size:18px}
+.hb2d .hbsub{color:#DCE8FD}
+.hb2d .hbtags span{font-size:11.5px;font-weight:700}
+.hb2d img{position:absolute;top:0;right:0;width:132px;height:100%;object-fit:cover;display:block}
+.hb2d img ~ .hbtext,.hb2d .hbtext:has(+ img){padding-right:144px}
+.svgroup{display:flex;flex-direction:column;gap:10px}
+.svgroup h2{margin:0;padding:0 4px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
+.svlist{display:flex;flex-direction:column;background:var(--white);border:1px solid var(--card-border);border-radius:18px;overflow:hidden}
+.svrow{display:flex;align-items:center;gap:14px;padding:12px 14px;border:0;border-top:1px solid #EEF0F4;background:none;font:inherit;color:var(--text);text-align:left;width:100%}
+.svrow:first-child{border-top:0}
+.svrow .svimg{width:56px;height:56px;border-radius:12px;object-fit:cover;flex:0 0 auto;background:var(--tint);display:grid;place-items:center;color:var(--primary)}
+.svrow .svt{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.svrow b{font-size:15px;font-weight:600}
+.svrow .svt span{font-size:13px;color:var(--muted);line-height:1.35}
+.svrow .chev{flex:0 0 auto;color:#9AA3B2}
+.svsoon{font-size:13px;color:var(--muted);padding:4px}
+.pgtitle{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
+.bizq{display:none;margin:0 0 -8px;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .hero{overflow:hidden}
 .locchip{align-self:flex-start;border:1px solid var(--card-border);background:var(--white);border-radius:999px;
   padding:6px 12px;font:inherit;font-size:12.5px;font-weight:700;color:var(--dark);cursor:pointer;max-width:100%;
@@ -180,15 +174,8 @@ button{font-family:inherit;cursor:pointer}
 .aerr{font-size:12.5px;line-height:1.45;color:var(--warn-text);background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:12px;padding:9px 12px}
 .aerr:empty{display:none}
 .hero .himg{width:100%;height:100%;object-fit:cover;display:block}
-.gcard:focus-visible{outline:none}
-.gcard:focus-visible .gtile{box-shadow:0 0 0 3px var(--tint-border)}
-.tone-green  .gtile{background:#FFFFFF;color:#2373F4}
-.tone-blue   .gtile{background:#FFFFFF;color:#2373F4}
-.tone-violet .gtile{background:#FFFFFF;color:#2373F4}
 .gplus{position:absolute;right:7px;bottom:7px;width:30px;height:30px;border-radius:10px;background:var(--white);
   color:var(--ptext);display:grid;place-items:center;box-shadow:0 2px 8px -2px rgba(14,27,51,.25)}
-.gname{font-size:12.8px;font-weight:700;line-height:1.3;letter-spacing:-.005em;display:-webkit-box;-webkit-line-clamp:2;
-  -webkit-box-orient:vertical;overflow:hidden;padding:0 2px}
 .hello{font-size:13px;font-weight:700;color:var(--muted)}
 .h1{font-size:25px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
 .protobar{background:var(--warn-bg);border:1px solid var(--warn-border);border-radius:14px;
@@ -397,31 +384,47 @@ a.btn{text-decoration:none}
    WIDER SCREENS (tablet and desktop): the same app in a centred column, no phone frame.
    The top bar, content and bottom bar share one column width, set per screen on #app by render().
    ============================================================ */
-h1,.h1,.tbtitle,.brand,.detailtitle,.donetitle,.gsectitle,.caretitle,.hbtitle,.fsectitle{font-family:var(--display)}
+h1,.h1,.pgtitle,.bizq,.tbtitle,.brand,.detailtitle,.donetitle,.gsectitle,.caretitle,.hbtitle,.fsectitle{font-family:var(--display)}
 button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{outline:2px solid var(--primary);outline-offset:2px}
 @media (min-width:700px){
   body{display:block;padding:0;background:var(--page)}
   #app{max-width:none;height:100%;border-radius:0;border:0;box-shadow:none;--colw:680px}
-  #app[data-view="home"],#app[data-view="bookings"]{--colw:960px}
+  #app[data-view="home"]{--colw:1320px}
+  #app[data-view="bookings"]{--colw:960px}
+  #app[data-view="home"] .tabbar,#app[data-view="bookings"] .tabbar{display:none}
+  .topnav{display:flex}
+  .hloc{max-width:none;height:40px;padding:0 14px;border:1px solid var(--card-border);border-radius:20px;color:var(--text)}
+  .bizpick{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
+  .biz{height:64px;flex-direction:row;justify-content:flex-start;gap:12px;padding:0 18px;font-size:14.5px;text-align:left}
+  .hb2d{min-height:172px;border-radius:22px}
+  .hb2d .hbtext{padding:28px 32px;gap:10px}
+  .hb2d .hbtitle{font-size:30px}
+  .hb2d .hbsub{font-size:15px}
+  .hb2d .hbtags span{font-size:13px;padding:5px 12px}
+  .hb2d img{width:34%}
+  .hb2d .hbtext:has(+ img){padding-right:calc(34% + 32px)}
+  .svgroup{gap:12px}
+  .svgroup h2{font-size:12.5px;padding:0}
+  .svlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px;background:none;border:0;border-radius:0;overflow:visible}
+  .svrow{border:1px solid var(--card-border);border-radius:16px;background:var(--white)}
+  .svrow:first-child{border-top:1px solid var(--card-border)}
+  .svrow:hover{border-color:var(--primary)}
+  .svrow .svimg{width:64px;height:64px}
+  .bizq{display:block}
   .topbar,.bottombar,.tabbar{padding-left:max(16px,calc((100% - var(--colw))/2));padding-right:max(16px,calc((100% - var(--colw))/2))}
   .topbar{padding-top:16px;padding-bottom:12px}
   .screen{padding:28px max(16px,calc((100% - var(--colw))/2)) 32px}
   .screen::-webkit-scrollbar{width:10px}
   .screen::-webkit-scrollbar-thumb{background:#C5CDD9;border-radius:6px}
-  .fchips{top:-28px}
   .h1{font-size:31px}
-  .sgrid{grid-template-columns:repeat(5,minmax(0,1fr));gap:20px 14px}
   .slots{grid-template-columns:repeat(4,1fr)}
   .bottombar{flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:flex-end;gap:12px}
   .bottombar .estimate{margin-right:auto}
   .bottombar .btn{width:auto;min-width:230px;padding:0 28px}
   .bottombar .btn.ghost{min-width:0;padding:0 16px}
   .tabbar{justify-content:center}
-  .gcard:hover .gtile,.card:hover,.chip:hover,.row:hover,.day:hover,.slot:hover{border-color:var(--primary)}
+  .card:hover,.chip:hover,.row:hover,.day:hover,.slot:hover{border-color:var(--primary)}
   .btn:not(:disabled):hover{filter:brightness(1.08)}
-}
-@media (min-width:700px) and (max-width:1000px){
-  .sgrid{grid-template-columns:repeat(4,minmax(0,1fr))}
 }
 </style>
 </head>
@@ -1943,25 +1946,7 @@ function tabs(active){
 }
 function footerBar(html){ $footer.className = ''; $footer.innerHTML = `<div class="bottombar">${html}</div>`; }
 
-/* ---------- home: services as a grid of tiles ---------- */
-// Shorter names for the tiles only; the full name shows inside each service.
-const TILE_NAME = {
-  toilet_cleaning:'Toilet Cleaning', opening_closing:'Opening & Closing', service_time_cleaning:'Service-Time Cleaning',
-  store_cleaning:'Store Cleaning', kitchen_equipment_cleaning:'Kitchen Equipment', kst_dishwashing:'KST / Dishwashing',
-  guest_assistance_server:'Guest & Server', pos_support:'POS Support', busser_table_support:'Busser & Tables',
-  stock_counting:'Stock Counting', packing_tagging_scanning:'Packing & Tagging', garbage_waste:'Garbage & Waste',
-  loading_unloading:'Loading & Unloading'
-};
-const CAT_INFO = {
-  'Cleaning':       {sub:'Washrooms, dining areas, kitchens and stores', tone:'green'},
-  'Front of house': {sub:'Servers, counter and table support',          tone:'blue'},
-  'Operations':     {sub:'Stock, packing, waste and loading',           tone:'violet'}
-};
-function greeting(){
-  const h = new Date().getHours();
-  return h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening';
-}
-const PLUS = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>';
+/* ---------- home: business type picker and service rows ---------- */
 // Services listed under the type of facility, set 23 Oct.
 // Who can book what comes from tab 1 of each logic sheet (F&B / Retail / Warehouse).
 // No sheet lists Office yet. Toilet Cleaning is shown there because its own facility
@@ -1985,71 +1970,74 @@ const FACILITIES = [
   {id:'office', name:'Office', sub:'Offices and office complexes', icon:FAC_ICON.office,
    services:['toilet_cleaning'], more:'More office services coming soon'}
 ];
-let homeFilter = 'all';
-try { homeFilter = localStorage.getItem('instaff.facility') || 'all'; } catch(e){}
-if (homeFilter !== 'all' && !FACILITIES.some(f => f.id === homeFilter)) homeFilter = 'all';
+let homeFilter = FACILITIES[0].id;   // the business type picked on home, remembered on this phone
+try { homeFilter = localStorage.getItem('instaff.facility') || homeFilter; } catch(e){}
+if (!FACILITIES.some(f => f.id === homeFilter)) homeFilter = FACILITIES[0].id;
 let svcFacility = '';   // the facility heading a service was opened from; sent with the lead
 
-function tileHTML(s, f){
-  return `<button class="gcard tone-${CAT_INFO[s.cat].tone}" data-s="${s.id}" data-f="${f.id}" aria-label="${esc(s.name)}, ${esc(f.name)}">
-    <span class="gtile">${safeImg(svcContent(s.id).tile_image)
-      ? `<img class="timg" src="${safeImg(svcContent(s.id).tile_image)}" alt="" loading="lazy">`
-      : s.icon.replace('width="22" height="22"', 'width="42" height="42"').replace('stroke-width="1.9"', 'stroke-width="1.6"')}
-      <span class="gplus">${PLUS}</span></span>
-    <span class="gname">${TILE_NAME[s.id] || s.name}</span>
+// One line under each service name on home.
+const SVC_BLURB = {
+  toilet_cleaning:'WCs, urinals, basins and mirrors', opening_closing:'Before you open or after you close',
+  service_time_cleaning:'Tables and floors kept clean during service', store_cleaning:'Floors, shelves and fixtures',
+  kitchen_equipment_cleaning:'Hobs, counters, fridges and hoods', kst_dishwashing:'Dishes, vessels and trolleys',
+  guest_assistance_server:'Seat, serve and look after guests', pos_support:'Billing counter help at busy hours',
+  busser_table_support:'Clear, reset and turn tables fast', stock_counting:'Shelf and storeroom counts',
+  packing_tagging_scanning:'Pack, label and scan orders', garbage_waste:'Dry and wet waste taken out',
+  loading_unloading:'Unload deliveries, load dispatch'
+};
+const CAT_ORDER = ['Cleaning', 'Front of house', 'Operations'];
+const ICO_CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const ICO_LOC = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
+// Home and Bookings share this header: logo, the customer's area once we know it, and on wide screens
+// the Services / Bookings links that the bottom tab bar gives on a phone.
+function homeHeader(active){
+  const area = (lead.area || '').trim();
+  $top.innerHTML = `<div class="tbrow home"><div class="brand"><span class="brandmark"></span>Shyft On</div>
+    <div class="hright">${area ? `<div class="hloc">${ICO_LOC}<span>${esc(area)}</span></div>` : ''}
+      <nav class="topnav"><button data-t="home" aria-selected="${active==='home'}">Services</button><button data-t="bookings" aria-selected="${active==='bookings'}">Bookings</button></nav></div></div>`;
+  $top.querySelectorAll('.topnav button').forEach(t => t.onclick = () => { view = t.dataset.t; svc = null; render(); });
+}
+function rowHTML(s, f){
+  const img = safeImg(svcContent(s.id).tile_image);
+  return `<button class="svrow" data-s="${s.id}" data-f="${f.id}">
+    ${img ? `<img class="svimg" src="${img}" alt="" loading="lazy">` : `<span class="svimg">${s.icon}</span>`}
+    <span class="svt"><b>${esc(s.name)}</b>${SVC_BLURB[s.id] ? `<span>${esc(SVC_BLURB[s.id])}</span>` : ''}</span>${ICO_CHEV}
   </button>`;
 }
 function renderHome(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark"></span>Shyft On</div></div>`;
-  const shown = FACILITIES.filter(f => homeFilter === 'all' || f.id === homeFilter);
+  homeHeader('home');
+  const f = FACILITIES.find(x => x.id === homeFilter) || FACILITIES[0];
   const hb = CONTENT.home || {};
   const hbTags = (Array.isArray(hb.tags) ? hb.tags.map(txt).filter(Boolean).slice(0, 4) : []);
   if (!hbTags.length) hbTags.push('By the hour', 'By the job');
+  const hbImg = safeImg(svcContent('service_time_cleaning').tile_image);
+  const live = f.services.filter(serviceLive).map(byId).filter(Boolean);
+  const groups = CAT_ORDER.map(cat => [cat, live.filter(s => s.cat === cat)]).filter(([, l]) => l.length);
   $screen.innerHTML = `
-    <div class="hometop">
-      <div class="hello">${greeting()}</div>
-      <div class="h1">What do you need today?</div>
-    </div>
-    <div class="hbanner">
+    <div class="hb2d">
       <div class="hbtext">
         <div class="hbtitle">${esc(txt(hb.title) || 'Trained fixers for your business')}</div>
-        <div class="hbsub">${esc(txt(hb.sub) || 'Cleaning, front of house and operations. Pick a service to see the price straight away.')}</div>
+        <div class="hbsub">${esc(txt(hb.sub) || 'Verified, uniformed and on time.')}</div>
         <div class="hbtags">${hbTags.map(t => `<span>${esc(t)}</span>`).join('')}</div>
       </div>
-      <div class="hbart" aria-hidden="true">
-        <span class="hb1">${I.tray.replace('width="22" height="22"','width="30" height="30"')}</span>
-        <span class="hb2">${I.spray.replace('width="22" height="22"','width="26" height="26"')}</span>
-        <span class="hb3">${I.box.replace('width="22" height="22"','width="24" height="24"')}</span>
-      </div>
+      ${hbImg ? `<img src="${hbImg}" alt="">` : ''}
     </div>
-    <div class="fchips" role="tablist" aria-label="Type of facility">
-      ${[{id:'all', name:'All'}].concat(FACILITIES).map(f => `
-        <button class="fchip" role="tab" data-filter="${f.id}" aria-selected="${homeFilter === f.id}">
-          ${f.icon || ''}<span>${f.name}</span>${f.services ? `<span class="n">${f.services.filter(serviceLive).length}</span>` : ''}
-        </button>`).join('')}
+    <h1 class="bizq">What type of business are you?</h1>
+    <div class="bizpick" role="tablist" aria-label="Type of business">
+      ${FACILITIES.map(x => `<button class="biz" role="tab" data-filter="${x.id}" aria-selected="${x.id === f.id}">${x.icon}<span>${x.name}</span></button>`).join('')}
     </div>
-    ` + shown.filter(f => f.more || f.services.some(serviceLive)).map(f => `
-      <section class="fsec" aria-label="${esc(f.name)}">
-        <div class="fsechead">
-          <span class="fsecicon">${f.icon}</span>
-          <span><span class="fsectitle">${f.name}</span>
-            <span class="fsecsub">${f.sub} · ${plural(f.services.filter(serviceLive).length, 'service')}</span></span>
-        </div>
-        <div class="sgrid">
-          ${f.services.filter(serviceLive).map(id => tileHTML(byId(id), f)).join('')}
-          ${f.more ? `<div class="gsoon"><span>${f.more}</span></div>` : ''}
-        </div>
-      </section>`).join('');
-  $screen.querySelectorAll('.fchip').forEach(c => c.onclick = () => {
+    ${groups.map(([cat, l]) => `<section class="svgroup" aria-label="${esc(cat)}"><h2>${esc(cat)}</h2>
+      <div class="svlist">${l.map(s => rowHTML(s, f)).join('')}</div></section>`).join('')}
+    ${f.more ? `<div class="svsoon">${esc(f.more)}</div>` : ''}`;
+  $screen.querySelectorAll('.biz').forEach(c => c.onclick = () => {
+    if (c.dataset.filter === homeFilter) return;
     homeFilter = c.dataset.filter;
-    if (homeFilter !== 'all') track('facility_selected', {facility:homeFilter});
+    track('facility_selected', {facility:homeFilter});
     try { localStorage.setItem('instaff.facility', homeFilter); } catch(e){}
-    lastScreenKey = '';   // a new filter starts at the top
+    lastScreenKey = '';   // a new business type starts at the top
     render();
   });
-  $screen.querySelectorAll('.gcard').forEach(b => b.onclick = () => {
-    openService(byId(b.dataset.s), b.dataset.f);
-  });
+  $screen.querySelectorAll('.svrow').forEach(b => b.onclick = () => openService(byId(b.dataset.s), b.dataset.f));
   tabs('home');
 }
 
@@ -2186,13 +2174,14 @@ async function verifyOtp(){
 
 /* ---------- bookings ---------- */
 function renderBookings(){
-  $top.innerHTML = `<div class="tbrow"><div class="tbtitle">Your bookings</div></div>`;
+  homeHeader('bookings');
+  const head = `<h1 class="pgtitle">Your bookings</h1>`;
   if (!bookings.length){
-    $screen.innerHTML = `<div class="empty">${I.cal}
+    $screen.innerHTML = head + `<div class="empty">${I.cal}
       <div class="emptytitle">Nothing booked yet</div>
       <div class="emptysub">Bookings you make show up here.</div></div>`;
   } else {
-    $screen.innerHTML = bookings.map(b => `
+    $screen.innerHTML = head + bookings.map(b => `
       <div class="bkcard">
         <div class="bkhead"><span class="bkname">${b.name}</span><span class="bkref">${b.ref}</span></div>
         <div class="bkmeta">${b.when}${b.status === 'care' && b.team ? '<br>' + esc(b.team) : ''}</div>
