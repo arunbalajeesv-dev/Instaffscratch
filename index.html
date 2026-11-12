@@ -180,7 +180,7 @@ section { padding-block: 104px 0; }
 .close { margin-top: 104px; background: var(--accent); color: var(--accent-ink); border-radius: 24px; padding: clamp(32px, 6vw, 72px); display: grid; gap: 28px; justify-items: start; }
 .close h2 { font-size: clamp(30px, 5vw, 60px); max-width: 15em; letter-spacing: -0.03em; }
 .close .btn { background: var(--accent-ink); color: var(--fg); }
-.join { margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: clamp(24px, 5vw, 48px);
+.join { scroll-margin-top: 24px; margin-top: 24px; background: var(--surface); border: 1px solid var(--line); border-radius: 24px; padding: clamp(24px, 5vw, 48px);
   display: flex; align-items: center; justify-content: space-between; gap: 24px; flex-wrap: wrap; }
 .join h2 { font-size: clamp(24px, 3.4vw, 36px); margin-top: 10px; }
 .join p:not(.eyebrow) { color: var(--muted); margin-top: 10px; max-width: 36em; }
@@ -194,7 +194,7 @@ footer { margin-top: 56px; padding-block: 28px 40px; border-top: 1px solid var(-
     <nav>
       <a class="link" href="#services">Services</a>
       <a class="link" href="#how">How it works</a>
-      <a class="link" href="#fixers">Fixers</a>
+      <a class="link" href="#join">Fixers</a>
       <a class="link" href="#problem">The problem</a>
       <a class="link" href="#opening">Store opening</a>
       <a class="btn" href="/app" data-app>Book a service</a>
@@ -390,7 +390,7 @@ footer { margin-top: 56px; padding-block: 28px 40px; border-top: 1px solid var(-
       <a class="btn" href="/app" data-app>Book a service</a>
     </div>
 
-    <div class="join">
+    <div class="join" id="join">
       <div>
         <p class="eyebrow">Work with us</p>
         <h2>Want to work as a Fixer?</h2>
