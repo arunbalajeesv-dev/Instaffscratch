@@ -100,13 +100,17 @@ button{font-family:inherit;cursor:pointer}
 .hbtags span{font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--hi);color:var(--text)}
 /* home (layout D): header with area, business picker tiles, compact banner, grouped service rows */
 .tbrow.home{justify-content:space-between}
-.hloc{display:flex;align-items:center;gap:5px;font-size:13px;font-weight:600;color:var(--muted);min-width:0;max-width:55%}
+.hloc{display:flex;align-items:center;gap:5px;height:34px;padding:0 10px;margin-right:-6px;border:0;border-radius:17px;background:none;
+  font:inherit;font-size:13px;font-weight:600;color:var(--text);min-width:0}
+.hloc:hover,.hloc:active{background:var(--tint)}
+.hloc .dn{flex:0 0 auto;color:var(--muted)}
 .hloc svg{flex:0 0 auto;color:var(--primary)}
 .hloc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .topnav{display:none;gap:6px}
 .topnav button{height:40px;padding:0 14px;border:0;border-radius:20px;background:none;font:inherit;font-size:13.5px;font-weight:600;color:var(--muted)}
 .topnav button[aria-selected="true"]{background:var(--tint);color:var(--primary)}
-.hright{display:flex;align-items:center;gap:10px;min-width:0}
+.hright{display:flex;align-items:center;justify-content:flex-end;gap:10px;min-width:0;flex:1 1 auto}
+.tbrow.home .brand{flex:0 0 auto}
 .bizpick{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
 .biz{height:78px;border:1px solid var(--card-border);border-radius:14px;background:var(--white);display:flex;flex-direction:column;
   align-items:center;justify-content:center;gap:6px;padding:6px 4px;color:#3A4458;font:inherit;font-size:11.5px;font-weight:600;line-height:1.15;text-align:center}
@@ -393,7 +397,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
   #app[data-view="bookings"]{--colw:960px}
   #app[data-view="home"] .tabbar,#app[data-view="bookings"] .tabbar{display:none}
   .topnav{display:flex}
-  .hloc{max-width:none;height:40px;padding:0 14px;border:1px solid var(--card-border);border-radius:20px;color:var(--text)}
+  .hloc{max-width:none;height:40px;padding:0 14px;margin-right:0;border:1px solid var(--card-border);border-radius:20px;background:var(--white)}
   .bizpick{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
   .biz{height:64px;flex-direction:row;justify-content:flex-start;gap:12px;padding:0 18px;font-size:14.5px;text-align:left}
   .hb2d{min-height:172px;border-radius:22px}
@@ -1922,6 +1926,7 @@ function renderView(){
   if (view === 'slot')      return renderSlot(r);
   if (view === 'details')   return renderDetails(r);
   if (view === 'done')      return renderDone();
+  if (view === 'location')  return renderLocation();
 }
 
 function journey(){ return svc.steps.length + 3; }   // the service's own steps, then review, date and time, details
@@ -1987,15 +1992,17 @@ const SVC_BLURB = {
 };
 const CAT_ORDER = ['Cleaning', 'Front of house', 'Operations'];
 const ICO_CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
+const ICO_DOWN = '<svg class="dn" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
 const ICO_LOC = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 // Home and Bookings share this header: logo, the customer's area once we know it, and on wide screens
 // the Services / Bookings links that the bottom tab bar gives on a phone.
 function homeHeader(active){
   const area = (lead.area || '').trim();
   $top.innerHTML = `<div class="tbrow home"><div class="brand"><span class="brandmark"></span>Shyft On</div>
-    <div class="hright">${area ? `<div class="hloc">${ICO_LOC}<span>${esc(area)}</span></div>` : ''}
+    <div class="hright"><button class="hloc" id="hloc" type="button" aria-label="${area ? 'Change location, now ' + esc(area) : 'Set your location'}">${ICO_LOC}<span>${esc(area || 'Set location')}</span>${ICO_DOWN}</button>
       <nav class="topnav"><button data-t="home" aria-selected="${active==='home'}">Services</button><button data-t="bookings" aria-selected="${active==='bookings'}">Bookings</button></nav></div></div>`;
   $top.querySelectorAll('.topnav button').forEach(t => t.onclick = () => { view = t.dataset.t; svc = null; render(); });
+  document.getElementById('hloc').onclick = openLocation;
 }
 function rowHTML(s, f){
   const img = safeImg(svcContent(s.id).tile_image);
@@ -2112,6 +2119,41 @@ async function reverseGeocode(lat, lng){
   } catch(e){ return null; }
 }
 let locAccuracy = 0;
+// The location in the home header opens this screen. It reuses the checkout's address search and
+// "Use my current location". Back leaves the saved location as it was.
+let locPrev = null;
+function openLocation(){
+  locPrev = {area:lead.area, address:lead.address, lat:lead.lat, lng:lead.lng, pinSrc:lead.pinSrc, from:view};
+  locConfirmed = !!lead.lat || lead.address.trim().length > 5;   // start on the search box with the saved address filled in
+  track('location_opened');
+  view = 'location'; render();
+}
+// The neighbourhood from a full address: "12, 3rd Ave, Anna Nagar, Chennai, Tamil Nadu 600040, India" gives "Anna Nagar".
+function areaFromAddress(a){
+  const parts = String(a || '').split(',').map(x => x.trim()).filter(x => x && !/\d{6}|^india$/i.test(x));
+  return parts.length >= 2 ? parts[parts.length - 2] : (parts[0] || '').slice(0, 30);
+}
+function renderLocation(){
+  bar('Your location');
+  $screen.innerHTML = addressBlock().replace('Where do you need the fixer?', 'Where is your business?');
+  footerBar(`<button class="btn" id="saveloc" disabled>Save location</button>`);
+  const btn = document.getElementById('saveloc');
+  lead.area = '';   // a fresh pick fills in its own area; the old one is kept in locPrev
+  bindAddress(() => { btn.disabled = !addressOk(); });
+  btn.onclick = async () => {
+    const same = lead.address === locPrev.address && lead.lat === locPrev.lat;
+    if (!lead.area.trim()) lead.area = same ? locPrev.area : areaFromAddress(lead.address);
+    locPrev = null; saveLead(); track('location_changed', {method: lead.pinSrc || 'typed'});
+    if (!same) sendLocationLead();
+    view = 'home'; render();
+  };
+}
+async function sendLocationLead(){
+  sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
+    service:'', facility:'', name:lead.name.trim(), business:'', phone:'+91' + normPhone(lead.phone || verifiedPhone),
+    area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
+    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+}
 function autoLocate(){
   if (DEMO || !navigator.geolocation) return;
   navigator.geolocation.getCurrentPosition(async p => {
@@ -2120,11 +2162,9 @@ function autoLocate(){
     const g = await reverseGeocode(lead.lat, lead.lng);
     if (g){ lead.address = g.text; if (!lead.area.trim() && g.area) lead.area = g.area; }
     saveLead(); track('location_captured', {method:'auto'});
+    if (view === 'home') render();   // show the area in the header
     // It also goes to the Sheet, so a customer who signs in but never books still leaves a pin.
-    sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
-      service:'', facility:'', name:lead.name.trim(), business:'', phone:'+91' + normPhone(lead.phone),
-      area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
-      utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+    sendLocationLead();
   }, () => track('location_denied'), {enableHighAccuracy:false, timeout:12000, maximumAge:300000});
 }
 
@@ -2769,6 +2809,11 @@ function refreshFooter(){
 
 /* ---------- back ---------- */
 function goBack(){
+  if (view === 'location'){
+    if (locPrev){ Object.assign(lead, {area:locPrev.area, address:locPrev.address, lat:locPrev.lat, lng:locPrev.lng, pinSrc:locPrev.pinSrc}); view = locPrev.from; locPrev = null; }
+    else view = 'home';
+    return render();
+  }
   if (view === 'service'){ view = 'home'; svc = null; return render(); }
   if (view === 'care'){ view = 'form'; return render(); }
   if (view === 'form'){
