@@ -134,6 +134,31 @@ button{font-family:inherit;cursor:pointer}
 .svrow .svt span{font-size:13px;color:var(--muted);line-height:1.35}
 .svrow .chev{flex:0 0 auto;color:#9AA3B2}
 .svsoon{font-size:13px;color:var(--muted);padding:4px}
+/* profile */
+.pfhead{display:flex;align-items:center;gap:14px;background:var(--white);border:1px solid var(--card-border);border-radius:18px;padding:16px}
+.pfav{width:52px;height:52px;border-radius:50%;background:var(--tint);color:var(--ptext);display:grid;place-items:center;
+  font-family:var(--display);font-size:21px;font-weight:800;flex:0 0 auto}
+.pfwho{min-width:0;display:flex;flex-direction:column;gap:3px}
+.pfwho b{font-size:17px;font-weight:700;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pfwho span{font-size:13.5px;color:var(--muted);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pfok{font-size:11px;font-weight:700;color:#1B7A3E;background:#E3F5EA;border-radius:999px;padding:2px 8px}
+.pfcard{background:var(--white);border:1px solid var(--card-border);border-radius:18px;padding:14px;display:flex;flex-direction:column;gap:12px}
+.pflabel{font-size:13px;font-weight:600;color:var(--muted);margin-bottom:6px;display:block}
+.pfloc{display:flex;align-items:center;gap:12px}
+.pfloc .ci{width:40px;height:40px;border-radius:12px;background:var(--tint);color:var(--primary);display:grid;place-items:center;flex:0 0 auto}
+.pfloc div{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.pfloc b{font-size:14.5px;font-weight:600}
+.pfloc span{font-size:12.5px;color:var(--muted);line-height:1.4}
+.pfchg{border:1px solid var(--card-border);background:var(--white);border-radius:12px;height:38px;padding:0 14px;font:inherit;font-size:13px;font-weight:700;color:var(--ptext);flex:0 0 auto}
+.pfsaved{font-size:12px;color:var(--muted);margin-top:-4px}
+.pfsaved:empty{display:none}
+.logout{min-height:50px;border-radius:14px;border:1px solid #F0C9C4;background:var(--white);color:#B42318;font:inherit;font-size:15px;font-weight:700;width:100%}
+.lobox{background:var(--white);border:1px solid #F0C9C4;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.lobox b{font-size:15.5px}
+.lobox p{margin:0;font-size:13px;color:var(--muted);line-height:1.5}
+.lobtns{display:flex;gap:10px}
+.lobtns .btn{flex:1}
+.btn.danger{background:#D92D20}
 .pgtitle{margin:0;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .bizq{display:none;margin:0 0 -8px;font-size:22px;font-weight:800;letter-spacing:-.02em}
 .locchip{align-self:flex-start;border:1px solid var(--card-border);background:var(--white);border-radius:999px;
@@ -412,7 +437,7 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
   #app{max-width:none;height:100%;border-radius:0;border:0;box-shadow:none;--colw:680px}
   #app[data-view="home"]{--colw:1320px}
   #app[data-view="bookings"]{--colw:960px}
-  #app[data-view="home"] .tabbar,#app[data-view="bookings"] .tabbar{display:none}
+  #app[data-view="home"] .tabbar,#app[data-view="bookings"] .tabbar,#app[data-view="profile"] .tabbar{display:none}
   .topnav{display:flex}
   .hloc{max-width:none;height:40px;padding:0 14px;margin-right:0;border:1px solid var(--card-border);border-radius:20px;background:var(--white)}
   .bizpick{grid-template-columns:repeat(auto-fit,minmax(min(100%,200px),1fr));gap:12px}
@@ -1932,6 +1957,7 @@ function openService(t, facility){
 }
 function renderView(){
   closeTerms();
+  if (view !== 'profile') loAsk = false;
   const r = result();
   if (view === 'signup')    return renderSignup();
   if (view === 'home')      return renderHome();
@@ -1944,6 +1970,7 @@ function renderView(){
   if (view === 'details')   return renderDetails(r);
   if (view === 'done')      return renderDone();
   if (view === 'location')  return renderLocation();
+  if (view === 'profile')   return renderProfile();
 }
 
 function journey(){ return svc.steps.length + 3; }   // the service's own steps, then review, date and time, details
@@ -1963,6 +1990,7 @@ function tabs(active){
   $footer.innerHTML = `<div class="tabbar">
     <button class="tab" data-t="home" aria-selected="${active==='home'}">${I.grid}Services</button>
     <button class="tab" data-t="bookings" aria-selected="${active==='bookings'}">${I.cal}Bookings</button>
+    <button class="tab" data-t="profile" aria-selected="${active==='profile'}">${I.person.replace('width="22" height="22"','width="21" height="21"').replace('stroke-width="1.9"','stroke-width="2"')}Profile</button>
   </div>`;
   $footer.querySelectorAll('.tab').forEach(t => t.onclick = () => { view = t.dataset.t; svc = null; render(); });
 }
@@ -2017,7 +2045,7 @@ function homeHeader(active){
   const area = (lead.area || '').trim();
   $top.innerHTML = `<div class="tbrow home"><div class="brand"><span class="brandmark"></span>Shyft On</div>
     <div class="hright"><button class="hloc" id="hloc" type="button" aria-label="${area ? 'Change location, now ' + esc(area) : 'Set your location'}">${ICO_LOC}<span>${esc(area || 'Set location')}</span>${ICO_DOWN}</button>
-      <nav class="topnav"><button data-t="home" aria-selected="${active==='home'}">Services</button><button data-t="bookings" aria-selected="${active==='bookings'}">Bookings</button></nav></div></div>`;
+      <nav class="topnav"><button data-t="home" aria-selected="${active==='home'}">Services</button><button data-t="bookings" aria-selected="${active==='bookings'}">Bookings</button><button data-t="profile" aria-selected="${active==='profile'}">Profile</button></nav></div></div>`;
   $top.querySelectorAll('.topnav button').forEach(t => t.onclick = () => { view = t.dataset.t; svc = null; render(); });
   document.getElementById('hloc').onclick = openLocation;
 }
@@ -2160,9 +2188,10 @@ function renderLocation(){
   btn.onclick = async () => {
     const same = lead.address === locPrev.address && lead.lat === locPrev.lat;
     if (!lead.area.trim()) lead.area = same ? locPrev.area : areaFromAddress(lead.address);
+    const back = locPrev.from === 'profile' ? 'profile' : 'home';
     locPrev = null; saveLead(); track('location_changed', {method: lead.pinSrc || 'typed'});
     if (!same) sendLocationLead();
-    view = 'home'; render();
+    view = back; render();
   };
 }
 async function sendLocationLead(){
@@ -2335,6 +2364,57 @@ function estimateLine(r){
   return p === null
     ? `<div class="estimate"><span class="estk">Price</span><span class="estv tbcv">Confirmed on call</span></div>`
     : `<div class="estimate"><span class="estk">${priceLabel()}</span><span class="estv">${inr(p)}</span></div>`;
+}
+
+/* ---------- profile ---------- */
+let loAsk = false;   // the log out confirmation is open
+function renderProfile(){
+  homeHeader('profile');
+  const name = lead.name.trim(), phone = verifiedPhone || normPhone(lead.phone) || '';
+  const fmtPh = phone ? '+91 ' + phone.slice(0, 5) + ' ' + phone.slice(5) : 'Not signed in';
+  const where = lead.address.trim() || (lead.lat ? 'Your current location' : '');
+  $screen.innerHTML = `<h1 class="pgtitle">Profile</h1>
+    <div class="pfhead"><span class="pfav" aria-hidden="true">${esc((name || 'S').charAt(0).toUpperCase())}</span>
+      <div class="pfwho"><b>${esc(name || 'Add your name')}</b><span>${esc(fmtPh)}${verifiedPhone ? '<span class="pfok">Verified</span>' : ''}</span></div></div>
+    <div class="pfcard">
+      <label><span class="pflabel">Your name</span><input class="tinput big" id="pfname" type="text" autocomplete="name" placeholder="Full name" value="${esc(lead.name)}"></label>
+      <label><span class="pflabel">Business name <span class="opt">optional</span></span><input class="tinput big" id="pfbiz" type="text" autocomplete="organization" placeholder="Shop, cafe or company name" value="${esc(lead.business)}"></label>
+      <div class="pfsaved" id="pfsaved" aria-live="polite"></div>
+    </div>
+    <div class="pfcard"><span class="pflabel" style="margin:0">Business location</span>
+      <div class="pfloc"><span class="ci">${ICO_PIN}</span>
+        <div><b>${esc(lead.area.trim() || (where ? 'Saved location' : 'No location yet'))}</b>${where ? `<span>${esc(where)}</span>` : ''}</div>
+        <button class="pfchg" id="pfloc" type="button">${where ? 'Change' : 'Add'}</button></div></div>
+    ${verifiedPhone || !OTP_ON ? (loAsk
+      ? `<div class="lobox" role="alertdialog" aria-labelledby="lotitle"><b id="lotitle">Log out of Shyft On?</b>
+          <p>Your saved name, location and booking list are removed from this phone. Bookings you have made with us are not affected.</p>
+          <div class="lobtns"><button class="btn ghost" id="locancel" type="button">Cancel</button><button class="btn danger" id="logo" type="button">Log out</button></div></div>`
+      : `<button class="logout" id="loask" type="button">Log out</button>`) : ''}`;
+  let t = null;
+  const saved = document.getElementById('pfsaved');
+  [['pfname','name'],['pfbiz','business']].forEach(([el, k]) => {
+    document.getElementById(el).oninput = e => {
+      lead[k] = e.target.value; clearTimeout(t);
+      t = setTimeout(() => { saveLead(); saved.textContent = 'Saved'; }, 400);
+    };
+  });
+  document.getElementById('pfloc').onclick = openLocation;
+  const ask = document.getElementById('loask'), cancel = document.getElementById('locancel'), go = document.getElementById('logo');
+  if (ask) ask.onclick = () => { loAsk = true; render(); };
+  if (cancel) cancel.onclick = () => { loAsk = false; render(); };
+  if (go) go.onclick = logOut;
+  tabs('profile');
+}
+async function logOut(){
+  track('logged_out');
+  loAsk = false;
+  try { if (OTP_ON && fb) await fb.auth.signOut(); else if (OTP_ON) { const f = await fbLoad(); await f.auth.signOut(); } } catch(e){}
+  ['instaff.verified', 'instaff.lead', 'instaff.bookings'].forEach(k => { try { localStorage.removeItem(k); } catch(e){} });
+  verifiedPhone = ''; bookings = [];
+  Object.keys(lead).forEach(k => { lead[k] = ''; });
+  locConfirmed = false; svc = null;
+  view = OTP_ON && !DEMO ? 'signup' : 'home';
+  render();
 }
 
 /* ---------- terms sheet ---------- */
