@@ -2243,9 +2243,7 @@ function renderBookings(){
         <div class="bkhead"><span class="bkname">${b.name}</span><span class="bkref">${b.ref}</span></div>
         <div class="bkmeta">${b.when}${b.status === 'care' && b.team ? '<br>' + esc(b.team) : ''}</div>
         <div><span class="pill ${b.status==='ok'?'ok':'care'}">${b.status==='ok' ? (SERVICE_AVAILABLE ? 'Confirmed' : 'Requested') : 'Needs a call'}</span></div>
-      </div>`).join('') + `<button class="btn ghost" id="clear">Clear all bookings</button>`;
-    const c = document.getElementById('clear');
-    if (c) c.onclick = () => { bookings = []; saveBookings(); render(); };
+      </div>`).join('');
   }
   tabs('bookings');
 }
