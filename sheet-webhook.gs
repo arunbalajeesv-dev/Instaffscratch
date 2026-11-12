@@ -84,14 +84,14 @@ function fixerApplication(d) {
   return reply({ok: true});
 }
 
-// The price the customer saw on screen, in rupees. "On call" when the app could not price the booking.
-// Left blank for rows that are not bookings (sign-ups, locations, call backs).
 // Booking rows only: Yes when the customer ticked "I accept the service terms".
 function termsCell(d) {
   if (d.type !== 'Booking') return '';
   return d.terms_accepted === true || d.terms_accepted === 'true' ? 'Yes' : 'No';
 }
 
+// The price the customer saw on screen, in rupees. "On call" when the app could not price the booking.
+// Left blank for rows that are not bookings (sign-ups, locations, call backs).
 function priceCell(d) {
   if (d.type !== 'Booking') return '';
   const n = Number(d.price_rs);
