@@ -2023,7 +2023,16 @@ const FACILITIES = [
 let homeFilter = FACILITIES[0].id;   // the business type picked on home, remembered on this phone
 try { homeFilter = localStorage.getItem('instaff.facility') || homeFilter; } catch(e){}
 if (!FACILITIES.some(f => f.id === homeFilter)) homeFilter = FACILITIES[0].id;
-let svcFacility = '';   // the facility heading a service was opened from; sent with the lead
+let svcFacility = '';
+// A link from the website (/app?s=<service id>&f=<business type>) opens that service once home is reached,
+// straight away for a signed-in customer and right after sign-in for a new one.
+let pendingSvc = (() => {
+  try {
+    const q = new URLSearchParams(location.search), id = q.get('s'), f = q.get('f');
+    if (f && FACILITIES.some(x => x.id === f)) homeFilter = f;
+    return id && SERVICES.some(x => x.id === id) ? {id, f: f || ''} : null;
+  } catch(e){ return null; }
+})();   // the facility heading a service was opened from; sent with the lead
 
 // One line under each service name on home.
 const SVC_BLURB = {
@@ -2057,6 +2066,10 @@ function rowHTML(s, f){
   </button>`;
 }
 function renderHome(){
+  if (pendingSvc){
+    const p = pendingSvc; pendingSvc = null;
+    if (serviceLive(p.id)){ track('service_deeplink', {service_id:p.id}); setTimeout(() => openService(byId(p.id), p.f || homeFilter), 0); }
+  }
   homeHeader('home');
   const f = FACILITIES.find(x => x.id === homeFilter) || FACILITIES[0];
   const hb = CONTENT.home || {};
