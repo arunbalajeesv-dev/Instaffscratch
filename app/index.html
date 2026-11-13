@@ -121,7 +121,7 @@ button{font-family:inherit;cursor:pointer}
 .hb2d .hbtitle{font-size:18px}
 .hb2d .hbsub{color:#DCE8FD}
 .hb2d .hbtags span{font-size:11.5px;font-weight:700}
-.hb2d img{position:absolute;top:0;right:0;width:132px;height:100%;object-fit:cover;display:block}
+.hb2d img{position:absolute;top:0;right:0;width:132px;height:100%;object-fit:cover;object-position:center 22%;display:block}
 .hb2d img ~ .hbtext,.hb2d .hbtext:has(+ img){padding-right:144px}
 .svgroup{display:flex;flex-direction:column;gap:10px}
 .svgroup h2{margin:0;padding:0 4px;font-family:var(--font);font-size:12px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--muted)}
@@ -447,8 +447,8 @@ button:focus-visible,input:focus-visible,textarea:focus-visible,a:focus-visible{
   .hb2d .hbtitle{font-size:30px}
   .hb2d .hbsub{font-size:15px}
   .hb2d .hbtags span{font-size:13px;padding:5px 12px}
-  .hb2d img{width:34%}
-  .hb2d .hbtext:has(+ img){padding-right:calc(34% + 32px)}
+  .hb2d img{width:min(30%,300px)}
+  .hb2d .hbtext:has(+ img){padding-right:calc(min(30%,300px) + 32px)}
   .svgroup{gap:12px}
   .svgroup h2{font-size:12.5px;padding:0}
   .svlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:12px;background:none;border:0;border-radius:0;overflow:visible}
@@ -2068,6 +2068,10 @@ function rowHTML(s, f){
 function renderHome(){
   if (pendingSvc){
     const p = pendingSvc; pendingSvc = null;
+    try {   // drop s and f from the address so a reload does not reopen the service
+      const u = new URL(location.href); u.searchParams.delete('s'); u.searchParams.delete('f');
+      history.replaceState(null, '', u.pathname + u.search + u.hash);
+    } catch(e){}
     if (serviceLive(p.id)){ track('service_deeplink', {service_id:p.id}); setTimeout(() => openService(byId(p.id), p.f || homeFilter), 0); }
   }
   homeHeader('home');
