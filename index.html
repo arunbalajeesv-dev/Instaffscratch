@@ -112,6 +112,20 @@ section.blk{margin-top:56px}
 .row b{font-size:14.5px;font-weight:600}
 .row .rt span{font-size:13px;color:var(--muted)}
 
+/* cost comparison */
+.cost{display:flex;flex-wrap:wrap;gap:32px;align-items:center;border:1px solid var(--line);border-radius:16px;padding:26px}
+.cost .ct{flex:1 1 300px;min-width:0;display:flex;flex-direction:column;gap:8px}
+.cost h2{font-size:22px;font-weight:800}
+.cost p{color:var(--body)}
+.cost small{font-size:12.5px;color:var(--muted)}
+.cost .bars{flex:1 1 380px;min-width:0;display:flex;flex-direction:column;gap:14px}
+.bar .bl{display:flex;justify-content:space-between;gap:12px;font-size:14px;margin-bottom:6px}
+.bar .bl b{font-variant-numeric:tabular-nums;white-space:nowrap}
+.bar .tr{height:12px;border-radius:6px;background:var(--tile);overflow:hidden}
+.bar .tr i{display:block;height:100%;border-radius:6px}
+.save{display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;background:#E8F6EE;color:#126B3A;border-radius:12px;padding:10px 14px;font-size:14px}
+.save b{font-family:var(--display);font-size:22px;font-variant-numeric:tabular-nums}
+
 /* fixer */
 .who{display:flex;align-items:center;gap:18px;padding:22px 24px;background:var(--soft);border-radius:16px}
 .who .ic{width:52px;height:52px;border-radius:50%;background:#FFFFFF;border:1px solid var(--line2);display:grid;place-items:center;color:var(--blue);flex:none}
@@ -180,6 +194,8 @@ footer{margin-top:64px;background:#F5F6F8}
   .row .thumb{width:52px;height:52px}
   .row b{font-size:14px}
   .row .rt span{font-size:12.5px}
+  .cost{border:0;padding:0;gap:18px}
+  .cost h2{font-size:19px}
   .who{display:block;padding:0;background:none}
   .who .ic{display:none}
   .who h2{font-size:19px}
@@ -259,6 +275,21 @@ footer{margin-top:64px;background:#F5F6F8}
   <section class="blk">
     <div class="shead"><h2>For shops &amp; warehouses</h2><button type="button" data-more="shop">See all 7</button></div>
     <div class="rows" id="shop"></div>
+  </section>
+
+  <section class="blk" aria-labelledby="costh">
+    <div class="cost">
+      <div class="ct">
+        <h2 id="costh">Why pay for a full month?</h2>
+        <p>Most shops and cafés need an extra person only on busy days, like weekends and week-offs. Book a fixer for those days instead of paying a monthly salary.</p>
+        <small>Example: one mid-shift person, needed about 12 days a month. Your numbers may differ.</small>
+      </div>
+      <div class="bars">
+        <div class="bar"><div class="bl"><span>Permanent staff</span><b>₹28,000 / month</b></div><div class="tr"><i style="width:100%;background:#3A4A66"></i></div></div>
+        <div class="bar"><div class="bl"><span>Fixer for 12 busy days</span><b>₹8,400 / month</b></div><div class="tr"><i style="width:30%;background:var(--blue)"></i></div></div>
+        <div class="save"><b>₹19,600</b><span>saved every month</span></div>
+      </div>
+    </div>
   </section>
 
   <section class="blk">
