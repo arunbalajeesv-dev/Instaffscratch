@@ -495,6 +495,8 @@ const SHEET_URL = 'https://script.google.com/macros/s/AKfycbzDBtH3CnTf57cXnbbITx
 const POSTHOG_KEY = 'phc_mTuiJPMhZLkcPxJdNqhWZkViTTnuT6qh8SufujKv4SES';
 // PostHog host, e.g. https://us.i.posthog.com or https://eu.i.posthog.com. Empty: tracking is off.
 const POSTHOG_HOST = 'https://us.i.posthog.com';
+// Meta Pixel ID from Meta Events Manager (15 to 16 digits). Empty: the Meta Pixel is off.
+const META_PIXEL_ID = '';
 // WhatsApp Business number, digits only with country code, e.g. 919876543210. Empty: no WhatsApp button.
 const WHATSAPP_NUMBER = '918610852323';
 // Customer care phone number with country code, e.g. +919876543210. Empty: no tap-to-call link.
@@ -551,18 +553,50 @@ if (TRACKING){
   } catch(e){}
 }
 
-// UTM values: read from the page address when the page first opens, then kept for the session.
-const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign'];
+// Campaign tags (UTM values). The first ad a visitor arrives from is kept on this phone for 30 days,
+// so a sign-up or booking on a later visit is still credited to that ad. A new ad click after
+// 30 days replaces it.
+const UTM_KEYS = ['utm_source', 'utm_medium', 'utm_campaign', 'utm_content'];
+const UTM_DAYS = 30;
 const UTM = (() => {
+  const q = new URLSearchParams(location.search), now = Date.now(), fresh = {};
+  UTM_KEYS.forEach(k => { fresh[k] = (q.get(k) || '').slice(0, 200); });
   let saved = null;
-  try { saved = JSON.parse(sessionStorage.getItem('instaff.utm') || 'null'); } catch(e){}
-  if (saved) return saved;
-  const q = new URLSearchParams(location.search), u = {};
-  UTM_KEYS.forEach(k => { u[k] = q.get(k) || ''; });
-  try { sessionStorage.setItem('instaff.utm', JSON.stringify(u)); } catch(e){}
-  return u;
+  try { saved = JSON.parse(localStorage.getItem('instaff.utm') || 'null'); } catch(e){}
+  if (saved && saved.at && now - saved.at < UTM_DAYS * 864e5 && saved.v) return Object.assign({}, fresh, saved.v);
+  if (UTM_KEYS.some(k => fresh[k])){
+    try { localStorage.setItem('instaff.utm', JSON.stringify({at:now, v:fresh})); } catch(e){}
+  }
+  return fresh;
 })();
+
+// Meta Pixel: only standard event names go to Meta, never names, phone numbers or addresses.
+const PIXEL_ON = !!META_PIXEL_ID && !INTERNAL && !DEMO;
+if (PIXEL_ON){
+  // Official Meta Pixel base code.
+  !function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+  n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;
+  n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;
+  t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,
+  document,'script','https://connect.facebook.net/en_US/fbevents.js');
+  try { fbq('init', META_PIXEL_ID); fbq('track', 'PageView'); } catch(e){}
+}
+function pixel(event, props){
+  if (!PIXEL_ON) return;
+  const p = props || {}, sid = p.service_id ? {content_ids:[p.service_id], content_type:'service'} : {};
+  let name = '', data = sid;
+  if (event === 'service_opened') name = 'ViewContent';
+  else if (event === 'signup_verified') name = 'CompleteRegistration';
+  else if (event === 'checkout_viewed'){
+    name = 'InitiateCheckout';
+    if (p.price_rs) data = Object.assign({value:Number(p.price_rs), currency:'INR'}, sid);
+  }
+  else if (event === 'lead_sent' && p.success) name = p.care ? 'Contact' : 'Lead';
+  if (!name) return;
+  try { fbq('track', name, data); } catch(e){}
+}
 function track(event, props){
+  pixel(event, props);
   if (!TRACKING) return;
   try { posthog.capture(event, Object.assign({}, UTM, props)); } catch(e){}
 }
@@ -2215,7 +2249,7 @@ async function sendLocationLead(){
   sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
     service:'', facility:'', name:lead.name.trim(), business:'', phone:'+91' + normPhone(lead.phone || verifiedPhone),
     area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
-    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign, utm_content:UTM.utm_content});
 }
 function autoLocate(){
   if (DEMO || !navigator.geolocation) return;
@@ -2264,7 +2298,7 @@ async function verifyOtp(){
     sendLead({source:'instaff-prototype', website:'', ref:'SU' + Math.floor(100000 + Math.random()*899999), type:'Sign-up',
       service:'', facility:'', name:lead.name.trim(), business:lead.business.trim(), phone:'+91' + verifiedPhone,
       area:lead.area.trim(), id_token:idToken, utm_source: INTERNAL ? 'internal' : UTM.utm_source,
-      utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign});
+      utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign, utm_content:UTM.utm_content});
     su = {step:'form', error:'', confirm:null, verifier:null};
     view = 'home';
     autoLocate();   // asks the browser for the location once, right after sign-in
@@ -2572,7 +2606,7 @@ function buildLead(r, ref){
     address: lead.address.trim(), lat: lead.lat, lng: lead.lng,
     terms_accepted: !care && !!termsAccepted[svc.id],
     price_shown: !care && priceFor(svc, st, r) !== null, price_rs: care ? '' : (priceFor(svc, st, r) === null ? '' : priceFor(svc, st, r)),
-    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium: UTM.utm_medium, utm_campaign: UTM.utm_campaign
+    utm_source: INTERNAL ? 'internal' : UTM.utm_source, utm_medium: UTM.utm_medium, utm_campaign: UTM.utm_campaign, utm_content: UTM.utm_content
   };
 }
 // Apps Script web apps do not answer browser preflight checks, so the row goes as plain text
@@ -2773,7 +2807,7 @@ function renderDetails(r){
     payload.id_token = await authToken();
     track('details_submitted', {service_id:svc.id});
     const res = await sendLead(payload);
-    if (res !== 'not-configured') track('lead_sent', {service_id:svc.id, success: res === 'sent'});
+    if (res !== 'not-configured') track('lead_sent', {service_id:svc.id, success: res === 'sent', care});
     if (res === 'failed'){
       leadError = "<strong>That didn't go through.</strong> Check your internet connection and try again.";
       return render();

@@ -342,7 +342,7 @@ footer{margin-top:64px;background:#F5F6F8}
   var SHOWN = 4;   // rows shown per business type before "See all"
 
   var utm = new URLSearchParams(location.search), keep = [];
-  ['utm_source','utm_medium','utm_campaign'].forEach(function (k) { if (utm.get(k)) keep.push(k + '=' + encodeURIComponent(utm.get(k))); });
+  ['utm_source','utm_medium','utm_campaign','utm_content','fbclid'].forEach(function (k) { if (utm.get(k)) keep.push(k + '=' + encodeURIComponent(utm.get(k))); });
   function appHref(id, f) {
     var q = [];
     if (id) q.push('s=' + id);
