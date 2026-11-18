@@ -152,6 +152,9 @@ button{font-family:inherit;cursor:pointer}
 .pfchg{border:1px solid var(--card-border);background:var(--white);border-radius:12px;height:38px;padding:0 14px;font:inherit;font-size:13px;font-weight:700;color:var(--ptext);flex:0 0 auto}
 .pfsaved{font-size:12px;color:var(--muted);margin-top:-4px}
 .pfsaved:empty{display:none}
+.tclink{color:var(--blue-text,#1D62D6);font-weight:600;text-decoration:underline;text-underline-offset:2px}
+.tcnote{font-size:12px;color:var(--muted);line-height:1.5;margin-top:12px}
+.pftc{display:block;text-align:center;font-size:13.5px;margin:4px 0 14px}
 .logout{min-height:50px;border-radius:14px;border:1px solid #F0C9C4;background:var(--white);color:#B42318;font:inherit;font-size:15px;font-weight:700;width:100%}
 .lobox{background:var(--white);border:1px solid #F0C9C4;border-radius:18px;padding:16px;display:flex;flex-direction:column;gap:12px}
 .lobox b{font-size:15.5px}
@@ -2185,7 +2188,8 @@ function renderSignup(){
          <button class="btn ghost" id="changenum">Use a different number</button>`
       : `<div class="q"><div class="qlabel">Mobile number</div>
           <div class="qhelp">We'll send a one-time code to this number. Our team also calls it to confirm bookings.</div>
-          <input class="tinput big" data-lead="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number" value="${esc(lead.phone||'')}"></div>`)
+          <input class="tinput big" data-lead="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number" value="${esc(lead.phone||'')}">
+          <div class="tcnote">By continuing you agree to our <a class="tclink" href="/terms/" target="_blank" rel="noopener">Terms &amp; conditions</a>.</div></div>`)
     + (su.error ? `<div class="warnnote">${su.error}</div>` : '');
   footerBar(`<button class="btn" id="go" disabled>${code ? 'Verify and continue' : 'Send code'}</button>`);
   const go = document.getElementById('go');
@@ -2436,6 +2440,7 @@ function renderProfile(){
       <div class="pfloc"><span class="ci">${ICO_PIN}</span>
         <div><b>${esc(lead.area.trim() || (where ? 'Saved location' : 'No location yet'))}</b>${where ? `<span>${esc(where)}</span>` : ''}</div>
         <button class="pfchg" id="pfloc" type="button">${where ? 'Change' : 'Add'}</button></div></div>
+    <a class="tclink pftc" href="/terms/" target="_blank" rel="noopener">Terms &amp; conditions</a>
     ${verifiedPhone || !OTP_ON ? (loAsk
       ? `<div class="lobox" role="alertdialog" aria-labelledby="lotitle"><b id="lotitle">Log out of Shyft On?</b>
           <p>Your saved name, location and booking list are removed from this phone. Bookings you have made with us are not affected.</p>
@@ -2494,6 +2499,7 @@ function openTerms(asking = true){
       <button class="acceptrow" type="button" id="tsok" aria-pressed="${ok}"><span class="box">${ok ? I.tick : ''}</span>
         <span class="accepttext">I accept the service terms</span></button>
       <button class="btn" id="tsgo" type="button" ${ok ? '' : 'disabled'}>Continue to date and time</button>
+      <div class="tcnote" style="margin-top:0;text-align:center">See also our <a class="tclink" href="/terms/" target="_blank" rel="noopener">Terms &amp; conditions</a>.</div>
     </div>` : ''}</div>`;
   $screen.parentElement.appendChild(el);
   track('terms_viewed', {service_id:svc.id, asking:!!asking});
