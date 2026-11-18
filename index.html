@@ -356,6 +356,15 @@ footer{margin-top:64px;background:#F5F6F8}
 
   var utm = new URLSearchParams(location.search), keep = [];
   ['utm_source','utm_medium','utm_campaign','utm_content','fbclid'].forEach(function (k) { if (utm.get(k)) keep.push(k + '=' + encodeURIComponent(utm.get(k))); });
+  // Keep the first ad a visitor came from for 30 days, in the same place the app reads it,
+  // so a booking made on a later visit is still credited to that ad.
+  try {
+    var UK = ['utm_source','utm_medium','utm_campaign','utm_content'], now = Date.now(), v = {}, any = false;
+    UK.forEach(function (k) { v[k] = (utm.get(k) || '').slice(0, 200); if (v[k]) any = true; });
+    var saved = JSON.parse(localStorage.getItem('instaff.utm') || 'null');
+    var live = saved && saved.at && now - saved.at < 30 * 864e5 && saved.v;
+    if (any && !live) localStorage.setItem('instaff.utm', JSON.stringify({at: now, v: v}));
+  } catch (e) {}
   function appHref(id, f) {
     var q = [];
     if (id) q.push('s=' + id);
