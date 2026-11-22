@@ -2118,7 +2118,7 @@ function renderHome(){
   const f = FACILITIES.find(x => x.id === homeFilter) || FACILITIES[0];
   const hb = CONTENT.home || {};
   const hbTags = (Array.isArray(hb.tags) ? hb.tags.map(txt).filter(Boolean).slice(0, 4) : []);
-  if (!hbTags.length) hbTags.push('By the hour', 'By the job');
+  if (!hbTags.length) hbTags.push('Instant booking', 'Trained fixers');
   const hbImg = safeImg(svcContent('service_time_cleaning').tile_image);
   const live = f.services.filter(serviceLive).map(byId).filter(Boolean);
   const groups = CAT_ORDER.map(cat => [cat, live.filter(s => s.cat === cat)]).filter(([, l]) => l.length);
