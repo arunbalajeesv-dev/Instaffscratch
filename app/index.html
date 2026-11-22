@@ -97,6 +97,10 @@ button{font-family:inherit;cursor:pointer}
 .hbtitle{font-size:19px;font-weight:800;letter-spacing:-.02em;line-height:1.2}
 .hbsub{font-size:12.5px;line-height:1.45;color:#EAF1FE}
 .hbtags{display:flex;gap:6px;margin-top:4px;flex-wrap:wrap}
+.payafter{display:flex;align-items:center;gap:12px;background:var(--tint);border:1px solid var(--tint-border);border-radius:14px;padding:11px 14px;color:var(--dark);flex:0 0 auto}
+.payafter svg{flex:0 0 auto}
+.payafter span{display:flex;flex-direction:column;font-size:12.5px;line-height:1.35;color:var(--muted)}
+.payafter b{font-size:14px;color:var(--text)}
 .hbtags span{font-size:11px;font-weight:800;border-radius:999px;padding:4px 10px;background:var(--hi);color:var(--text)}
 /* home (layout D): header with area, business picker tiles, compact banner, grouped service rows */
 .tbrow.home{justify-content:space-between}
@@ -1854,8 +1858,8 @@ const serviceLive = id => String(pSet(id, 'live')).toUpperCase() !== 'N';
 const OTP_ON = !!(FIREBASE_CONFIG.apiKey && FIREBASE_CONFIG.projectId);
 let verifiedPhone = '';
 try { verifiedPhone = localStorage.getItem('instaff.verified') || ''; } catch(e){}
-// signup | location | home | bookings | service | form | review | slot | done | care
-let view = (OTP_ON && !verifiedPhone && !DEMO) ? 'signup' : 'home';   // signup | home | bookings | service | form | review | slot | details | done | care
+// location | home | bookings | service | form | review | slot | done | care
+let view = 'home';   // home | bookings | service | form | review | slot | details | done | care
 let svc = null;             // active service definition
 let st = {};                // active service answers
 let stepIx = 0;             // 0-based index into svc.steps
@@ -1965,7 +1969,6 @@ function render(){
   if (k !== lastTrackedKey){ lastTrackedKey = k; trackScreen(); }
 }
 function trackScreen(){
-  if (view === 'signup') return track('signup_viewed');
   if (view === 'home') return track('home_viewed');
   if (!svc) return;
   const r = result();
@@ -1996,7 +1999,6 @@ function renderView(){
   closeTerms();
   if (view !== 'profile') loAsk = false;
   const r = result();
-  if (view === 'signup')    return renderSignup();
   if (view === 'home')      return renderHome();
   if (view === 'bookings')  return renderBookings();
   if (view === 'service')   return renderService();
@@ -2084,6 +2086,7 @@ const SVC_BLURB = {
 const CAT_ORDER = ['Cleaning', 'Front of house', 'Operations'];
 const ICO_CHEV = '<svg class="chev" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>';
 const ICO_DOWN = '<svg class="dn" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+const ICO_PAY = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="6" width="18" height="13" rx="2.5"/><path d="M3 10.5h18M7 15.5h3"/></svg>';
 const ICO_LOC = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.2-7-11.5a7 7 0 0 1 14 0C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg>';
 // Home and Bookings share this header: logo, the customer's area once we know it, and on wide screens
 // the Services / Bookings links that the bottom tab bar gives on a phone.
@@ -2128,6 +2131,7 @@ function renderHome(){
       </div>
       ${hbImg ? `<img src="${hbImg}" alt="">` : ''}
     </div>
+    <div class="payafter">${ICO_PAY}<span><b>Pay after the service is completed</b>Nothing to pay when you book.</span></div>
     <h1 class="bizq">What type of business are you?</h1>
     <div class="bizpick" role="tablist" aria-label="Type of business">
       ${FACILITIES.map(x => `<button class="biz" role="tab" data-filter="${x.id}" aria-selected="${x.id === f.id}">${x.icon}<span>${x.name}</span></button>`).join('')}
@@ -2176,34 +2180,6 @@ function otpError(e){
   if (c === 'auth/network-request-failed') return 'No internet connection. Check it and try again.';
   return "We couldn't send the code just now. Please try again in a moment.";
 }
-function renderSignup(){
-  $top.innerHTML = `<div class="tbrow"><div class="brand"><span class="brandmark"></span>Shyft On</div></div>`;
-  const code = su.step === 'code';
-  $screen.innerHTML = `<div class="hometop"><div class="hello">Welcome</div>
-      <div class="h1">${code ? 'Enter the code' : 'Sign in with your mobile number'}</div></div>`
-    + (code
-      ? `<div class="q"><div class="qlabel">6-digit code</div>
-          <div class="qhelp">Sent to +91 ${esc(lead.phone)}.</div>
-          <input class="tinput big" id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456"></div>
-         <button class="btn ghost" id="changenum">Use a different number</button>`
-      : `<div class="q"><div class="qlabel">Mobile number</div>
-          <div class="qhelp">We'll send a one-time code to this number. Our team also calls it to confirm bookings.</div>
-          <input class="tinput big" data-lead="phone" type="tel" inputmode="tel" autocomplete="tel" placeholder="10-digit mobile number" value="${esc(lead.phone||'')}">
-          <div class="tcnote">By continuing you agree to our <a class="tclink" href="/terms/" target="_blank" rel="noopener">Terms &amp; conditions</a>.</div></div>`)
-    + (su.error ? `<div class="warnnote">${su.error}</div>` : '');
-  footerBar(`<button class="btn" id="go" disabled>${code ? 'Verify and continue' : 'Send code'}</button>`);
-  const go = document.getElementById('go');
-  const ok = () => code ? /^\d{6}$/.test(document.getElementById('otp').value.trim()) : !!normPhone(lead.phone);
-  const sync = () => { go.disabled = !ok(); };
-  if (code){
-    document.getElementById('otp').oninput = sync;
-    document.getElementById('changenum').onclick = () => { su = {step:'form', error:'', confirm:null, verifier:null}; render(); };
-  } else {
-    $screen.querySelectorAll('[data-lead]').forEach(inp => inp.oninput = () => { lead[inp.dataset.lead] = inp.value; sync(); });
-  }
-  sync();
-  go.onclick = code ? verifyOtp : sendOtp;
-}
 // Turns coordinates into a readable address. Needs the Geocoding API on the Maps key; without it this returns null
 // and the checkout simply shows "your current location" for the customer to confirm.
 async function reverseGeocode(lat, lng){
@@ -2219,6 +2195,7 @@ async function reverseGeocode(lat, lng){
   } catch(e){ return null; }
 }
 let locAccuracy = 0;
+let autoTried = false;   // the phone is asked for its location once, when the customer first reaches checkout
 // The location in the home header opens this screen. It reuses the checkout's address search and
 // "Use my current location". Back leaves the saved location as it was.
 let locPrev = null;
@@ -2250,6 +2227,7 @@ function renderLocation(){
   };
 }
 async function sendLocationLead(){
+  if (!verifiedPhone && !normPhone(lead.phone)) return;   // a browsing visitor has no number yet; the booking carries the pin
   sendLead({source:'instaff-prototype', website:'', ref:'LC' + Math.floor(100000 + Math.random()*899999), type:'Location',
     service:'', facility:'', name:lead.name.trim(), business:'', phone:'+91' + normPhone(lead.phone || verifiedPhone),
     area:lead.area.trim(), address:lead.address.trim(), lat:lead.lat, lng:lead.lng, id_token:await authToken(),
@@ -2264,13 +2242,14 @@ function autoLocate(){
     if (g){ lead.address = g.text; if (!lead.area.trim() && g.area) lead.area = g.area; }
     saveLead(); track('location_captured', {method:'auto'});
     if (view === 'home') render();   // show the area in the header
+    else if (view === 'details' && su.step !== 'code') render();   // the checkout offers the found address to confirm
     // It also goes to the Sheet, so a customer who signs in but never books still leaves a pin.
     sendLocationLead();
   }, () => track('location_denied'), {enableHighAccuracy:false, timeout:12000, maximumAge:300000});
 }
 
-async function sendOtp(){
-  const go = document.getElementById('go');
+async function sendOtp(goId){
+  const go = document.getElementById(goId);
   if (!normPhone(lead.phone) || go.dataset.busy) return;
   go.dataset.busy = '1'; go.disabled = true; go.textContent = 'Sending…';
   try {
@@ -2287,30 +2266,24 @@ async function sendOtp(){
   }
   render();
 }
-async function verifyOtp(){
-  const go = document.getElementById('go'), code = document.getElementById('otp').value.trim();
+// Called from the checkout button. Once the code is right the booking (or call back) is sent straight away by `after`.
+async function verifyOtp(goId, after){
+  const go = document.getElementById(goId), code = document.getElementById('otp').value.trim();
   if (!/^\d{6}$/.test(code) || go.dataset.busy) return;
   go.dataset.busy = '1'; go.disabled = true; go.textContent = 'Checking…';
   try {
-    const cred = await su.confirm.confirm(code);
-    const idToken = await cred.user.getIdToken();
+    await su.confirm.confirm(code);
     verifiedPhone = normPhone(lead.phone);
     try { localStorage.setItem('instaff.verified', verifiedPhone); } catch(e){}
     saveLead();
     track('signup_verified');
-    // The sign-up goes to the Sheet straight away, so people who browse but never book are captured too.
-    sendLead({source:'instaff-prototype', website:'', ref:'SU' + Math.floor(100000 + Math.random()*899999), type:'Sign-up',
-      service:'', facility:'', name:lead.name.trim(), business:lead.business.trim(), phone:'+91' + verifiedPhone,
-      area:lead.area.trim(), id_token:idToken, utm_source: INTERNAL ? 'internal' : UTM.utm_source,
-      utm_medium:UTM.utm_medium, utm_campaign:UTM.utm_campaign, utm_content:UTM.utm_content});
     su = {step:'form', error:'', confirm:null, verifier:null};
-    view = 'home';
-    autoLocate();   // asks the browser for the location once, right after sign-in
   } catch(e){
     su.error = otpError(e);
     track('signup_failed', {step:'verify', code:(e && e.code) || 'unknown'});
+    return render();
   }
-  render();
+  await after();
 }
 
 /* ---------- bookings ---------- */
@@ -2469,7 +2442,7 @@ async function logOut(){
   verifiedPhone = ''; bookings = [];
   Object.keys(lead).forEach(k => { lead[k] = ''; });
   locConfirmed = false; svc = null;
-  view = OTP_ON && !DEMO ? 'signup' : 'home';
+  view = 'home';
   render();
 }
 
@@ -2560,7 +2533,7 @@ function renderSlot(r){
         `<button class="slot" data-v="${t}" aria-pressed="${slot.time===t}">${fmt12(t)}</button>`).join('') + `</div>`);
   bindInputs();
   footerBar(`<button class="btn" id="next" ${slot.time?'':'disabled'}>Continue</button>`);
-  document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
+  document.getElementById('next').onclick = () => { leadMode = 'booking'; leadError = ''; su.step = 'form'; su.error = ''; locConfirmed = false; view = 'details'; render(); };
 }
 
 /* ---------- customer details (smoke test lead capture) ---------- */
@@ -2777,6 +2750,9 @@ function renderDetails(r){
   if (care) bar(svc.name, 'Request a call back');
   else bar(svc.name, `Step ${n+3} of ${total} · Your details`, total, n+2);
   const ds = days(), d = ds[slot.day];
+  // A new customer proves their phone here, after they have seen the price: send a code, then the booking goes.
+  const needOtp = OTP_ON && !verifiedPhone && !DEMO, codeStep = needOtp && su.step === 'code';
+  if (!autoTried && !lead.lat && !lead.address.trim()){ autoTried = true; autoLocate(); }
   const field = (key, label, ph, type, req, help) => `<div class="q">
       <div class="qlabel">${label}${req ? '' : '<span class="opt">optional</span>'}</div>
       ${help ? `<div class="qhelp">${help}</div>` : ''}
@@ -2788,25 +2764,37 @@ function renderDetails(r){
       ? `<div class="warnnote"><strong>${esc(careReasonOf(r))}.</strong> Leave your details and our team will call you to plan the fixers, the time and the price.</div>`
       : big(`${slot.day===0?'Today':d.name} ${d.num} ${d.mon} · ${fmt12(slot.time)}`, approxText(r)))
     + field('name', 'Your name', 'Full name', 'text', true)
-    + field('phone', 'Phone number', '10-digit mobile number', 'tel', true, "We'll use this number to confirm your booking.")
+    + field('phone', 'Phone number', '10-digit mobile number', 'tel', true,
+        needOtp ? "We'll send a one-time code to this number. Our team also calls it to confirm." : "We'll use this number to confirm your booking.")
+    + (codeStep ? `<div class="q"><div class="qlabel">6-digit code</div>
+        <div class="qhelp">Sent to +91 ${esc(lead.phone)}.</div>
+        <input class="tinput big" id="otp" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456">
+        <button class="btn ghost" id="changenum" type="button">Use a different number</button></div>` : '')
     + addressBlock()
-
+    + (needOtp ? `<div class="tcnote">By continuing you agree to our <a class="tclink" href="/terms/" target="_blank" rel="noopener">Terms &amp; conditions</a>.</div>` : '')
     + `<input class="hp" data-lead="website" tabindex="-1" autocomplete="off" aria-hidden="true">`
-    + (leadError ? `<div class="warnnote">${leadError}</div>` : '');
-  if (verifiedPhone){
+    + (leadError ? `<div class="warnnote">${leadError}</div>` : '')
+    + (needOtp && su.error ? `<div class="warnnote">${su.error}</div>` : '');
+  if (verifiedPhone || codeStep){
     const ph = $screen.querySelector('[data-lead="phone"]');
-    if (ph){ ph.value = verifiedPhone; lead.phone = verifiedPhone; ph.readOnly = true; }
+    if (ph){ if (verifiedPhone){ ph.value = verifiedPhone; lead.phone = verifiedPhone; } ph.readOnly = true; }
   }
-  const btnText = care ? 'Request a call back' : 'Confirm booking';
+  const btnText = codeStep ? (care ? 'Verify and request call back' : 'Verify and confirm booking')
+    : needOtp ? 'Send code' : (care ? 'Request a call back' : 'Confirm booking');
+  const otpOk = () => /^\d{6}$/.test((document.getElementById('otp') || {value:''}).value.trim());
+  const canGo = () => codeStep ? (otpOk() && detailsOk(care)) : detailsOk(care);
   footerBar((care ? `<div class="estimate care">${I.clock}<span>Needs a call</span></div>` : estimateLine(r))
-    + `<button class="btn" id="submit" ${detailsOk(care) ? '' : 'disabled'}>${btnText}</button>`);
+    + `<button class="btn" id="submit" ${codeStep ? 'disabled' : (detailsOk(care) ? '' : 'disabled')}>${btnText}</button>`);
   const btn = document.getElementById('submit');
   $screen.querySelectorAll('[data-lead]').forEach(inp => {
-    inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !detailsOk(care); };
+    inp.oninput = () => { lead[inp.dataset.lead] = inp.value; btn.disabled = !canGo(); };
   });
-  bindAddress(() => { btn.disabled = !detailsOk(care); });
-  btn.onclick = async () => {
-    if (!detailsOk(care) || btn.dataset.busy) return;
+  if (codeStep){
+    document.getElementById('otp').oninput = () => { btn.disabled = !canGo(); };
+    document.getElementById('changenum').onclick = () => { su = {step:'form', error:'', confirm:null, verifier:null}; render(); };
+  }
+  bindAddress(() => { btn.disabled = !canGo(); });
+  const doSubmit = async () => {
     btn.dataset.busy = '1'; btn.disabled = true; btn.textContent = 'Sending…';
     const ref = 'IN' + Math.floor(100000 + Math.random()*899999);
     const payload = buildLead(r, ref);
@@ -2832,6 +2820,12 @@ function renderDetails(r){
            payload.lat ? `Map: https://www.google.com/maps?q=${payload.lat},${payload.lng}` : ''].filter(Boolean).join('\n')
     });
     saveBookings(); view = 'done'; render();
+  };
+  btn.onclick = () => {
+    if (!detailsOk(care) || btn.dataset.busy) return;
+    if (!needOtp) return doSubmit();
+    if (!codeStep){ su.error = ''; return sendOtp('submit'); }
+    return verifyOtp('submit', doSubmit);
   };
 }
 
@@ -2892,7 +2886,7 @@ function renderCare(r){
     <button class="btn ghost" id="chg">Change my answers</button>`);
   document.getElementById('callback').onclick = () => {
     track('callback_requested', {service_id:svc.id, reason:careReasonOf(r)});
-    leadMode = 'care'; leadError = ''; locConfirmed = false; view = 'details'; render(); };
+    leadMode = 'care'; leadError = ''; su.step = 'form'; su.error = ''; locConfirmed = false; view = 'details'; render(); };
   document.getElementById('chg').onclick = () => { view = 'form'; render(); };
 }
 
